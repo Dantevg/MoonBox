@@ -40,6 +40,8 @@ function computer.start()
 	computer.screen.w = math.floor( love.graphics.getWidth() / settings.scale )
 	computer.screen.h = math.floor( love.graphics.getHeight() / settings.scale )
 	computer.screen.scale = settings.scale
+	computer.screen.canvas = love.graphics.newCanvas( computer.screen.w, computer.screen.h )
+	computer.screen.canvas:setFilter( "linear", "nearest" )
 	
 	-- Load standard env
 	local env = {
@@ -174,7 +176,7 @@ function love.draw()
 	else
 		love.graphics.setColor( 1,1,1,1 )
 		love.graphics.setBlendMode( "alpha", "premultiplied" )
-		love.graphics.draw( computer.env.screen.canvas, 0, 0, 0, computer.screen.scale )
+		love.graphics.draw( computer.screen.canvas, 0, 0, 0, computer.screen.scale )
 		love.graphics.setBlendMode( "alpha" ) -- Reset blendMode
 	end
 end
