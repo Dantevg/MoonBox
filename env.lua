@@ -145,27 +145,25 @@ function env.colors.rgb(color)
 	
 	local name, brightness, opacity = env.colors.getComponents(color)
 	
-	if not env.screen.colors[name] then
-		error( "No such color: "..(name or "nil"), 2 )
-	end
-	
 	brightness = tonumber(brightness) or 0
 	opacity = tonumber(opacity) or 1
 	if env.screen.colors == env.screen.colors32 then
-		return {
-			env.screen.colors[name][brightness+2][1],
-			env.screen.colors[name][brightness+2][2],
-			env.screen.colors[name][brightness+2][3],
-			opacity
-		}
+		brightness = brightness + 2
 	elseif env.screen.colors == env.screen.colors64 then
-		return {
-			env.screen.colors[name][brightness+4][1],
-			env.screen.colors[name][brightness+4][2],
-			env.screen.colors[name][brightness+4][3],
-			opacity
-		}
+		brightness = brightness + 4
 	end
+	
+	-- Nonexisting color
+	if not env.screen.colors[name] or not env.screen.colors[name][brightness] then
+		return nil
+	end
+	
+	return {
+		env.screen.colors[name][brightness][1],
+		env.screen.colors[name][brightness][2],
+		env.screen.colors[name][brightness][3],
+		math.min( math.max( 0, opacity ), 1 )
+	}
 end
 
 -- Convert rgb (0-255) to color
@@ -269,13 +267,17 @@ function env.colors.lighter( color, amount )
 end
 
 function env.colors.blend( fg, a, bg )
-	fg = env.colors.rgb(fg)
-	bg = env.colors.rgb(bg)
+	fg = getColor(fg)
+	bg = getColor(bg)
+	
+	if not fg or not bg then
+		error( "No such color", 2 )
+	end
 	
 	local result = {
-		fg[1]/255 * a + bg[1]/255 * (1-a),
-		fg[2]/255 * a + bg[2]/255 * (1-a),
-		fg[3]/255 * a + bg[3]/255 * (1-a),
+		fg[1] * a + bg[1] * (1-a),
+		fg[2] * a + bg[2] * (1-a),
+		fg[3] * a + bg[3] * (1-a),
 	}
 	
 	return env.colors.color( result[1]*255, result[2]*255, result[3]*255 )
@@ -335,10 +337,10 @@ function env.screen.pixel( x, y, color )
 		return
 	end
 	
-	local rgb = getColor(color) or getColor(env.screen.color)
-	if rgb[4] ~= 1 then -- Transparency, blend with background
+	local rgb = getColor( color or env.screen.color )
+	if not rgb then error( "No such color", 2 ) end
+	if rgb[4] ~= 1 then -- Partially transparent, blend with background
 		color = env.colors.blend( color, rgb[4], env.screen.getPixel(x,y) )
-		rgb = getColor(color)
 	end
 	
 	computer.screen.canvas:renderTo(function()
@@ -349,9 +351,11 @@ end
 
 function env.screen.char( char, x, y, color )
 	x, y = x or env.screen.pos.x, y or env.screen.pos.y
-	rgb = getColor(color) or getColor(env.screen.color)
+	local rgb = getColor( color or env.screen.color )
 	
-	if rgb[4] ~= 1 then -- Transparency
+	if not rgb then error( "No such color", 2 ) end
+	
+	if rgb[4] ~= 1 then -- Partially transparent
 		-- Update the screen image
 		computer.screen.image = computer.screen.canvas:newImageData()
 		computer.screen.imageFrame = computer.currentFrame
@@ -370,7 +374,7 @@ function env.screen.char( char, x, y, color )
 			local b = data[h]
 			for w = env.screen.font.width, 1, -1 do
 				if b % 2 == 1 then
-					if rgb[4] ~= 1 then
+					if rgb[4] ~= 1 then -- Partially transparent
 						local bg = { computer.screen.image:getPixel( x+w-0.5, y+h-0.5 ) }
 						local finalColor = {
 							rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
@@ -450,7 +454,8 @@ function env.screen.rect( x, y, w, h, color )
 	x, y = x or env.screen.pos.x, y or env.screen.pos.y
 	w, h = (w or 0), (h or 0)
 	
-	local rgb = getColor(color) or getColor(env.screen.color)
+	local rgb = getColor( color or env.screen.color )
+	if not rgb then error( "No such color", 2 ) end
 	
 	if rgb[4] == 1 then -- Not transparent, use simple faster method
 		computer.screen.canvas:renderTo(function()
