@@ -490,7 +490,7 @@ function env.screen.rect( x, y, w, h, color )
 end
 
 function env.screen.clear(color)
-	color = getColor(color) or getColor(env.screen.color)
+	color = getColor(color) or getColor(env.screen.background)
 	color[4] = 1 -- No transparency
 	
 	computer.screen.canvas:renderTo(function()
