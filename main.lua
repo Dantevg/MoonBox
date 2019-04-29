@@ -319,18 +319,16 @@ function love.resize( w, h )
 	computer.screen.w = math.floor( w / settings.scale )
 	computer.screen.h = math.floor( h / settings.scale )
 	
-	-- Save canvas to image
-	local image = love.graphics.newImage( computer.env.screen.canvas:newImageData() )
+	computer.env.screen.width = computer.screen.w
+	computer.env.screen.height = computer.screen.h
 	
-	local _, _, mode = love.window.getMode()
-	if not mode.fullscreen then
-		setWindow{
-			x = mode.x,
-			y = mode.y,
-			w = computer.screen.w,
-			h = computer.screen.h
-		}
+	if computer.env.screen.font then
+		computer.env.screen.charWidth = math.floor( computer.screen.w / (computer.env.screen.font.width+1) )
+		computer.env.screen.charHeight = math.floor( computer.screen.h / (computer.env.screen.font.height+1) )
 	end
+	
+	-- Save canvas to image
+	local image = love.graphics.newImage( computer.screen.canvas:newImageData() )
 	
 	-- Copy image to canvas
 	local newCanvas = love.graphics.newCanvas( computer.screen.w, computer.screen.h )
@@ -339,8 +337,8 @@ function love.resize( w, h )
 		love.graphics.draw( image, 0, 0 )
 	end)
 	
-	computer.env.screen.canvas = newCanvas
-	computer.env.screen.canvas:setFilter( "linear", "nearest" )
+	computer.screen.canvas = newCanvas
+	computer.screen.canvas:setFilter( "linear", "nearest" )
 	
 	table.insert( computer.eventBuffer, { "resize", computer.screen.w, computer.screen.h } )
 end

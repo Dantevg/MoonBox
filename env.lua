@@ -581,8 +581,8 @@ function env.screen.setFont(path)
 	local font = loadstring( "return " .. file )()
 	if font then
 		env.screen.font = font
-		env.screen.charWidth = env.screen.width / (font.width+1)
-		env.screen.charHeight = env.screen.height / (font.height+1)
+		env.screen.charWidth = math.floor( env.screen.width / (font.width+1) )
+		env.screen.charHeight = math.floor( env.screen.height / (font.height+1) )
 		return true
 	else
 		return false
