@@ -301,17 +301,17 @@ env.screen.background = "black"
 env.screen.font = {}
 
 env.screen.colors64 = {
-	red = { {51,0,10}, {102,5,18}, {166,15,23}, {230,33,33}, {255,80,64}, {255,128,102}, {255,196,176} },
-	orange = { {64,13,0}, {128,36,0}, {189,64,0}, {230,94,0}, {255,135,36}, {255,166,74}, {255,212,153} },
-	yellow = { {77,33,0}, {153,87,0}, {204,135,0}, {240,194,0}, {255,237,51}, {255,255,102}, {245,255,153} },
-	green = { {0,51,26}, {3,102,36}, {20,138,43}, {51,204,51}, {115,230,92}, {168,255,125}, {204,255,166} },
-	cyan = { {0,36,51}, {0,84,102}, {0,128,138}, {18,179,179}, {54,217,201}, {125,255,222}, {176,255,222} },
-	blue = { {26,18,64}, {46,36,128}, {56,56,189}, {74,97,255}, {125,158,255}, {166,201,255}, {204,230,255} },
-	purple = { {31,3,51}, {71,13,102}, {102,26,128}, {166,46,189}, {217,79,230}, {255,125,255}, {255,189,250} },
-	brown = { {51,18,13}, {87,28,18}, {115,41,23}, {153,64,31}, {189,107,66}, {230,163,115}, {255,217,176} },
-	gray = { {0,0,0}, {41,41,41}, {82,82,82}, {128,128,128}, {171,171,171}, {212,212,212}, {255,255,255} },
-	black = { {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0} },
-	white = { {255,255,255}, {255,255,255}, {255,255,255}, {255,255,255}, {255,255,255}, {255,255,255}, {255,255,255} },
+	red    = { {51, 0,  10 }, {102,5,  18 }, {166,15, 23 }, {230,33, 33 }, {255,80, 64 }, {255,128,102}, {255,196,176} },
+	orange = { {64, 13, 0  }, {128,36, 0  }, {189,64, 0  }, {230,94, 0  }, {255,135,36 }, {255,166,74 }, {255,212,153} },
+	yellow = { {77, 33, 0  }, {153,87, 0  }, {204,135,0  }, {240,194,0  }, {255,237,51 }, {255,255,102}, {245,255,153} },
+	green  = { {0,  51, 26 }, {3,  102,36 }, {20, 138,43 }, {51, 204,51 }, {115,230,92 }, {168,255,125}, {204,255,166} },
+	cyan   = { {0,  36, 51 }, {0,  84, 102}, {0,  128,138}, {18, 179,179}, {54, 217,201}, {125,255,222}, {176,255,222} },
+	blue   = { {26, 18, 64 }, {46, 36, 128}, {56, 56, 189}, {74, 97, 255}, {125,158,255}, {166,201,255}, {204,230,255} },
+	purple = { {31, 3,  51 }, {71, 13, 102}, {102,26, 128}, {166,46, 189}, {217,79, 230}, {255,125,255}, {255,189,250} },
+	brown  = { {51, 18, 13 }, {87, 28, 18 }, {115,41, 23 }, {153,64, 31 }, {189,107,66 }, {230,163,115}, {255,217,176} },
+	gray   = { {0,  0,  0  }, {41, 41, 41 }, {82, 82, 82 }, {128,128,128}, {171,171,171}, {212,212,212}, {255,255,255} },
+	black  = { {0,  0,  0  }, {0,  0,  0  }, {0,  0,  0  }, {0,  0,  0  }, {0,  0,  0  }, {0,  0,  0  }, {0,  0,  0  } },
+	white  = { {255,255,255}, {255,255,255}, {255,255,255}, {255,255,255}, {255,255,255}, {255,255,255}, {255,255,255} },
 }
 
 env.screen.colors32 = {
@@ -325,13 +325,36 @@ env.screen.colors32 = {
   orange = {{136,68, 0  }, {221,102,0  }, {255,153,68 }}, -- So does dark orange (or should I say brown?)
   brown  = {{119,85, 68 }, {170,119,85 }, {204,170,136}},
   gray   = {{85, 85, 85 }, {136,136,136}, {204,204,204}},
-  black  = {{0,  0,  0, }, {0,  0,  0, }, {0,  0,  0, }},
+  black  = {{0,  0,  0  }, {0,  0,  0  }, {0,  0,  0  }},
   white  = {{255,255,255}, {255,255,255}, {255,255,255}},
 }
 
 env.screen.colors = env.screen.colors64
 
-function env.screen.pixel( x, y, color )
+env.screen.canvas = {}
+
+function env.screen.canvas:draw( x, y )
+	computer.screen.canvas:renderTo(function()
+		love.graphics.setColor( 1, 1, 1, 1 )
+		love.graphics.draw( self.canvas, x-0.5, y-0.5 )
+	end)
+end
+
+setmetatable( env.screen, {
+	__index = function( t, k )
+		if rawget( env.screen, k ) then
+			return rawget( t, k )
+		elseif type(env.screen.canvas[k]) == "function" then
+			return function(...)
+				return env.screen.canvas[k]( computer.screen, ... )
+			end
+		else
+			return nil
+		end
+	end
+} )
+
+function env.screen.canvas.pixel( canvas, x, y, color )
 	x, y = x or env.screen.pos.x, y or env.screen.pos.y
 	if x <= 0 or y <= 0 or x > env.screen.width or y > env.screen.height then
 		return
@@ -340,16 +363,16 @@ function env.screen.pixel( x, y, color )
 	local rgb = getColor( color or env.screen.color )
 	if not rgb then error( "No such color", 2 ) end
 	if rgb[4] ~= 1 then -- Partially transparent, blend with background
-		color = env.colors.blend( color, rgb[4], env.screen.getPixel(x,y) )
+		color = env.colors.blend( color, rgb[4], env.screen.canvas.getPixel( canvas, x, y ) )
 	end
 	
-	computer.screen.canvas:renderTo(function()
+	canvas.canvas:renderTo(function()
 		love.graphics.setColor(rgb)
 		love.graphics.points( x-0.5, y-0.5 )
 	end)
 end
 
-function env.screen.char( char, x, y, color )
+function env.screen.canvas.char( canvas, char, x, y, color )
 	x, y = x or env.screen.pos.x, y or env.screen.pos.y
 	local rgb = getColor( color or env.screen.color )
 	
@@ -357,11 +380,11 @@ function env.screen.char( char, x, y, color )
 	
 	if rgb[4] ~= 1 then -- Partially transparent
 		-- Update the screen image
-		computer.screen.image = computer.screen.canvas:newImageData()
-		computer.screen.imageFrame = computer.currentFrame
+		canvas.image = canvas.canvas:newImageData()
+		canvas.imageFrame = computer.currentFrame
 	end
 	
-	computer.screen.canvas:renderTo(function()
+	canvas.canvas:renderTo(function()
 		love.graphics.setColor(rgb)
 		local data
 		if env.screen.font.data[ string.byte(char) ] then
@@ -375,7 +398,7 @@ function env.screen.char( char, x, y, color )
 			for w = env.screen.font.width, 1, -1 do
 				if b % 2 == 1 then
 					if rgb[4] ~= 1 then -- Partially transparent
-						local bg = { computer.screen.image:getPixel( x+w-0.5, y+h-0.5 ) }
+						local bg = { canvas.image:getPixel( x+w-0.5, y+h-0.5 ) }
 						local finalColor = {
 							rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
 							rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
@@ -397,7 +420,7 @@ end
 -- screen.write( text, x, y )
 -- Options: x (number), y (number), color (string), background (string),
 -- 	max (number), overflow: (string) ["wrap", "ellipsis"]
-function env.screen.write( text, a, b )
+function env.screen.canvas.write( canvas, text, a, b )
 	text = text and tostring(text) or ""
 	local options = {}
 	if type(a) == "number" then
@@ -423,17 +446,17 @@ function env.screen.write( text, a, b )
 	end
 	
 	if options.background then
-		env.screen.rect( x, y, w, h, options.background )
+		env.screen.canvas.rect( canvas, x, y, w, h, options.background )
 	end
 	
 	for i = 1, #text do
-		env.screen.char( string.sub(text,i), x, y, options.color )
+		env.screen.canvas.char( canvas, string.sub(text,i), x, y, options.color )
 		x = x + env.screen.font.width + 1
 		if x >= env.screen.width then -- Next line
 			x = options.x or env.screen.pos.x
 			y = y + env.screen.font.height + 1
 			while env.screen.pos.y + env.screen.font.height > env.screen.height do
-				env.screen.move( 0, -env.screen.font.height-1 )
+				env.screen.canvas.move( canvas, 0, -env.screen.font.height-1 )
 			end
 		end
 	end
@@ -441,16 +464,16 @@ function env.screen.write( text, a, b )
 	env.screen.pos.y = y
 end
 
-function env.screen.print( text, color )
-	env.screen.write( text, {color = color} )
+function env.screen.canvas.print( canvas, text, color )
+	env.screen.canvas.write( canvas, text, {color = color} )
 	env.screen.pos.x = 1
 	env.screen.pos.y = env.screen.pos.y + (env.screen.font.height+1)
 	while env.screen.pos.y + env.screen.font.height > env.screen.height do
-		env.screen.move( 0, -env.screen.font.height-1 )
+		env.screen.canvas.move( canvas, 0, -env.screen.font.height-1 )
 	end
 end
 
-function env.screen.rect( x, y, w, h, color )
+function env.screen.canvas.rect( canvas, x, y, w, h, color )
 	x, y = x or env.screen.pos.x, y or env.screen.pos.y
 	w, h = (w or 0), (h or 0)
 	
@@ -458,66 +481,66 @@ function env.screen.rect( x, y, w, h, color )
 	if not rgb then error( "No such color", 2 ) end
 	
 	if rgb[4] == 1 then -- Not transparent, use simple faster method
-		computer.screen.canvas:renderTo(function()
+		canvas.canvas:renderTo(function()
 			love.graphics.setColor(rgb)
 			love.graphics.rectangle( "fill", x-0.5, y-0.5, w, h )
 		end)
 	elseif rgb[4] ~= 0 then -- Partially transparent, use slow method
 		-- Update the screen image
-		computer.screen.image = computer.screen.canvas:newImageData()
-		computer.screen.imageFrame = computer.currentFrame
+		canvas.image = canvas.canvas:newImageData()
+		canvas.imageFrame = computer.currentFrame
 		
 		-- Draw rectangle on image
 		for i = math.max( x, 1 ), math.min( x+w-1, env.screen.width ) do
 			for j = math.max( y, 1 ), math.min( y+h-1, env.screen.height ) do
-				local bg = { computer.screen.image:getPixel(i-0.5, j-0.5) }
+				local bg = { canvas.image:getPixel(i-0.5, j-0.5) }
 				local finalColor = {
 					rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
 					rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
 					rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
 				}
-				computer.screen.image:setPixel( i-0.5, j-0.5, unpack(finalColor) )
+				canvas.image:setPixel( i-0.5, j-0.5, unpack(finalColor) )
 			end
 		end
 		
 		-- Draw image on canvas
-		computer.screen.canvas:renderTo(function()
-			local image = love.graphics.newImage(computer.screen.image)
+		canvas.canvas:renderTo(function()
+			local image = love.graphics.newImage(canvas.image)
 			love.graphics.setColor( 1, 1, 1, 1 )
 			love.graphics.draw(image)
 		end)
 	end
 end
 
-function env.screen.clear(color)
+function env.screen.canvas.clear( canvas, color )
 	color = getColor(color) or getColor(env.screen.background)
 	color[4] = 1 -- No transparency
 	
-	computer.screen.canvas:renderTo(function()
+	canvas.canvas:renderTo(function()
 		love.graphics.setColor(color)
 		love.graphics.rectangle( "fill", 0, 0,
 			env.screen.width, env.screen.height+1 )
 	end)
 end
 
-function env.screen.move( x, y )
+function env.screen.canvas.move( canvas, x, y )
 	local newCanvas = love.graphics.newCanvas(
 		env.screen.width,
 		env.screen.height)
 		
 	newCanvas:renderTo(function()
 		love.graphics.setColor( 1, 1, 1, 1 )
-		love.graphics.draw( computer.screen.canvas, x, y )
+		love.graphics.draw( canvas.canvas, x, y )
 	end)
 	
-	computer.screen.canvas = newCanvas
-	computer.screen.canvas:setFilter( "linear", "nearest" )
+	canvas.canvas = newCanvas
+	canvas.canvas:setFilter( "linear", "nearest" )
 	env.screen.pos.x = env.screen.pos.x + x
 	env.screen.pos.y = env.screen.pos.y + y
 end
 
-function env.screen.cursor( x, y, color )
-	env.screen.char( "_", x, y, color )
+function env.screen.canvas.cursor( canvas, x, y, color )
+	env.screen.canvas.char( canvas, "_", x, y, color )
 end
 
 function env.screen.setPixelPos( x, y )
@@ -539,7 +562,7 @@ function env.screen.setCharPos( x, y )
 end
 
 function env.screen.getCharPos( x, y )
-	x, y = env.screen.x + (x or env.screen.pos.x), env.screen.y + (y or env.screen.pos.y)
+	x, y = x or env.screen.pos.x, y or env.screen.pos.y
 	return
 		math.floor( x / (env.screen.font.width+1) ) + 1,
 		math.floor( y / (env.screen.font.height+1) ) + 1
@@ -553,16 +576,16 @@ function env.screen.setBackground(color)
 	env.screen.background = color
 end
 
-function env.screen.getPixel( x, y )
+function env.screen.canvas.getPixel( canvas, x, y )
 	if x <= 0 or y <= 0 or x > env.screen.width or y > env.screen.height then
 		return env.screen.background
 	end
-	if not computer.screen.image or computer.screen.imageFrame < computer.currentFrame then
+	if not canvas.image or canvas.imageFrame < computer.currentFrame then
 		-- Update the screen image
-		computer.screen.image = computer.screen.canvas:newImageData()
-		computer.screen.imageFrame = computer.currentFrame
+		canvas.image = canvas.canvas:newImageData()
+		canvas.imageFrame = computer.currentFrame
 	end
-	local r, g, b = computer.screen.image:getPixel( x-1, y-1 )
+	local r, g, b = canvas.image:getPixel( x-1, y-1 )
 	
 	return env.colors.color( r, g, b )
 end
@@ -570,25 +593,35 @@ end
 function env.screen.setFont(path)
 	path = env.disk.absolute(path)
 	if not env.disk.exists(path) then
-		error( "No such file: "..env.disk.absolute(path) )
+		error( "No such file: "..env.disk.absolute(path), 2 )
 	end
 	
 	local file = env.disk.read(path)
 	if not file then
-		error("Could not read file")
+		error( "Could not read file", 2 )
 	end
 	
 	local font = loadstring( "return " .. file )()
 	if font then
 		env.screen.font = font
-		env.screen.charWidth = env.screen.width / (font.width+1)
-		env.screen.charHeight = env.screen.height / (font.height+1)
+		env.screen.charWidth = math.floor( env.screen.width / (font.width+1) )
+		env.screen.charHeight = math.floor( env.screen.height / (font.height+1) )
 		return true
 	else
 		return false
 	end
 end
 
+function env.screen.newCanvas( w, h )
+	w, h = w or 0, h or 0
+	local c = {
+		w = w,
+		h = h,
+		canvas = love.graphics.newCanvas( w, h )
+	}
+	c.canvas:setFilter( "linear", "nearest" )
+	return setmetatable( c, {__index = env.screen.canvas} )
+end
 
 
 
@@ -842,7 +875,7 @@ function env.os.run( path, ... )
 		return
 	end
 	
-	setfenv( fn, computer.env )
+	setfenv( fn, getfenv(2) )
 	
 	local success, err = pcall( fn, ... )
 	if not success then
@@ -893,16 +926,16 @@ end
 
 setmetatable( env.mouse, {__index = function(t,k)
 	if k == "x" then
-		return computer.mouse.x - env.screen.x
+		return computer.mouse.x
 	elseif k == "y" then
-		return computer.mouse.y - env.screen.y
+		return computer.mouse.y
 	elseif k == "pos" then
-		return computer.mouse.x - env.screen.x, computer.mouse.y - env.screen.y
+		return computer.mouse.x, computer.mouse.y
 	elseif k == "drag" then
 		if computer.mouse.drag then
 			return {
-				x = computer.mouse.drag.x - env.screen.x,
-				y = computer.mouse.drag.y - env.screen.y
+				x = computer.mouse.drag.x,
+				y = computer.mouse.drag.y
 			}
 		end
 	end
