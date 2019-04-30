@@ -199,8 +199,6 @@ function modules.window:new( parent, d )
 end
 
 function modules.window:init(d)
-	self.window = screen.newWindow( self.calc.x, self.calc.y, self.w, self.h )
-	
 	self:addChild( "titleBar", {
 		w = d.w,
 		h = d.title and d.title.h,
@@ -278,9 +276,64 @@ function modules.program:new( parent, d )
 		h = d.h or parent.h,
 		
 		path = d.path,
-		window = screen.newWindow( parent.x + (d.x or 0), parent.y + (d.y or 0),
-			d.w or parent.w, d.h or parent.h )
+		
+		prev = {
+			pos = {1,1},
+			color = "white",
+			background = "black"
+		}
 	}, {__index = self} )
+end
+
+function modules.program:createScreenSandbox()
+	local env = setmetatable( {}, {
+		__index = function( t, k )
+			-- if k == "read" then
+				-- return function(...)
+				-- 	return read( self.canvas, ... )
+				-- end
+			if k == "print" then
+				return function(...)
+					return self.canvas:print(...)
+				end
+			else
+				return _G[k]
+			end
+		end
+	} )
+	
+	env.screen = setmetatable( {}, {
+		__index = function( t, k )
+			if screen.canvas[k] then
+				return function(...)
+					return self.canvas[k]( self.canvas, ... )
+				end
+			else
+				return screen[k]
+			end
+		end
+	} )
+	
+	env.shell = setmetatable( {}, {
+		__index = function( t, k )
+			if k == "error" then
+				return function( msg, level )
+					self.canvas:print( msg, "red+1" )
+				end
+			else
+				return shell[k]
+			end
+		end
+	} )
+	
+	-- Copy read function to new env
+	env.read = loadstring(string.dump(read))
+	debug.setupvalue( env.read, 1, env )
+	setfenv( env.read, env )
+	
+	env._G = env
+	
+	return env
 end
 
 function modules.program:init()
@@ -290,12 +343,12 @@ function modules.program:init()
 	local chunk = load(file)
 	if not chunk then error("Error loading program") end
 	
-	self.co = coroutine.create(chunk)
+	self.canvas = screen.newCanvas( self.w, self.h )
+	self.canvas:clear("black")
+	self.env = self:createScreenSandbox()
+	setfenv( chunk, self.env )
 	
-	local prevWindow = getmetatable(screen.window).__index
-	screen.setWindow(self.window)
-	screen.clear("black")
-	screen.setWindow(prevWindow)
+	self.co = coroutine.create(chunk)
 	
 	self:resume()
 end
@@ -303,9 +356,6 @@ end
 function modules.program:update()
 	self.calc.x = self.parent.calc.x + self.x
 	self.calc.y = self.parent.calc.y + self.y
-	
-	self.window.x = self.calc.x
-	self.window.y = self.calc.y
 end
 
 function modules.program:event( event, ... )
@@ -319,7 +369,7 @@ function modules.program:event( event, ... )
 end
 
 function modules.program:draw()
-	screen.drawWindow(self.window)
+	self.canvas:draw( self.calc.x, self.calc.y )
 end
 
 -- One step through coroutine
@@ -328,15 +378,18 @@ function modules.program:resume( e, ... )
 	
 	if not self.eventFilter or e == self.eventFilter then
 		self.eventFilter = nil
-		local prevWindow = getmetatable(screen.window).__index
-		screen.setWindow(self.window)
+		screen.setPixelPos( self.prev.pos[1], self.prev.pos[2] )
+		screen.setColor(self.prev.color)
+		screen.setBackground(self.prev.background)
 		local ok, result = coroutine.resume( self.co, e, ... )
-		screen.setWindow(prevWindow)
 		if ok then
 			self.eventFilter = result
 		else
 			error( "Error in program: "..(result or "nil") )
 		end
+		self.prev.pos = {screen.getPixelPos()}
+		self.prev.color = screen.color
+		self.prev.background = screen.background
 	end
 end
 
