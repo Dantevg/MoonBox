@@ -9,6 +9,8 @@
 local carbon = require "carbon"
 local ovos = {}
 
+local windowPos = 10
+
 ovos.GUI = carbon()
 ovos.UI = {
 	desktop = {},
@@ -21,23 +23,26 @@ ovos.running = true
 -- Functions
 function ovos.main()
 	ovos.GUI:draw()
+	ovos.GUI:event( event.wait() )
 end
 
 function ovos.addWindow()
 	table.insert( ovos.UI.windows, ovos.GUI:addChild("window", {
-		x = 10,
-		y = 10,
-		w = screen.width - 20,
-		h = screen.height - 20,
+		x = windowPos,
+		y = windowPos,
+		w = 250,
+		h = 150,
 		title = {
 			bg = "blue",
 			color = "white"
 		}
 	}) )
 	
+	windowPos = windowPos+20
+	
 	local w = ovos.UI.windows[#ovos.UI.windows]
 	
-	ovos.UI.program = w:addChild( "program", {
+	w:addChild( "program", {
 		path = "/rom/shell.lua",
 		y = screen.font.height + 2,
 		h = w.h - screen.font.height - 2
@@ -75,6 +80,7 @@ ovos.UI.taskbar:addChild( "text", {
 ovos.UI.taskbar:find("menu").mouse = function( self, x, y )
 	if self:pointInside( x, y ) then
 		self.bg = "red-1"
+		ovos.addWindow()
 	end
 end
 ovos.UI.taskbar:find("menu").mouseUp = function( self, x, y )
@@ -92,5 +98,4 @@ end
 
 while ovos.running do
 	ovos.main()
-	ovos.GUI:event( event.wait() )
 end
