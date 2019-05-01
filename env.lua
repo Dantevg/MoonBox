@@ -957,7 +957,6 @@ env.shell.extensions = {
 }
 
 env.shell.dir = "/disk1"
-env.shell.history = {"edit /rom/boot.lua", "ovos/main.lua"} -- TODO: remove
 
 -- Type: "f", "d", "fd", "df" (file/dir, in specified order)
 function env.shell.find( path, type )

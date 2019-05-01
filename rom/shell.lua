@@ -1,3 +1,5 @@
+local history = {"ovos/main.lua"} -- TODO: empty
+
 print(os.version)
 
 while true do
@@ -6,10 +8,10 @@ while true do
 	screen.write( string.sub(shell.dir, 2), {color = "yellow+1"} )
 	screen.write( "> " )
 	
-	-- Get input and save shell.history
-	local input = read(shell.history)
-	if input ~= "" and input ~= shell.history[#shell.history] then
-		table.insert( shell.history, input )
+	-- Get input and save history
+	local input = read(history)
+	if input ~= "" and input ~= history[#history] then
+		table.insert( history, input )
 	end
 	print()
 	
