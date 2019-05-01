@@ -11,7 +11,7 @@
 
 local carbon = {}
 carbon.modules = {}
-carbon.version = "0.4"
+carbon.version = "0.4.2"
 
 
 
@@ -113,8 +113,8 @@ function carbon:event( event, ... )
 		self[event]( self, ... )
 	end
 	if self.objects then
-		for _, object in ipairs(self.objects) do
-			object:event( event, ... )
+		for i = #self.objects, 1, -1 do
+			self.objects[i]:event( event, ... )
 		end
 	end
 end
