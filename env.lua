@@ -393,10 +393,9 @@ function env.screen.canvas.char( canvas, char, x, y, color )
 			data = env.screen.font.data[63]
 		end
 		
-		for h = 1, env.screen.font.height do
-			local b = data[h]
-			for w = env.screen.font.width, 1, -1 do
-				if b % 2 == 1 then
+		for h, _ in pairs(data) do
+			for w, _ in pairs(data[h]) do
+				if data[h][w] == 1 then
 					if rgb[4] ~= 1 then -- Partially transparent
 						local bg = { canvas.image:getPixel( x+w-0.5, y+h-0.5 ) }
 						local finalColor = {
@@ -408,9 +407,8 @@ function env.screen.canvas.char( canvas, char, x, y, color )
 					else
 						love.graphics.setColor(rgb)
 					end
-					love.graphics.points( x + w - 0.5, y + h - 0.5 )
+					love.graphics.points( x + w - 0.5, y + env.screen.font.height - h - 0.5 )
 				end
-				b = bit.rshift( b, 1 )
 			end
 		end
 	end)
@@ -590,18 +588,78 @@ function env.screen.canvas.getPixel( canvas, x, y )
 	return env.colors.color( r, g, b )
 end
 
+function loadFont( path, data )
+	local font = {}
+	font.name = data.description.family
+	font.monospace = true -- Only monospace support for now
+	font.width = 0
+	font.height = 0
+	font.data = {}
+	
+	local image = love.image.newImageData( env.disk.absolute(path.."/"..data.file) )
+	if not image then error( "Could not load font resource: "..env.disk.absolute(data.file), 2 ) end
+	
+	-- Get font width
+	for i = 1, #data.chars do
+		font.width = math.max( font.width, data.chars[i].w ) -- Set font monospace width
+		font.height = math.max( font.height, data.chars[i].h ) -- Set font monospace width
+	end
+	
+	-- Get characters
+	for i = 1, #data.chars do
+		local charData = data.chars[i]
+		local char = {}
+		
+		-- Get pixels
+		for y = charData.oy - charData.h, charData.oy do
+			char[y+1] = {}
+			for x = charData.ox, charData.ox + charData.w do
+				local xPixel = charData.x + x
+				local yPixel = charData.y + charData.oy - y
+				if ({ image:getPixel(xPixel, yPixel) })[4] == 1 then
+					char[y+1][x+1] = 1
+				else
+					char[y+1][x+1] = 0
+				end
+			end
+		end
+		
+		-- Convert to binary format
+		-- local bin = {}
+		-- for y, _ in pairs(char) do
+		-- 	bin[y] = 0
+		-- 	for x, _ in pairs(char[y]) do
+		-- 		bin[y] = bit.bor(
+		-- 			bin[y],
+		-- 			(char[y] and char[y][x]) and bit.lshift( char[y][x], font.width-x ) or 0
+		-- 		)
+		-- 	end
+		-- end
+		
+		font.data[ string.byte(charData.char) ] = char
+	end
+	
+	return font
+end
+
 function env.screen.setFont(path)
 	path = env.disk.absolute(path)
 	if not env.disk.exists(path) then
-		error( "No such file: "..env.disk.absolute(path), 2 )
+		error( "No such file: "..path, 2 )
 	end
 	
 	local file = env.disk.read(path)
 	if not file then
-		error( "Could not read file", 2 )
+		error( "Could not read file: "..path, 2 )
 	end
 	
-	local font = loadstring( "return " .. file )()
+	local data = loadstring(file)
+	if not data then error( "Error loading file", 2 ) end
+	data = data()
+	
+	local font = loadFont( env.disk.getPath(path), data )
+	-- local font = loadstring( "return " .. file )() -- Old font file type
+	
 	if font then
 		env.screen.font = font
 		env.screen.charWidth = math.floor( env.screen.width / (font.width+1) )
