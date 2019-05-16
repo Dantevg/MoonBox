@@ -393,11 +393,11 @@ function env.screen.canvas.char( canvas, char, x, y, color )
 			data = env.screen.font.data[63]
 		end
 		
-		for h, _ in pairs(data) do
-			for w, _ in pairs(data[h]) do
+		for h in pairs(data) do
+			for w in pairs(data[h]) do
 				if data[h][w] == 1 then
 					if rgb[4] ~= 1 then -- Partially transparent
-						local bg = { canvas.image:getPixel( x+w-0.5, y+h-0.5 ) }
+						local bg = { canvas.image:getPixel( x+w-0.5, y+env.screen.font.height-h-0.5 ) }
 						local finalColor = {
 							rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
 							rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
@@ -417,7 +417,7 @@ end
 -- screen.write( text, options )
 -- screen.write( text, x, y )
 -- Options: x (number), y (number), color (string), background (string),
--- 	max (number), overflow: (string) ["wrap", "ellipsis"]
+-- 	max (number), overflow: (string) ["wrap", "ellipsis"], monospace (boolean)
 function env.screen.canvas.write( canvas, text, a, b )
 	text = text and tostring(text) or ""
 	local options = {}
@@ -449,7 +449,11 @@ function env.screen.canvas.write( canvas, text, a, b )
 	
 	for i = 1, #text do
 		env.screen.canvas.char( canvas, string.sub(text,i), x, y, options.color )
-		x = x + env.screen.font.width + 1
+		if options.monospace == false then
+			x = x + env.screen.font.charWidth[ string.sub(text,i,i) ] + 1
+		else
+			x = x + env.screen.font.width + 1
+		end
 		if x >= env.screen.width then -- Next line
 			x = options.x or env.screen.pos.x
 			y = y + env.screen.font.height + 1
@@ -594,6 +598,7 @@ function loadFont( path, data )
 	font.monospace = true -- Only monospace support for now
 	font.width = 0
 	font.height = 0
+	font.charWidth = {}
 	font.data = {}
 	
 	local image = love.image.newImageData( env.disk.absolute(path.."/"..data.file) )
@@ -603,6 +608,7 @@ function loadFont( path, data )
 	for i = 1, #data.chars do
 		font.width = math.max( font.width, data.chars[i].w ) -- Set font monospace width
 		font.height = math.max( font.height, data.chars[i].h ) -- Set font monospace width
+		font.charWidth[ data.chars[i].char ] = data.chars[i].width
 	end
 	
 	-- Get characters
