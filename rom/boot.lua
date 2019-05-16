@@ -1,5 +1,5 @@
 -- Boot
-screen.setFont("/rom/fonts/5x5-pxl-round.font")
+screen.setFont("/rom/fonts/5x5_pxl_round.lua")
 
 -- Startup program
 if disk.exists("/disk1/startup.lua") then
