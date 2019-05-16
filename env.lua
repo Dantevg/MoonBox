@@ -710,7 +710,7 @@ end
 
 function env.disk.getDrive(path)
 	local drive = env.disk.getParts( env.disk.absolute(path) )[1]
-	return drive ~= "" and drive or "/" -- Return drive or "/" for main
+	return env.disk.drives[drive] and drive or "/" -- Return drive or "/" for main
 end
 
 function env.disk.absolute(path)
@@ -832,6 +832,23 @@ env.disk.drives["/"] = setmetatable( {}, {__index = env.disk.defaults} )
 
 env.disk.drives["/"].list = function(path)
 	return env.disk.getDrives()
+end
+env.disk.drives["/"].info = function(path)
+	if env.disk.drives[path] then
+		return {
+			type = "drive",
+			size = 0,
+			modified = 0,
+		}
+	else
+		return false
+	end
+end
+env.disk.drives["/"].read = function(path)
+	error( "No such file", 2 )
+end
+env.disk.drives["/"].readLines = function(path)
+	error( "No such file", 2 )
 end
 
 env.disk.drives["disk1"] = setmetatable( {}, {__index = env.disk.defaults} )
