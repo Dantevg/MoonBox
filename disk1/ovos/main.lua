@@ -9,7 +9,7 @@
 local carbon = require "carbon"
 local ovos = {}
 
-local windowPos = 10
+local windowPos = 20
 
 ovos.GUI = carbon()
 ovos.UI = {
@@ -26,10 +26,21 @@ function ovos.main()
 	ovos.GUI:event( event.wait() )
 end
 
-function ovos.addWindow()
+function ovos.focus(window)
+	for k, w in ipairs(ovos.UI.windows) do
+		w.focus = false
+	end
+	
+	if window then
+		window.focus = true
+		-- window:toFront()
+	end
+end
+
+function ovos.addWindow( x, y, program )
 	table.insert( ovos.UI.windows, ovos.GUI:addChild("window", {
-		x = windowPos,
-		y = windowPos,
+		x = x or windowPos,
+		y = y or windowPos,
 		w = 250,
 		h = 150,
 		title = {
@@ -38,12 +49,16 @@ function ovos.addWindow()
 		}
 	}) )
 	
-	windowPos = windowPos+20
+	if not x then
+		windowPos = windowPos+20
+	end
 	
 	local w = ovos.UI.windows[#ovos.UI.windows]
 	
+	ovos.focus(w)
+	
 	w:addChild( "program", {
-		path = "/rom/shell.lua",
+		path = program or "/rom/shell.lua",
 		y = screen.font.height + 2,
 		h = w.h - screen.font.height - 2
 	} )

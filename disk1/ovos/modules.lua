@@ -195,6 +195,8 @@ function modules.window:new( parent, d )
 		w = d.w or 0,
 		h = d.h or 0,
 		color = d.color or "white",
+		
+		focus = true
 	}, {__index = self} )
 end
 
@@ -240,9 +242,21 @@ function modules.window:draw()
 	end
 end
 
+function modules.window:event( event, ... )
+	if type( self[event] ) == "function" then
+		self[event]( self, ... )
+	end
+	for i = #self.objects, 1, -1 do
+		if self.focus then
+			self.objects[i]:event( event, ... )
+		end
+	end
+end
+
 function modules.window:mouse( x, y )
 	if self:pointInside( x, y ) then
 		self:toFront()
+		self.focus = true
 	end
 end
 
