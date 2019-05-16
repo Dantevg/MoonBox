@@ -624,18 +624,6 @@ function loadFont( path, data )
 			end
 		end
 		
-		-- Convert to binary format
-		-- local bin = {}
-		-- for y, _ in pairs(char) do
-		-- 	bin[y] = 0
-		-- 	for x, _ in pairs(char[y]) do
-		-- 		bin[y] = bit.bor(
-		-- 			bin[y],
-		-- 			(char[y] and char[y][x]) and bit.lshift( char[y][x], font.width-x ) or 0
-		-- 		)
-		-- 	end
-		-- end
-		
 		font.data[ string.byte(charData.char) ] = char
 	end
 	
