@@ -38,6 +38,17 @@ function env.read(history)
 			..string.sub( history[selected], pos+1, -1 ), x, y )
 	end
 	
+	local function getWords()
+		local words = {}
+		local length = 1
+		for word, separator in string.gmatch( history[selected], "(%w+)(%W*)" ) do
+			table.insert( words, { type="word", data=word, s=length, e=length+#word-1 } )
+			table.insert( words, { type="separator", data=separator, s=length+#word, e=length+#word+#separator-1 } )
+			length = length + #word + #separator
+		end
+		return words
+	end
+	
 	while true do
 		draw()
 		length = #history[selected]
@@ -69,9 +80,29 @@ function env.read(history)
 				selected = math.min( selected+1, #history )
 				pos = #history[selected]+1
 			elseif key == "left" then
-				pos = math.max( 1, pos-1 )
+				if env.event.keyDown("ctrl") then
+					local words = getWords()
+					for i = 1, #words do
+						if pos > words[i].s and pos <= words[i].e+1 then
+							pos = (words[i].type == "word") and (words[i-1] and words[i-1].s) or words[i].s
+							break
+						end
+					end
+				else
+					pos = math.max( 1, pos-1 )
+				end
 			elseif key == "right" then
-				pos = math.min( pos+1, #history[selected]+1 )
+				if env.event.keyDown("ctrl") then
+					local words = getWords()
+					for i = 1, #words do
+						if pos >= words[i].s and pos <= words[i].e then
+							pos = (words[i].type == "separator") and words[i+1].e+1 or words[i].e+1
+							break
+						end
+					end
+				else
+					pos = math.min( pos+1, #history[selected]+1 )
+				end
 			elseif key == "home" then
 				pos = 1
 			elseif key == "end" then
