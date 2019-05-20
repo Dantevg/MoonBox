@@ -622,10 +622,12 @@ function loadFont( path, data )
 			for x = charData.ox, charData.ox + charData.w do
 				local xPixel = charData.x + x
 				local yPixel = charData.y + charData.oy - y
+				-- Center monospaced narrow characters like "." and "!"
+				local xChar, yChar = (font.monospace and x+1 + math.floor( (font.width-charData.w) / 2 ) or x+1), y+1
 				if ({ image:getPixel(xPixel, yPixel) })[4] == 1 then
-					char[y+1][x+1] = 1
+					char[yChar][xChar] = 1
 				else
-					char[y+1][x+1] = 0
+					char[yChar][xChar] = 0
 				end
 			end
 		end
