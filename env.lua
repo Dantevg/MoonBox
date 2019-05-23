@@ -70,9 +70,25 @@ function env.read(history)
 					return history[selected]
 				end
 			elseif key == "backspace" then
-				history[selected] = string.sub( history[selected], 1, math.max(0,pos-2) )
-					..string.sub( history[selected], pos, -1 )
-					pos = math.max( 1, pos-1 )
+				if env.event.keyDown("ctrl") then
+					local words = getWords()
+					for i = 1, #words do
+						if pos > words[i].s and pos <= words[i].e+1 then
+							local l = #words[i].data
+							words[i].data = string.sub( words[i].data, pos - words[i].s + 1 )
+							pos = math.max( 1, pos-(l-#words[i].data) )
+							break
+						end
+					end
+					history[selected] = ""
+					for i = 1, #words do
+						history[selected] = history[selected] .. words[i].data
+					end
+				else
+					history[selected] = string.sub( history[selected], 1, math.max(0,pos-2) )
+						..string.sub( history[selected], pos, -1 )
+						pos = math.max( 1, pos-1 )
+				end
 			elseif key == "up" then
 				selected = math.max( 1, selected-1 )
 				pos = #history[selected]+1
