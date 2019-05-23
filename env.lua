@@ -41,7 +41,7 @@ function env.read(history)
 	local function getWords()
 		local words = {}
 		local length = 1
-		for word, separator in string.gmatch( history[selected], "(%w+)(%W*)" ) do
+		for word, separator in string.gmatch( history[selected], "(%w*)(%W*)" ) do
 			table.insert( words, { type="word", data=word, s=length, e=length+#word-1 } )
 			table.insert( words, { type="separator", data=separator, s=length+#word, e=length+#word+#separator-1 } )
 			length = length + #word + #separator
@@ -88,6 +88,24 @@ function env.read(history)
 					history[selected] = string.sub( history[selected], 1, math.max(0,pos-2) )
 						..string.sub( history[selected], pos, -1 )
 						pos = math.max( 1, pos-1 )
+				end
+			elseif key == "delete" then
+				if env.event.keyDown("ctrl") then
+					local words = getWords()
+					for i = 1, #words do
+						if pos > words[i].s and pos <= words[i].e+1 then
+							local l = #words[i].data
+							words[i].data = string.sub( words[i].data, 1, pos - words[i].s )
+							break
+						end
+					end
+					history[selected] = ""
+					for i = 1, #words do
+						history[selected] = history[selected] .. words[i].data
+					end
+				else
+					history[selected] = string.sub( history[selected], 1, pos )
+						..string.sub( history[selected], pos+2, -1 )
 				end
 			elseif key == "up" then
 				selected = math.max( 1, selected-1 )
