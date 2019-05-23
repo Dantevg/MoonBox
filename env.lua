@@ -240,7 +240,7 @@ function env.colors.compose( name, brightness, opacity )
 	brightness = math.min( math.max( -3, brightness or 0 ), 3 )
 	opacity = math.min( math.max( 0, opacity or 1 ), 1 )
 	
-	local color = ""
+	local color
 	
 	if name == "black" or (name == "gray" and brightness == -3) then
 		color = "black"
@@ -395,6 +395,7 @@ function env.screen.canvas.pixel( canvas, x, y, color )
 	if not rgb then error( "No such color", 2 ) end
 	if rgb[4] ~= 1 then -- Partially transparent, blend with background
 		color = env.colors.blend( color, rgb[4], env.screen.canvas.getPixel( canvas, x, y ) )
+		rgb = getColor(color)
 	end
 	
 	canvas.canvas:renderTo(function()
@@ -863,7 +864,7 @@ env.disk.drives = {}
 
 env.disk.drives["/"] = setmetatable( {}, {__index = env.disk.defaults} )
 
-env.disk.drives["/"].list = function(path)
+env.disk.drives["/"].list = function()
 	return env.disk.getDrives()
 end
 env.disk.drives["/"].info = function(path)
@@ -1078,7 +1079,6 @@ env.shell.dir = "/disk1"
 -- Type: "f", "d", "fd", "df" (file/dir, in specified order)
 function env.shell.find( path, type )
 	if not path then error( "Expected path [,type]", 2 ) end
-	local name = env.disk.getFilename(path)
 	
 	local found = {}
 	table.insert( env.shell.path, env.shell.dir.."/" ) -- Add current dir to the list
