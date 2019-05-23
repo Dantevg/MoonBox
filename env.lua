@@ -844,11 +844,26 @@ env.disk.drives["/"].info = function(path)
 		return false
 	end
 end
-env.disk.drives["/"].read = function(path)
+env.disk.drives["/"].read = function()
 	error( "No such file", 2 )
 end
-env.disk.drives["/"].readLines = function(path)
+env.disk.drives["/"].readLines = function()
 	error( "No such file", 2 )
+end
+env.disk.drives["/"].write = function()
+	error( "Attempt to modify read-only location", 2 )
+end
+env.disk.drives["/"].append = function()
+	error( "Attempt to modify read-only location", 2 )
+end
+env.disk.drives["/"].mkdir = function()
+	error( "Attempt to modify read-only location", 2 )
+end
+env.disk.drives["/"].newFile = function()
+	error( "Attempt to modify read-only location", 2 )
+end
+env.disk.drives["/"].remove = function()
+	error( "Attempt to modify read-only location", 2 )
 end
 
 env.disk.drives["disk1"] = setmetatable( {}, {__index = env.disk.defaults} )
