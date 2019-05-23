@@ -481,7 +481,7 @@ function env.screen.canvas.write( canvas, text, a, b )
 	for i = 1, #text do
 		env.screen.canvas.char( canvas, string.sub(text,i), x, y, options.color )
 		if options.monospace == false then
-			x = x + env.screen.font.charWidth[ string.sub(text,i,i) ] + 1
+			x = x + env.screen.font.charWidth[ string.sub(text,i,i) ]
 		else
 			x = x + env.screen.font.width + 1
 		end
