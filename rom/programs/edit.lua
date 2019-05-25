@@ -99,6 +99,17 @@ function setIndent()
 	end
 end
 
+function getWords(line)
+	local words = {}
+	local length = 1
+	for word, separator in string.gmatch( file[line], "(%w*)(%W*)" ) do
+		table.insert( words, { type="word", data=word, s=length, e=length+#word-1 } )
+		table.insert( words, { type="separator", data=separator, s=length+#word, e=length+#word+#separator-1 } )
+		length = length + #word + #separator
+	end
+	return words
+end
+
 function drawLine( row, start )
 	local line = file[row+yScroll]
 	screen.setCharPos( 1, row )
@@ -181,16 +192,22 @@ function setCursor( newX, newY )
 end
 
 function keyPress(key)
-	if event.keyDown("ctrl") then
-		if key == "e" or key == "q" then
-			running = false
-			os.sleep()
-		elseif key == "s" then
-			save()
-			inMenu = false
-		end
-	else
-		if key == "backspace" then
+	if key == "backspace" then
+		if event.keyDown("ctrl") and x > 1 then
+			local words = getWords(y)
+			for i = 1, #words do
+				if x > words[i].s and x <= words[i].e+1 then
+					local l = #words[i].data
+					words[i].data = string.sub( words[i].data, x - words[i].s + 1 )
+					x = math.max( 1, x-(l-#words[i].data) )
+					break
+				end
+			end
+			file[y] = ""
+			for i = 1, #words do
+				file[y] = file[y] .. words[i].data
+			end
+		else
 			if x > 1 then
 				file[y] = string.sub( file[y], 1, x-2 )..string.sub( file[y], x )
 				setCursor( x-1, y )
@@ -199,50 +216,99 @@ function keyPress(key)
 				file[y] = file[y] .. string.sub( file[y+1], 1, -1 )
 				table.remove( file, y+1 )
 			end
-		elseif key == "enter" then
-			table.insert( file, y+1, "" )
-			setIndent()
-			file[y+1] = string.rep( "  ", indent ) .. string.sub( file[y], x, -1 )
-			file[y] = string.sub( file[y], 1, x-1 )
-			setCursor( indent*2+1, y+1 )
-		elseif key == "tab" then
-			file[y] = string.sub( file[y], 1, x ).."  "..string.sub( file[y], x+1, -1 )
-			x = x+2
-			setIndent()
-		elseif key == "up" then
-			if y > 1 then
-				setCursor( math.min( x, #file[y-1]+1 ), y-1 )
-			else
-				setCursor( 1, 1 )
+		end
+	elseif key == "delete" then
+		if event.keyDown("ctrl") and x < #file[y] then
+			local words = getWords(y)
+			for i = 1, #words do
+				if x > words[i].s and x <= words[i].e+1 then
+					words[i].data = string.sub( words[i].data, 1, x - words[i].s )
+					break
+				end
 			end
-		elseif key == "right" then
+			file[y] = ""
+			for i = 1, #words do
+				file[y] = file[y] .. words[i].data
+			end
+		else
+			if x <= #file[y] then
+				file[y] = string.sub( file[y], 1, x-1 )..string.sub( file[y], x+1 )
+			elseif y < #file then
+				file[y] = file[y] .. file[y+1]
+				table.remove( file, y+1 )
+			end
+		end
+	elseif key == "enter" then
+		table.insert( file, y+1, "" )
+		setIndent()
+		file[y+1] = string.rep( "  ", indent ) .. string.sub( file[y], x, -1 )
+		file[y] = string.sub( file[y], 1, x-1 )
+		setCursor( indent*2+1, y+1 )
+	elseif key == "tab" then
+		file[y] = string.sub( file[y], 1, x ).."  "..string.sub( file[y], x+1, -1 )
+		x = x+2
+		setIndent()
+	elseif key == "up" then
+		if y > 1 then
+			setCursor( math.min( x, #file[y-1]+1 ), y-1 )
+		else
+			setCursor( 1, 1 )
+		end
+	elseif key == "right" then
+		if event.keyDown("ctrl") and x < #file[y] then
+			local words = getWords(y)
+			for i = 1, #words do
+				if x >= words[i].s and x <= words[i].e then
+					setCursor( (words[i].type == "separator") and words[i+1].e+1 or words[i].e+1, y )
+					break
+				end
+			end
+		else
 			if x < #file[y]+1 then
 				setCursor( x+1, y )
 			elseif y < #file then
 				setCursor( 1, y+1 )
 			end
-		elseif key == "down" then
-			if y < #file then
-				setCursor( math.min( x, #file[y+1]+1 ), y+1 )
-			else
-				setCursor( #file[y]+1, y )
+		end
+	elseif key == "down" then
+		if y < #file then
+			setCursor( math.min( x, #file[y+1]+1 ), y+1 )
+		else
+			setCursor( #file[y]+1, y )
+		end
+	elseif key == "left" then
+		if event.keyDown("ctrl") and x > 1 then
+			local words = getWords(y)
+			for i = 1, #words do
+				if x > words[i].s and x <= words[i].e+1 then
+					setCursor( (words[i].type == "word") and (words[i-1] and words[i-1].s) or words[i].s, y )
+					break
+				end
 			end
-		elseif key == "left" then
+		else
 			if x > 1 then
 				setCursor( x-1, y )
 			elseif y > 1 then
 				setCursor( #file[y-1]+1, y-1 )
 			end
-		elseif key == "pageup" then
-			yScroll = math.max( yScroll - screen.charHeight, 0 )
-			setCursor( x, math.max(y-screen.charHeight, 1) )
-		elseif key == "pagedown" then
-			yScroll = math.min( yScroll + screen.charHeight, #file - screen.charHeight )
-			setCursor( x, math.min(y+screen.charHeight, #file) )
-		elseif key == "end" then
-			setCursor( #file[y]+1, y )
-		elseif key == "home" then
-			setCursor( 1, y )
+		end
+	elseif key == "pageup" then
+		yScroll = math.max( yScroll - screen.charHeight, 0 )
+		setCursor( x, math.max(y-screen.charHeight, 1) )
+	elseif key == "pagedown" then
+		yScroll = math.min( yScroll + screen.charHeight, #file - screen.charHeight )
+		setCursor( x, math.min(y+screen.charHeight, #file) )
+	elseif key == "end" then
+		setCursor( #file[y]+1, y )
+	elseif key == "home" then
+		setCursor( 1, y )
+	elseif event.keyDown("ctrl") then
+		if key == "e" or key == "q" then
+			running = false
+			os.sleep()
+		elseif key == "s" then
+			save()
+			inMenu = false
 		end
 	end
 end
