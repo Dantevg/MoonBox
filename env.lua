@@ -94,7 +94,6 @@ function env.read(history)
 					local words = getWords()
 					for i = 1, #words do
 						if pos > words[i].s and pos <= words[i].e+1 then
-							local l = #words[i].data
 							words[i].data = string.sub( words[i].data, 1, pos - words[i].s )
 							break
 						end
@@ -104,8 +103,8 @@ function env.read(history)
 						history[selected] = history[selected] .. words[i].data
 					end
 				else
-					history[selected] = string.sub( history[selected], 1, pos )
-						..string.sub( history[selected], pos+2, -1 )
+					history[selected] = string.sub( history[selected], 1, pos-1 )
+						..string.sub( history[selected], pos+1, -1 )
 				end
 			elseif key == "up" then
 				selected = math.max( 1, selected-1 )
