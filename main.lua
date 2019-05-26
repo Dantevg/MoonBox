@@ -37,17 +37,17 @@ function computer.start()
 	computer.terminate = false
 	
 	computer.screen = {}
-	computer.screen.w = math.floor( love.graphics.getWidth() / settings.scale )
-	computer.screen.h = math.floor( love.graphics.getHeight() / settings.scale )
+	computer.screen.w = math.floor( love.graphics.getWidth() / settings.scale - 2*settings.border )
+	computer.screen.h = math.floor( love.graphics.getHeight() / settings.scale - 2*settings.border )
 	computer.screen.scale = settings.scale
 	computer.screen.canvas = love.graphics.newCanvas( computer.screen.w, computer.screen.h )
 	computer.screen.canvas:setFilter( "linear", "nearest" )
 	
 	-- Load standard env
-	local env = {
+	local vars = {
 		"coroutine", "assert", "tostring", "tonumber", "rawget", "xpcall", "pcall", "bit", "getfenv", "rawset", "setmetatable", "package", "getmetatable", "type", "ipairs", "_VERSION", "debug", "table", "collectgarbage", "module", "next", "math", "setfenv", "select", "string", "unpack", "require", "rawequal", "pairs", "error"
 	}
-	for _, v in ipairs(env) do
+	for _, v in ipairs(vars) do
 		computer.env[v] = _G[v]
 	end
 	
@@ -87,8 +87,8 @@ end
 function setWindow(s)
 	s = s or {}
 	love.window.setMode(
-		s.w and s.w * settings.scale or settings.width * settings.scale,
-		s.h and s.h * settings.scale or settings.height * settings.scale,
+		s.w and (s.w+2*settings.border) * settings.scale or (settings.width+2*settings.border) * settings.scale,
+		s.h and (s.h+2*settings.border) * settings.scale or (settings.height+2*settings.border) * settings.scale,
 		{
 			fullscreen = s.fullscreen or settings.fullscreen,
 			x = s.x,
@@ -118,7 +118,7 @@ function love.update(dt)
 	computer.currentFrame = computer.currentFrame + 1
 	computer.clock = computer.clock + dt
 	
-	-- Ctrl-r detection
+	-- Ctrl-r detection (reboot)
 	if love.keyboard.isDown("lctrl") and love.keyboard.isDown("r") then
 		if not computer.reboot then
 			computer.reboot = love.timer.getTime()
@@ -130,7 +130,7 @@ function love.update(dt)
 		computer.reboot = false
 	end
 	
-	-- Ctrl-t detection
+	-- Ctrl-t detection (terminate)
 	if love.keyboard.isDown("lctrl") and love.keyboard.isDown("t") then
 		if not computer.terminate then
 			computer.terminate = love.timer.getTime()
@@ -176,7 +176,7 @@ function love.draw()
 	else
 		love.graphics.setColor( 1,1,1,1 )
 		love.graphics.setBlendMode( "alpha", "premultiplied" )
-		love.graphics.draw( computer.screen.canvas, 0, 0, 0, computer.screen.scale )
+		love.graphics.draw( computer.screen.canvas, settings.border*computer.screen.scale, settings.border*computer.screen.scale, 0, computer.screen.scale )
 		love.graphics.setBlendMode( "alpha" ) -- Reset blendMode
 	end
 end
@@ -316,8 +316,8 @@ function love.mousemoved( x, y )
 end
 
 function love.resize( w, h )
-	computer.screen.w = math.floor( w / settings.scale )
-	computer.screen.h = math.floor( h / settings.scale )
+	computer.screen.w = math.floor( w / settings.scale ) - 2*settings.border
+	computer.screen.h = math.floor( h / settings.scale ) - 2*settings.border
 	
 	computer.env.screen.width = computer.screen.w
 	computer.env.screen.height = computer.screen.h
