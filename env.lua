@@ -1,4 +1,5 @@
 local env = {}
+local computer = ...
 
 -- GLOBAL FUNCTIONS
 
