@@ -25,6 +25,7 @@ while true do
 	
 	-- Run file
 	if path then
+		if path == "exit" then break end
 		local file = shell.find( path, "f" ) -- Only check for files
 		if file then
 			os.run( file, unpack(args) )
