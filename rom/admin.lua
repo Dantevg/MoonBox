@@ -4,18 +4,26 @@ screen.setFont("/rom/fonts/5x5_pxl_round.lua")
 -- Menu
 local menu = {
 	main = {
+		{name = "Lua Sandbox menu", type = "text"},
+		{name = "Press both [ctrl]s to switch", type = "text"},
+		{name = "", type = "text"},
 		{name = "Settings", type = "menu", data = "settings"},
 		{name = "Lua", type = "fn", data = "lua"},
 		{name = "Shell", type = "fn", data = "shell"},
 		selected = 1,
 	},
 	settings = {
+		{name = "Lua Sandbox menu", type = "text"},
+		{name = "Press both [ctrl]s to switch", type = "text"},
+		{name = "", type = "text"},
 		{name = "Back", type = "menu", data = "main"},
+		{name = "------", type = "text"},
 		{name = "Width", type = "input.number", source = "width", data = settings.width},
 		{name = "Height", type = "input.number", source = "height", data = settings.height},
 		{name = "Scale", type = "input.number", source = "scale", data = settings.scale},
 		{name = "Fullscreen", type = "input.boolean", source = "fullscreen", data = settings.fullscreen},
 		{name = "Border width", type = "input.number", source = "border", data = settings.border},
+		{name = "------", type = "text"},
 		{name = "Save", type = "fn", data = "saveSettings"},
 		selected = 1
 	},
@@ -58,19 +66,23 @@ end
 function draw()
 	screen.clear()
 	screen.setPixelPos( 1, 1 )
-	max = 16
+	max = 0
 	for i = 1, #currentMenu do
-		max = math.max( max, #currentMenu[i].name+2 )
+		if currentMenu[i].type == "text" then
+			max = math.max( max, #currentMenu[i].name )
+		else
+			max = math.max( max, #currentMenu[i].name+2 )
+		end
 	end
 	local x = math.floor( (screen.charWidth-max)/2 )+1
-	local y = math.floor( (screen.charHeight-#currentMenu)/2 ) + 1
+	local y = math.floor( (screen.charHeight-#currentMenu)/2 )
 	
-	screen.setCharPos( x, y-2 )
-	screen.write( "Lua sandbox menu" )
 	for i = 1, #currentMenu do
 		screen.setCharPos( x, y )
 		if i == currentMenu.selected then
 			screen.write( "> "..currentMenu[i].name )
+		elseif currentMenu[i].type == "text" then
+			screen.write( currentMenu[i].name )
 		else
 			screen.write( "  "..currentMenu[i].name )
 		end
@@ -84,13 +96,22 @@ end
 
 -- Run
 while true do
+	while currentMenu[currentMenu.selected].type == "text" do
+		currentMenu.selected = (currentMenu.selected) % #currentMenu + 1
+	end
+	
 	draw()
 	local event, key = event.wait()
+	
 	if event == "key" then
 		if key == "up" then
-			currentMenu.selected = (currentMenu.selected-2) % #currentMenu + 1
+			repeat
+				currentMenu.selected = (currentMenu.selected-2) % #currentMenu + 1
+			until currentMenu[currentMenu.selected].type ~= "text"
 		elseif key == "down" then
-			currentMenu.selected = (currentMenu.selected) % #currentMenu + 1
+			repeat
+				currentMenu.selected = (currentMenu.selected) % #currentMenu + 1
+			until currentMenu[currentMenu.selected].type ~= "text"
 		elseif key == "enter" then
 			local selected = currentMenu[currentMenu.selected]
 			if selected.type == "fn" then
