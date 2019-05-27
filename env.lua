@@ -514,13 +514,15 @@ function env.screen.canvas.write( canvas, text, a, b )
 	end
 	
 	for i = 1, #text do
-		env.screen.canvas.char( canvas, string.sub(text,i), x, y, options.color )
+		if string.sub(text,i,i) ~= "\n" then
+			env.screen.canvas.char( canvas, string.sub(text,i,i), x, y, options.color )
+		end
 		if options.monospace == false then
 			x = x + env.screen.font.charWidth[ string.sub(text,i,i) ]
 		else
 			x = x + env.screen.font.width + 1
 		end
-		if x >= env.screen.width then -- Next line
+		if x >= env.screen.width or string.sub(text,i,i) == "\n" then -- Next line
 			x = options.x or env.screen.pos.x
 			y = y + env.screen.font.height + 1
 			while env.screen.pos.y + env.screen.font.height > env.screen.height do
@@ -1175,6 +1177,41 @@ function env.net.request(url)
 		body = table.concat(response),
 		code = code
 	}
+end
+
+
+
+
+
+-- EXTENSIONS OF STANDARD LUA APIs
+
+env.table = setmetatable( {}, {__index = table} )
+
+function env.table.serialize( t, level )
+	level = level or 1
+	local s = "{\n"
+	if type(t) ~= "table" then error( "Expected table", 2 ) end
+	for k, v in pairs(t) do
+		local serializable = (type(k) == "string" or type(k) == "number" or type(k) == "boolean")
+			and (type(v) == "string" or type(v) == "number" or type(v) == "boolean" or type(v) == "table")
+		
+		if type(k) == "string" and not string.find(k, "(%s)") and serializable then
+			s = s .. string.rep("  ", level)..k.." = "
+		elseif type(k) == "string" and serializable then
+			s = s .. string.rep("  ", level).."["..string.format("%q",k).."] = "
+		elseif serializable then
+			s = s .. string.rep("  ", level).."["..tostring(k).."] = "
+		end
+		
+		if type(v) == "string" and serializable then
+			s = s .. string.format("%q",v)..",\n"
+		elseif type(v) == "table" and serializable then
+			s = s .. env.table.serialize( v, level and level+1 )..",\n"
+		elseif serializable then
+			s = s .. tostring(v)..",\n"
+		end
+	end
+	return s..string.rep("  ", level-1).."}"
 end
 
 
