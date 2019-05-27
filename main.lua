@@ -119,7 +119,8 @@ function love.load()
 	
 	setWindow()
 	
-	if not love.filesystem.getInfo("disk1") or love.filesystem.getInfo("disk1").type ~= "folder" then
+	if not love.filesystem.getInfo("disk1") or love.filesystem.getInfo("disk1").type ~= "directory" then
+		firstBoot = true
 		love.filesystem.createDirectory("disk1")
 	end
 	
@@ -129,7 +130,7 @@ function love.load()
 	computer:start()
 	menu = sandbox.new()
 	menu:start( _G, "/rom/admin.lua" )
-	active = computer
+	active = (firstBoot and menu or computer)
 end
 
 function love.update(dt)
