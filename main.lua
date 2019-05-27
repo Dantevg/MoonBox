@@ -53,7 +53,7 @@ function sandbox.new()
 	return setmetatable( computer, {__index = sandbox} )
 end
 
-function sandbox:start(env)
+function sandbox:start( env, bootPath )
 	if env then
 		self.env = setmetatable( {}, {__index = env} )
 	else
@@ -76,7 +76,7 @@ function sandbox:start(env)
 	self.env._G = self.env
 	
 	-- Load boot program
-	local fn, err = love.filesystem.load("rom/boot.lua")
+	local fn, err = love.filesystem.load( bootPath or "/rom/boot.lua" )
 	if err then error(err) end
 	
 	-- Start boot program
@@ -128,7 +128,7 @@ function love.load()
 	computer = sandbox.new()
 	computer:start()
 	menu = sandbox.new()
-	menu:start(_G)
+	menu:start( _G, "/rom/admin.lua" )
 	active = computer
 end
 
@@ -197,22 +197,24 @@ function love.draw()
 		love.graphics.printf( active.error, 50, math.floor( h/2-75 ), w-100, "center" )
 	else
 		local border = settings.border*settings.scale
-		love.graphics.setColor( 1,1,1,1 )
-		love.graphics.setBlendMode( "alpha", "premultiplied" )
-		love.graphics.draw( computer.screen.canvas, border, border, 0, settings.scale )
-		love.graphics.setBlendMode( "alpha" ) -- Reset blendMode
 		if active == menu then
+			-- Draw menu
+			love.graphics.setColor( 1,1,1,1 )
+			love.graphics.draw( menu.screen.canvas, border, border, 0, settings.scale )
+			-- Draw computer
+			love.graphics.setColor( 1,1,1,0.2 )
+			love.graphics.draw( computer.screen.canvas, border, border, 0, settings.scale )
+			-- Draw borders
+			love.graphics.setColor( 1,1,1,1 )
 			local w, h = love.graphics.getDimensions()
 			love.graphics.rectangle( "fill", 0, 0, w, border )
 			love.graphics.rectangle( "fill", w-border, 0, border, h )
 			love.graphics.rectangle( "fill", 0, h-border, w, border )
 			love.graphics.rectangle( "fill", 0, 0, border, h )
-			love.graphics.setColor( 0,0,0,0.8 )
-			love.graphics.rectangle( "fill", border, border, w-2*border, h-2*border )
+		else
+			-- Draw computer
 			love.graphics.setColor( 1,1,1,1 )
-			love.graphics.setBlendMode( "alpha", "premultiplied" )
-			love.graphics.draw( menu.screen.canvas, border, border, 0, settings.scale )
-			love.graphics.setBlendMode( "alpha" ) -- Reset blendMode
+			love.graphics.draw( computer.screen.canvas, border, border, 0, settings.scale )
 		end
 	end
 end
