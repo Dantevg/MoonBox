@@ -115,6 +115,7 @@ function setWindow(s)
 end
 
 function love.load()
+	package.loaded.settings = nil -- Reset if already loaded
 	settings = require "settings" -- Load settings file
 	
 	setWindow()
