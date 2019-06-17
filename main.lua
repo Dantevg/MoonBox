@@ -199,24 +199,16 @@ function love.draw()
 		love.graphics.printf( active.error, 50, math.floor( h/2-75 ), w-100, "center" )
 	else
 		local border = settings.border*settings.scale
+		love.graphics.setColor( 1,1,1,1 )
+		love.graphics.draw( computer.screen.canvas, border, border, 0, settings.scale )
 		if active == menu then
-			-- Draw menu
-			love.graphics.setColor( 1,1,1,1 )
 			love.graphics.draw( menu.screen.canvas, border, border, 0, settings.scale )
-			-- Draw computer
-			love.graphics.setColor( 1,1,1,0.2 )
-			love.graphics.draw( computer.screen.canvas, border, border, 0, settings.scale )
 			-- Draw borders
-			love.graphics.setColor( 1,1,1,1 )
 			local w, h = love.graphics.getDimensions()
 			love.graphics.rectangle( "fill", 0, 0, w, border )
 			love.graphics.rectangle( "fill", w-border, 0, border, h )
 			love.graphics.rectangle( "fill", 0, h-border, w, border )
 			love.graphics.rectangle( "fill", 0, 0, border, h )
-		else
-			-- Draw computer
-			love.graphics.setColor( 1,1,1,1 )
-			love.graphics.draw( computer.screen.canvas, border, border, 0, settings.scale )
 		end
 	end
 end
