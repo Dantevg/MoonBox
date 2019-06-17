@@ -35,14 +35,12 @@ local max = 16
 local fn = {}
 
 function fn.lua()
-	screen.clear()
-	screen.setPixelPos( 1, 1 )
+	clearScreen()
 	os.run("/rom/programs/lua.lua")
 end
 
 function fn.shell()
-	screen.clear()
-	screen.setPixelPos( 1, 1 )
+	clearScreen()
 	os.run("/rom/shell.lua")
 end
 
@@ -69,9 +67,17 @@ function fn.saveSettings()
 end
 
 -- Program functions
-function draw()
+function clearScreen()
+	screen.background = "black"
+	screen.color = "white"
 	screen.clear()
 	screen.setPixelPos( 1, 1 )
+end
+
+function draw()
+	screen.background = "white"
+	screen.color = "gray-1"
+	screen.clear()
 	max = 0
 	for i = 1, #currentMenu do
 		if currentMenu[i].type == "text" then
@@ -94,7 +100,7 @@ function draw()
 		end
 		if string.find( currentMenu[i].type, "input", 1, true ) then
 			screen.setCharPos( x + max + 1, y )
-			screen.write( tostring(currentMenu[i].data), {color="blue+1"} )
+			screen.write( tostring(currentMenu[i].data), {color="blue"} )
 		end
 		y = y+1
 	end
