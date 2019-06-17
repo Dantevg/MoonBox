@@ -48,15 +48,21 @@ end
 
 function fn.saveSettings()
 	-- Apply
+	local s = {}
+	
+	for k, v in pairs(settings) do
+		s[k] = v
+	end
+	
 	for i = 1, #menu.settings do
 		if menu.settings[i].source then
 			local setting = menu.settings[i]
-			settings[setting.source] = setting.data
+			s[setting.source] = setting.data
 		end
 	end
 	
 	-- Save
-	love.filesystem.write( "/settings.lua", "return "..table.serialize(settings) )
+	love.filesystem.write( "/settings.lua", "return "..table.serialize(s) )
 	
 	-- To main menu
 	currentMenu = menu.main
@@ -126,7 +132,7 @@ while true do
 				if selected.type == "input.boolean" then
 					selected.data = not selected.data
 				else
-					screen.setCharPos( math.floor( (screen.charWidth-max)/2 )+max+2, math.floor( (screen.charHeight-#currentMenu)/2 ) + currentMenu.selected )
+					screen.setCharPos( math.floor( (screen.charWidth-max)/2 )+max+2, math.floor( (screen.charHeight-#currentMenu)/2 ) + currentMenu.selected - 1 )
 					selected.data = read()
 					if selected.type == "input.number" then
 						selected.data = tonumber(selected.data)
