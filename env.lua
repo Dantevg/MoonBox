@@ -584,12 +584,9 @@ end
 
 function env.screen.canvas.clear( canvas, color )
 	color = getColor(color) or getColor(env.screen.background)
-	-- color[4] = 1 -- No transparency
+	color[4] = 1 -- No transparency
 	
 	canvas.canvas:renderTo(function()
-		-- love.graphics.setColor(color)
-		-- love.graphics.rectangle( "fill", 0, 0,
-		-- 	env.screen.width, env.screen.height+1 )
 		love.graphics.clear(color)
 	end)
 end
