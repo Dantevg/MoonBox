@@ -213,7 +213,7 @@ function keyPress(key)
 				setCursor( x-1, y )
 			elseif y > 1 then
 				setCursor( #file[y-1]+1, y-1 )
-				file[y] = file[y] .. string.sub( file[y+1], 1, -1 )
+				file[y] = file[y] .. file[y+1]
 				table.remove( file, y+1 )
 			end
 		end
@@ -308,7 +308,6 @@ function keyPress(key)
 			os.sleep()
 		elseif key == "s" then
 			save()
-			inMenu = false
 		end
 	end
 end
@@ -319,7 +318,7 @@ while running do
 	local event, param = event.wait()
 	if event == "key" then
 		keyPress(param)
-	elseif event == "char" and not inMenu then
+	elseif event == "char" then
 		file[y] = string.sub( file[y], 1, x-1 )..param..string.sub( file[y], x )
 		setCursor( x+1, y )
 	elseif event == "timer" and param == timer then
