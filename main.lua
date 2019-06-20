@@ -182,7 +182,7 @@ function love.update(dt)
 			return
 		end
 		
-		if active.eventFilter == nil or active.eventFilter == active.eventBuffer[1][1] then
+		if active.eventFilter == nil or active.eventFilter == active.eventBuffer[1][1] or active.eventBuffer[1][1] == "terminate" then
 			active:resume( unpack(active.eventBuffer[1]) )
 		end
 		table.remove( active.eventBuffer, 1 )
