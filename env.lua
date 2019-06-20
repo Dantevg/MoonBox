@@ -348,6 +348,15 @@ function env.colors.blend( fg, a, bg )
 	return env.colors.color( result[1]*255, result[2]*255, result[3]*255 )
 end
 
+function env.colors.random( brightness, opacity )
+	local keys = {}
+	for k, v in pairs(env.screen.colors) do
+		table.insert( keys, k )
+	end
+	
+	return env.colors.compose( keys[ math.random(#keys) ], brightness, opacity )
+end
+
 
 
 
@@ -440,9 +449,7 @@ end
 
 function env.screen.canvas.char( canvas, char, x, y, color )
 	x, y = x or env.screen.pos.x, y or env.screen.pos.y
-	local rgb = getColor( color or env.screen.color )
-	
-	if not rgb then error( "No such color", 2 ) end
+	local rgb = getColor(color) or getColor(env.screen.color)
 	
 	if rgb[4] ~= 1 then -- Partially transparent
 		-- Update the screen image
@@ -585,7 +592,7 @@ function env.screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	if not x1 or not y1 or not x2 or not y2 then
 		error( "Expected coordinates", 2 )
 	end
-	color = getColor(color) or getColor(env.screen.color)
+	local rgb = getColor(color) or getColor(env.screen.color)
 	
 	local function low( x1, y1, x2, y2 )
 		local dx = x2 - x1
@@ -598,7 +605,7 @@ function env.screen.canvas.line( canvas, x1, y1, x2, y2, color )
 		local D = 2*dy - dx
 		local y = y1
 		canvas.canvas:renderTo(function()
-			love.graphics.setColor(color)
+			love.graphics.setColor(rgb)
 			for x = x1, x2 do
 				love.graphics.points( x, y )
 				if D > 0 then
@@ -621,7 +628,7 @@ function env.screen.canvas.line( canvas, x1, y1, x2, y2, color )
 		local D = 2*dx - dy
 		local x = x1
 		canvas.canvas:renderTo(function()
-			love.graphics.setColor(color)
+			love.graphics.setColor(rgb)
 			for y = y1, y2 do
 				love.graphics.points( x, y )
 				if D > 0 then
@@ -651,21 +658,22 @@ end
 function env.screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	xc, yc = xc or env.screen.pos.x, yc or env.screen.pos.y
 	if not r then error( "Radius expected", 2 ) end
-	color = getColor(color) or getColor(env.screen.color)
+	local rgb = getColor(color) or getColor(env.screen.color)
 	
-	local d = (5 - 4*r) / 4
-	local x = 0
-	local y = r
+	local x = r
+	local y = 0
+	local err = -r
 	
 	local function draw( x, y )
-		canvas.canvas:renderTo(function()
-			love.graphics.setColor(color)
-			if filled then
-				env.screen.line( xc-x, yc-y, xc+x, yc+y )
-				env.screen.line( xc-x, yc+y, xc+x, yc-y )
-				env.screen.line( xc-y, yc-x, xc+y, yc+x )
-				env.screen.line( xc-y, yc+x, xc+y, yc-x )
-			else
+		local x, y = math.floor(x), math.floor(y)
+		if filled then
+			env.screen.line( xc-x, yc-y, xc+x, yc-y, color )
+			env.screen.line( xc-x, yc+y, xc+x, yc+y, color )
+			env.screen.line( xc-y, yc-x, xc+y, yc-x, color )
+			env.screen.line( xc-y, yc+x, xc+y, yc+x, color )
+		else
+			canvas.canvas:renderTo(function()
+				love.graphics.setColor(rgb)
 				love.graphics.points( xc+x, yc+y,
 															xc-x, yc+y,
 															xc+x, yc-y,
@@ -674,20 +682,19 @@ function env.screen.canvas.circle( canvas, xc, yc, r, color, filled )
 															xc-y, yc+x,
 															xc+y, yc-x,
 															xc-y, yc-x )
-			end
-		end)
+			end)
+		end
 	end
 	
-	draw( x, y )
-	while x < y do
-		x = x+1
-		if d >= 0 then
-			y = y-1
-			d = d + 2*(x-y) + 1
-		else
-			d = d + 2*x + 1
-		end
+	while x >= y do
 		draw( x, y )
+		y = y+1
+		if err < 0 then
+			err = err + 2*y + 1
+		else
+			x = x-1
+			err = err + 2*(y-x) + 1
+		end
 	end
 end
 
