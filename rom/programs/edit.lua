@@ -142,7 +142,7 @@ function draw()
 	screen.rect( 1, 1, lineStart * (screen.font.width+1) + 1, screen.height, "gray-2" )
 	
 	-- File contents, line numbers
-	local maxY = math.min( screen.charHeight-1, #file )
+	local maxY = math.min( screen.charHeight-1, #file - yScroll )
 	for row = 1, maxY do
 		drawLine( row, lineStart )
 	end
