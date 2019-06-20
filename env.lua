@@ -550,7 +550,8 @@ function env.screen.canvas.print( canvas, text, color )
 	end
 end
 
-function env.screen.canvas.rect( canvas, x, y, w, h, color )
+-- Default filled
+function env.screen.canvas.rect( canvas, x, y, w, h, color, filled )
 	x, y = x or env.screen.pos.x, y or env.screen.pos.y
 	w, h = (w or 0), (h or 0)
 	
@@ -559,9 +560,13 @@ function env.screen.canvas.rect( canvas, x, y, w, h, color )
 	if rgb[4] == 1 then -- Not transparent, use simple faster method
 		canvas.canvas:renderTo(function()
 			love.graphics.setColor(rgb)
-			love.graphics.rectangle( "fill", x-0.5, y-0.5, w, h )
+			if filled ~= false then
+				love.graphics.rectangle( "fill", x-0.5, y-0.5, w, h )
+			else
+				love.graphics.rectangle( "line", x-0.5, y-0.5, w-1, h-1 )
+			end
 		end)
-	elseif rgb[4] ~= 0 then -- Partially transparent, use slow method
+	elseif rgb[4] ~= 0 and filled ~= false then -- Partially transparent, use slow method
 		-- Update the screen image
 		canvas.image = canvas.canvas:newImageData()
 		canvas.imageFrame = computer.currentFrame
@@ -585,6 +590,11 @@ function env.screen.canvas.rect( canvas, x, y, w, h, color )
 			love.graphics.setColor( 1, 1, 1, 1 )
 			love.graphics.draw(image)
 		end)
+	elseif rgb[4] ~= 0 and filled == false then
+		env.screen.canvas.line( canvas, x+1, y, x+w-1, y, color )
+		env.screen.canvas.line( canvas, x+w-1, y+1, x+w-1, y+h-1, color )
+		env.screen.canvas.line( canvas, x, y+h-1, x+w-2, y+h-1, color )
+		env.screen.canvas.line( canvas, x, y, x, y+h-2, color )
 	end
 end
 
@@ -593,6 +603,26 @@ function env.screen.canvas.line( canvas, x1, y1, x2, y2, color )
 		error( "Expected coordinates", 2 )
 	end
 	local rgb = getColor(color) or getColor(env.screen.color)
+	
+	if rgb[4] ~= 1 then -- Partially transparent, update screen image
+		canvas.image = canvas.canvas:newImageData()
+		canvas.imageFrame = computer.currentFrame
+	end
+	
+	local function point( x, y )
+		if rgb[4] ~= 1 then
+			local bg = { canvas.image:getPixel(x-0.5, y-0.5) }
+			local finalColor = {
+				rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
+				rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
+				rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
+			}
+			love.graphics.setColor(finalColor)
+		else
+			love.graphics.setColor(rgb)
+		end
+		love.graphics.points( x-0.5, y-0.5 )
+	end
 	
 	local function low( x1, y1, x2, y2 )
 		local dx = x2 - x1
@@ -605,9 +635,8 @@ function env.screen.canvas.line( canvas, x1, y1, x2, y2, color )
 		local D = 2*dy - dx
 		local y = y1
 		canvas.canvas:renderTo(function()
-			love.graphics.setColor(rgb)
 			for x = x1, x2 do
-				love.graphics.points( x, y )
+				point( x, y )
 				if D > 0 then
 					y = y + yi
 					D = D - 2*dx
@@ -628,9 +657,8 @@ function env.screen.canvas.line( canvas, x1, y1, x2, y2, color )
 		local D = 2*dx - dy
 		local x = x1
 		canvas.canvas:renderTo(function()
-			love.graphics.setColor(rgb)
 			for y = y1, y2 do
-				love.graphics.points( x, y )
+				point( x, y )
 				if D > 0 then
 					x = x + xi
 					D = D - 2*dy
@@ -655,33 +683,54 @@ function env.screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	end
 end
 
+-- Default filled
 function env.screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	xc, yc = xc or env.screen.pos.x, yc or env.screen.pos.y
 	if not r then error( "Radius expected", 2 ) end
 	local rgb = getColor(color) or getColor(env.screen.color)
 	
+	if rgb[4] ~= 1 and not filled then -- Partially transparent, update screen image
+		canvas.image = canvas.canvas:newImageData()
+		canvas.imageFrame = computer.currentFrame
+	end
+	
 	local x = r
 	local y = 0
 	local err = -r
 	
+	local function pixel( x, y )
+		if rgb[4] ~= 1 then
+			local bg = { canvas.image:getPixel(x-0.5, y-0.5) }
+			local finalColor = {
+				rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
+				rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
+				rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
+			}
+			love.graphics.setColor(finalColor)
+		else
+			love.graphics.setColor(rgb)
+		end
+		
+		love.graphics.points( x-0.5, y-0.5 )
+	end
+	
 	local function draw( x, y )
 		local x, y = math.floor(x), math.floor(y)
-		if filled then
+		if filled ~= false then
 			env.screen.line( xc-x, yc-y, xc+x, yc-y, color )
 			env.screen.line( xc-x, yc+y, xc+x, yc+y, color )
 			env.screen.line( xc-y, yc-x, xc+y, yc-x, color )
 			env.screen.line( xc-y, yc+x, xc+y, yc+x, color )
 		else
 			canvas.canvas:renderTo(function()
-				love.graphics.setColor(rgb)
-				love.graphics.points( xc+x, yc+y,
-															xc-x, yc+y,
-															xc+x, yc-y,
-															xc-x, yc-y,
-															xc+y, yc+x,
-															xc-y, yc+x,
-															xc+y, yc-x,
-															xc-y, yc-x )
+				pixel( xc+x, yc+y )
+				pixel( xc-x, yc+y )
+				pixel( xc+x, yc-y )
+				pixel( xc-x, yc-y )
+				pixel( xc+y, yc+x )
+				pixel( xc-y, yc+x )
+				pixel( xc+y, yc-x )
+				pixel( xc-y, yc-x )
 			end)
 		end
 	end
