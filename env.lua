@@ -1069,7 +1069,14 @@ env.disk.drives = {}
 env.disk.drives["/"] = setmetatable( {}, {__index = env.disk.defaults} )
 
 env.disk.drives["/"].list = function()
-	return env.disk.getDrives()
+	local drives = env.disk.getDrives()
+	for i = 1, #drives do
+		if drives[i] == "/" then
+			table.remove( drives, i )
+			break
+		end
+	end
+	return drives
 end
 env.disk.drives["/"].info = function(path)
 	if env.disk.drives[path] then
