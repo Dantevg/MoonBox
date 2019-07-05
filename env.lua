@@ -403,8 +403,6 @@ env.screen.colors32 = {
   white  = {{255,255,255}, {255,255,255}, {255,255,255}},
 }
 
-env.screen.colors = env.screen.colors64
-
 env.screen.canvas = {}
 
 function env.screen.canvas:draw( x, y )
@@ -506,6 +504,14 @@ function env.screen.canvas.write( canvas, text, a, b )
 	local w, h = math.min(#text, options.max) * (env.screen.font.width+1), env.screen.font.height+1
 	options.overflow = options.overflow ~= nil or "wrap" -- Set default overflow to wrap
 	
+	local function nextCharPos()
+		if options.monospace == false then
+			x = x + env.screen.font.charWidth[ string.sub(text,i,i) ]
+		else
+			x = x + env.screen.font.width + 1
+		end
+	end
+	
 	if #text > options.max then
 		if options.overflow == "ellipsis" then
 			text = string.sub( text, 1, options.max-3 ) .. "..."
@@ -521,20 +527,19 @@ function env.screen.canvas.write( canvas, text, a, b )
 	end
 	
 	for i = 1, #text do
-		if string.sub(text,i,i) ~= "\n" then
+		if string.sub(text,i,i) ~= "\n" and string.sub(text,i,i) ~= "\t" then
 			env.screen.canvas.char( canvas, string.sub(text,i,i), x, y, options.color )
 		end
-		if options.monospace == false then
-			x = x + env.screen.font.charWidth[ string.sub(text,i,i) ]
-		else
-			x = x + env.screen.font.width + 1
-		end
+		nextCharPos()
 		if x >= env.screen.width or string.sub(text,i,i) == "\n" then -- Next line
 			x = options.x or env.screen.pos.x
 			y = y + env.screen.font.height + 1
 			while env.screen.pos.y + env.screen.font.height > env.screen.height do
 				env.screen.canvas.move( canvas, 0, -env.screen.font.height-1 )
 			end
+		end
+		if string.sub(text,i,i) == "\t" then -- Tab
+			nextCharPos()
 		end
 	end
 	env.screen.pos.x = x
@@ -1317,7 +1322,7 @@ function env.shell.absolute(path)
 end
 
 function env.shell.error( msg, level )
-	env.screen.print( msg, "red+1" )
+	env.screen.print( env.shell.traceback and debug.traceback(msg, level) or msg, "red+1" )
 end
 
 

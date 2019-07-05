@@ -74,6 +74,8 @@ function sandbox:start( env, bootPath )
 	end
 	
 	self.env._G = self.env
+	self.env.screen.colors = self.env.screen.colors64
+	self.env.shell.traceback = true
 	
 	-- Load boot program
 	local fn, err = love.filesystem.load( bootPath or "/rom/boot.lua" )
@@ -96,7 +98,7 @@ function sandbox:resume(...)
 	if ok then
 		self.eventFilter = result
 	else
-		self.error = result
+		self.error = self.env.shell.traceback and debug.traceback( self.co, result ) or result
 	end
 end
 
