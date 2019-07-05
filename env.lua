@@ -1148,7 +1148,7 @@ setmetatable(env.disk, {
 env.os = {}
 
 env.os.FPS = computer.FPS
-env.os.version = "Oxygen v"..computer.version
+env.os.version = "Lunar sandbox v"..computer.version
 
 function env.os.clock()
 	return math.floor( computer.clock * 1000 ) / 1000

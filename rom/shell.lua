@@ -1,4 +1,4 @@
-local history = {"ovos/main.lua"} -- TODO: empty
+local history = {} -- TODO: empty
 
 print(os.version)
 

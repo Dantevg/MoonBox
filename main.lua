@@ -75,7 +75,7 @@ function sandbox:start( env, bootPath )
 	
 	self.env._G = self.env
 	self.env.screen.colors = self.env.screen.colors64
-	self.env.shell.traceback = true
+	self.env.shell.traceback = false
 	
 	-- Load boot program
 	local fn, err = love.filesystem.load( bootPath or "/rom/boot.lua" )
@@ -202,7 +202,6 @@ function love.draw()
 	else
 		local border = settings.border*settings.scale
 		love.graphics.setColor( 1,1,1,1 )
-		love.graphics.draw( computer.screen.canvas, border, border, 0, settings.scale )
 		if active == menu then
 			love.graphics.draw( menu.screen.canvas, border, border, 0, settings.scale )
 			-- Draw borders
@@ -211,6 +210,8 @@ function love.draw()
 			love.graphics.rectangle( "fill", w-border, 0, border, h )
 			love.graphics.rectangle( "fill", 0, h-border, w, border )
 			love.graphics.rectangle( "fill", 0, 0, border, h )
+		else
+			love.graphics.draw( computer.screen.canvas, border, border, 0, settings.scale )
 		end
 	end
 end

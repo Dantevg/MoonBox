@@ -4,7 +4,7 @@ screen.setFont("/rom/fonts/5x5_pxl_round.lua")
 -- Menu
 local menu = {
 	main = {
-		{name = "Lua Sandbox menu", type = "text"},
+		{name = "Lunar sandbox menu", type = "text"},
 		{name = "Press both [ctrl]s to switch", type = "text"},
 		{name = "", type = "text"},
 		{name = "Settings", type = "menu", data = "settings"},
@@ -13,7 +13,7 @@ local menu = {
 		selected = 1,
 	},
 	settings = {
-		{name = "Lua Sandbox menu", type = "text"},
+		{name = "Lunar sandbox menu", type = "text"},
 		{name = "Press both [ctrl]s to switch", type = "text"},
 		{name = "", type = "text"},
 		{name = "Back", type = "menu", data = "main"},
