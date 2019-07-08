@@ -231,6 +231,54 @@ function env.colors.rgb(color)
 	}
 end
 
+-- Convert color to hsla (0-255) value
+function env.colors.hsl(color)
+	if not color then return end
+	
+	if type(color) == "table" then
+		return color
+	end
+	
+	local name, brightness, opacity = env.colors.getComponents(color)
+	
+	brightness = tonumber(brightness) or 0
+	opacity = tonumber(opacity) or 1
+	if env.screen.colors == env.screen.colors32 then
+		brightness = brightness + 2
+	elseif env.screen.colors == env.screen.colors64 then
+		brightness = brightness + 4
+	end
+	
+	-- Nonexisting color
+	if not env.screen.colors[name] or not env.screen.colors[name][brightness] then
+		return nil
+	end
+	
+	-- https://github.com/EmmanuelOga/columns/blob/master/utils/color.lua
+	local r, g, b = env.screen.colors[name][brightness][1]/255, env.screen.colors[name][brightness][2]/255, env.screen.colors[name][brightness][3]/255
+
+	local max, min = math.max(r, g, b), math.min(r, g, b)
+	local h, s, l
+
+	l = (max + min) / 2
+
+	if max == min then
+		h, s = 0, 0 -- achromatic
+	else
+		local d = max - min
+		if l > 0.5 then s = d / (2 - max - min) else s = d / (max + min) end
+		if max == r then
+			h = (g - b) / d
+			if g < b then h = h + 6 end
+		elseif max == g then h = (b - r) / d + 2
+		elseif max == b then h = (r - g) / d + 4
+		end
+		h = h / 6
+	end
+
+	return math.floor(h*255), math.floor(s*255), math.floor(l*255), a
+end
+
 -- Convert rgb (0-255) to color
 -- colors.color( rgba (table) )
 -- colors.color( r (number), g (number), b (number), a (number) )
@@ -1114,6 +1162,22 @@ end
 env.disk.drives["disk1"] = setmetatable( {}, {__index = env.disk.defaults} )
 
 env.disk.drives["rom"] = setmetatable( {}, {__index = env.disk.defaults} )
+
+env.disk.drives["rom"].write = function()
+	error( "Attempt to modify read-only location", 2 )
+end
+env.disk.drives["rom"].append = function()
+	error( "Attempt to modify read-only location", 2 )
+end
+env.disk.drives["rom"].mkdir = function()
+	error( "Attempt to modify read-only location", 2 )
+end
+env.disk.drives["rom"].newFile = function()
+	error( "Attempt to modify read-only location", 2 )
+end
+env.disk.drives["rom"].remove = function()
+	error( "Attempt to modify read-only location", 2 )
+end
 
 function env.disk.getDrives()
 	local d = {}
