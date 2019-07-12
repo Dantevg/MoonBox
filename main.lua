@@ -329,13 +329,15 @@ function love.textinput(char)
 end
 
 local function getCoordinates( x, y )
-	return math.floor( x / settings.scale ) + 1,
-		math.floor( y / settings.scale ) + 1
+	return math.floor( x / settings.scale ) - settings.border + 1,
+		math.floor( y / settings.scale ) - settings.border + 1
 end
 
 function love.mousepressed( x, y, btn )
 	x, y = getCoordinates( x, y )
-	table.insert( active.eventBuffer, { "mouse", x, y, btn } )
+	if x >= 1 and x <= settings.width and y >= 1 and y <= settings.height then
+		table.insert( active.eventBuffer, { "mouse", x, y, btn } )
+	end
 end
 function love.mousereleased( x, y, btn )
 	x, y = getCoordinates( x, y )
