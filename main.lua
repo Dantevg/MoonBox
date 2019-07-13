@@ -85,6 +85,15 @@ function sandbox:start( env, bootPath )
 	setfenv( fn, self.env )
 	self.co = coroutine.create(fn)
 	
+	-- Add debug hook to prevent infinite loops without waiting
+	function self.hook(trigger)
+		if trigger == "count" then
+			if love.timer.getTime() - self.chunkTime > 3 then
+				error( "Timeout", 0 )
+			end
+		end
+	end
+	
 	self:resume()
 end
 
@@ -94,7 +103,12 @@ function sandbox:resume(...)
 		-- love.load() -- Reboot
 		return false
 	end
+	
+	debug.sethook( self.co, self.hook, "", 1000 ) -- Activate infinite loop hook
+	self.chunkTime = love.timer.getTime() -- Reset starting time
 	local ok, result = coroutine.resume( self.co, ... )
+	debug.sethook(self.co) -- Reset hook
+	
 	if ok then
 		self.eventFilter = result
 	else
