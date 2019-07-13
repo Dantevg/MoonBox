@@ -19,6 +19,28 @@ function getColor(color)
 	}
 end
 
+function closestColor( r, g, b, a )
+	if type(r) == "table" then
+		r, g, b, a = r[1]*255, r[2]*255, r[3]*255, r[4]
+	end
+	
+	local minName, minBrightness, minDist
+	for name, v in pairs(env.screen.colors) do
+		for brightness, color in ipairs(v) do
+			local dist = math.sqrt( (color[1]-r)^2 + (color[2]-g)^2 + (color[3]-b)^2 )
+			if not minDist or dist < minDist then
+				minDist = dist
+				minName, minBrightness = name, brightness
+			end
+		end
+	end
+	
+	return env.screen.colors[minName][minBrightness][1]/255,
+		env.screen.colors[minName][minBrightness][2]/255,
+		env.screen.colors[minName][minBrightness][3]/255,
+		a
+end
+
 function env.read(history)
 	history = history or {}
 	table.insert( history, "" )
@@ -232,31 +254,34 @@ function env.colors.rgb(color)
 end
 
 -- Convert color to hsla (0-255) value
-function env.colors.hsl(color)
+function env.colors.hsl( color, g, b, a )
 	if not color then return end
 	
+	local r, g, b, a = color, g, b, a
+	
 	if type(color) == "table" then
-		return color
-	end
+		r, g, b, a = color[1]/255, color[2]/255, color[3]/255, color[4]
+	elseif g and b then
+		r, g, b = color/255, g/255, b/255
+	else
+		local name, brightness = env.colors.getComponents(color)
 	
-	local name, brightness, opacity = env.colors.getComponents(color)
-	
-	brightness = tonumber(brightness) or 0
-	opacity = tonumber(opacity) or 1
-	if env.screen.colors == env.screen.colors32 then
-		brightness = brightness + 2
-	elseif env.screen.colors == env.screen.colors64 then
-		brightness = brightness + 4
-	end
-	
-	-- Nonexisting color
-	if not env.screen.colors[name] or not env.screen.colors[name][brightness] then
-		return nil
+		brightness = tonumber(brightness) or 0
+		if env.screen.colors == env.screen.colors32 then
+			brightness = brightness + 2
+		elseif env.screen.colors == env.screen.colors64 then
+			brightness = brightness + 4
+		end
+		
+		-- Nonexisting color
+		if not env.screen.colors[name] or not env.screen.colors[name][brightness] then
+			return nil
+		end
+		
+		r, g, b = env.screen.colors[name][brightness][1]/255, env.screen.colors[name][brightness][2]/255, env.screen.colors[name][brightness][3]/255
 	end
 	
 	-- https://github.com/EmmanuelOga/columns/blob/master/utils/color.lua
-	local r, g, b = env.screen.colors[name][brightness][1]/255, env.screen.colors[name][brightness][2]/255, env.screen.colors[name][brightness][3]/255
-
 	local max, min = math.max(r, g, b), math.min(r, g, b)
 	local h, s, l
 
@@ -283,7 +308,7 @@ end
 -- colors.color( rgba (table) )
 -- colors.color( r (number), g (number), b (number), a (number) )
 function env.colors.color( r, g, b, a )
-	if type(r) == table then
+	if type(r) == "table" then
 		r, g, b, a = r[1], r[2], r[3], r[4]
 	end
 	
@@ -563,7 +588,7 @@ function env.screen.canvas.write( canvas, text, a, b )
 	if #text > options.max then
 		if options.overflow == "ellipsis" then
 			text = string.sub( text, 1, options.max-3 ) .. "..."
-		elseif options.overflow == "wrap"  then
+		elseif options.overflow == "wrap" then
 			h = math.ceil( #text / options.max ) * (env.screen.font.height+1)
 		else
 			text = string.sub( text, 1, options.max )
@@ -633,7 +658,7 @@ function env.screen.canvas.rect( canvas, x, y, w, h, color, filled )
 					rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
 					rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
 				}
-				canvas.image:setPixel( i-0.5, j-0.5, unpack(finalColor) )
+				canvas.image:setPixel( i-0.5, j-0.5, closestColor(finalColor) )
 			end
 		end
 		
