@@ -77,7 +77,7 @@ end
 function draw()
 	screen.background = "white"
 	screen.color = "gray-1"
-	screen.clear()
+	screen.clear("white")
 	max = 0
 	for i = 1, #currentMenu do
 		if currentMenu[i].type == "text" then
