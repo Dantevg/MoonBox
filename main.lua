@@ -146,7 +146,7 @@ function love.load()
 	computer = sandbox.new()
 	computer:start()
 	menu = sandbox.new()
-	menu:start( _G, "/rom/admin.lua" )
+	menu:start( setmetatable( _G, {__index = computer.env} ), "/rom/admin.lua" )
 	active = (firstBoot and menu or computer)
 end
 
@@ -192,13 +192,24 @@ function love.update(dt)
 	end
 	
 	-- Return events
-	for i = 1, #active.eventBuffer do
+	while #active.eventBuffer > 0 do
 		if active.eventBuffer[1][1] == "reboot" then
 			love.load()
 			return
-		end
-		
-		if active.eventFilter == nil or active.eventFilter == active.eventBuffer[1][1] or active.eventBuffer[1][1] == "terminate" then
+		elseif active.eventFilter == "elevateRequest" then
+			elevated = sandbox.new()
+			elevated:start( setmetatable( _G, {__index = computer.env} ), "/rom/elevate.lua" )
+			local _, fn = coroutine.resume( active.co, true )
+			table.insert( elevated.eventBuffer, {"elevateFunction", fn} )
+			active = elevated
+			return
+		elseif active.eventBuffer[1][1] == "elevateReturn" then
+			computer.eventFilter = nil
+			table.insert( computer.eventBuffer, {"elevateResult", unpack(active.eventBuffer[1], 2)} )
+			active = computer
+			elevated = nil
+			return
+		elseif active.eventFilter == nil or active.eventFilter == active.eventBuffer[1][1] or active.eventBuffer[1][1] == "terminate" then
 			active:resume( unpack(active.eventBuffer[1]) )
 		end
 		table.remove( active.eventBuffer, 1 )
@@ -225,7 +236,7 @@ function love.draw()
 			love.graphics.rectangle( "fill", 0, h-border, w, border )
 			love.graphics.rectangle( "fill", 0, 0, border, h )
 		else
-			love.graphics.draw( computer.screen.canvas, border, border, 0, settings.scale )
+			love.graphics.draw( active.screen.canvas, border, border, 0, settings.scale )
 		end
 	end
 end
@@ -360,9 +371,9 @@ function love.mousereleased( x, y, btn )
 	active.mouse.drag = false
 end
 
-function love.wheelmoved(dir)
+function love.wheelmoved( _, amount )
 	local x, y = getCoordinates( love.mouse.getPosition() )
-	table.insert( computer.eventBuffer, { "scroll", x, y, dir } )
+	table.insert( computer.eventBuffer, { "scroll", x, y, amount } )
 end
 
 function love.mousemoved( x, y )
