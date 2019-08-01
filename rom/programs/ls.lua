@@ -24,9 +24,12 @@ for i = 1, #list do
 	end
 end
 
-screen.setColor("green+1")
-for i = 1, #folders do
-	print(folders[i])
+-- screen.setColor("green+1")
+-- for i = 1, #folders do
+-- 	print(folders[i])
+-- end
+if #folders >= 1 then
+	screen.write( table.concat(folders, " ") .. "\n", {overflow = "wrap", color = "green+1"} )
 end
 
 for i = 1, #files do
