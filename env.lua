@@ -192,7 +192,7 @@ function env.loadstring( str, name, mode, e )
 end
 
 function env.require(path)
-	local before = {"/", "/disk1/", "/disk1/apis/"}
+	local before = {"/", "/disk1/", "/disk1/lib/"}
 	local after = {"", ".lua"}
 	
 	for i = 1, #before do
@@ -430,6 +430,22 @@ function env.colors.random( brightness, opacity )
 	return env.colors.compose( keys[ math.random(#keys) ], brightness, opacity )
 end
 
+function env.colors.all(variants)
+	local all = {}
+	
+	for color in pairs(env.screen.colors) do
+		if variants and color ~= "white" and color ~= "black" then
+			for brightness = -3, 3 do
+				table.insert( all, colors.compose( color, brightness ) )
+			end
+		elseif color ~= "white" and color ~= "black" then
+			table.insert( all, color )
+		end
+	end
+	
+	return all
+end
+
 
 
 
@@ -478,10 +494,10 @@ env.screen.colors32 = {
 
 env.screen.canvas = {}
 
-function env.screen.canvas:draw( x, y )
+function env.screen.canvas:draw( x, y, scale )
 	computer.screen.canvas:renderTo(function()
 		love.graphics.setColor( 1, 1, 1, 1 )
-		love.graphics.draw( self.canvas, x-0.5, y-0.5 )
+		love.graphics.draw( self.canvas, x-1, y-1, nil, scale ) -- TODO: Check if -1 or -0.5
 	end)
 end
 
@@ -575,7 +591,7 @@ function env.screen.canvas.write( canvas, text, a, b )
 	options.max = options.max or math.floor(
 		(env.screen.width - x) / (env.screen.font.width+1) )
 	local w, h = math.min(#text, options.max) * (env.screen.font.width+1), env.screen.font.height+1
-	options.overflow = options.overflow ~= nil or "wrap" -- Set default overflow to wrap
+	options.overflow = options.overflow ~= nil and options.overflow or "wrap" -- Set default overflow to wrap
 	
 	local function nextCharPos()
 		if options.monospace == false then
@@ -604,11 +620,12 @@ function env.screen.canvas.write( canvas, text, a, b )
 			env.screen.canvas.char( canvas, string.sub(text,i,i), x, y, options.color )
 		end
 		nextCharPos()
-		if x >= env.screen.width or string.sub(text,i,i) == "\n" then -- Next line
+		if x >= env.screen.width or string.sub(text,i,i) == "\n" or i % options.max == 0 then -- Next line
 			x = options.x or env.screen.pos.x
 			y = y + env.screen.font.height + 1
-			while env.screen.pos.y + env.screen.font.height > env.screen.height do
+			while y + env.screen.font.height > env.screen.height do
 				env.screen.canvas.move( canvas, 0, -env.screen.font.height-1 )
+				y = y - env.screen.font.height-1
 			end
 		end
 		if string.sub(text,i,i) == "\t" then -- Tab
@@ -795,10 +812,10 @@ function env.screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	local function draw( x, y )
 		local x, y = math.floor(x), math.floor(y)
 		if filled ~= false then
-			env.screen.line( xc-x, yc-y, xc+x, yc-y, color )
-			env.screen.line( xc-x, yc+y, xc+x, yc+y, color )
-			env.screen.line( xc-y, yc-x, xc+y, yc-x, color )
-			env.screen.line( xc-y, yc+x, xc+y, yc+x, color )
+			env.screen.canvas.line( canvas, xc-x, yc-y, xc+x, yc-y, color )
+			env.screen.canvas.line( canvas, xc-x, yc+y, xc+x, yc+y, color )
+			env.screen.canvas.line( canvas, xc-y, yc-x, xc+y, yc-x, color )
+			env.screen.canvas.line( canvas, xc-y, yc+x, xc+y, yc+x, color )
 		else
 			canvas.canvas:renderTo(function()
 				pixel( xc+x, yc+y )
@@ -826,8 +843,12 @@ function env.screen.canvas.circle( canvas, xc, yc, r, color, filled )
 end
 
 function env.screen.canvas.clear( canvas, color )
-	color = getColor(color) or getColor(env.screen.background)
-	color[4] = 1 -- No transparency
+	color = getColor(color)
+	if color then
+		color[4] = 1 -- No transparency
+	else
+		color = {0,0,0,0}
+	end
 	
 	canvas.canvas:renderTo(function()
 		love.graphics.clear(color)
@@ -1251,8 +1272,12 @@ function env.os.time( h24, seconds )
 	end
 end
 
-function env.os.date()
-	return os.date("%d-%m-%Y")
+function env.os.date(yearFirst)
+	if yearFirst then
+		return os.date("%Y-%m-%d")
+	else
+		return os.date("%d-%m-%Y")
+	end
 end
 
 function env.os.datetime()
@@ -1299,6 +1324,13 @@ function env.os.run( path, ... )
 	if not success then
 		env.shell.error(err)
 	end
+end
+
+function env.os.elevate(fn)
+	env.event.wait("elevateRequest")
+	coroutine.yield(fn)
+	local result = {env.event.wait("elevateResult")}
+	return unpack( result, 2 )
 end
 
 
