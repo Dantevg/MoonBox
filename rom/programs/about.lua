@@ -1,4 +1,5 @@
 -- CONSTANTS
+local args = {...}
 local sizes = {" B", " kB", " MB", " GB"}
 
 -- GATHER INFO
@@ -33,9 +34,11 @@ for drive in pairs(disk.drives) do
 	end
 end
 
-local elevateSuccess, host, cores = os.elevate(
-	"return love.system.getOS(), love.system.getProcessorCount()"
-)
+local elevateSuccess, host, cores
+if args[1] == "extended" then
+	elevateSuccess, host, cores = os.elevate(
+		"return love.system.getOS(), love.system.getProcessorCount()" )
+end
 
 
 
