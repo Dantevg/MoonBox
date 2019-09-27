@@ -589,15 +589,26 @@ function env.screen.canvas.write( canvas, text, a, b )
 	end
 	x, y = options.x or env.screen.pos.x, options.y or env.screen.pos.y
 	options.max = options.max or math.floor(
-		(env.screen.width - x) / (env.screen.font.width+1) )
+		(env.screen.width - x + 1) / (env.screen.font.width+1) )
 	local w, h = math.min(#text, options.max) * (env.screen.font.width+1), env.screen.font.height+1
-	options.overflow = options.overflow ~= nil and options.overflow or "wrap" -- Set default overflow to wrap
+	if options.overflow == nil then
+		options.overflow = "wrap" -- Set default overflow to wrap
+	end
 	
 	local function nextCharPos()
 		if options.monospace == false then
 			x = x + env.screen.font.charWidth[ string.sub(text,i,i) ]
 		else
 			x = x + env.screen.font.width + 1
+		end
+	end
+	
+	local function nextLine()
+		x = options.x or env.screen.pos.x
+		y = y + env.screen.font.height + 1
+		while y + env.screen.font.height > env.screen.height do
+			env.screen.canvas.move( canvas, 0, -env.screen.font.height-1 )
+			y = y - env.screen.font.height-1
 		end
 	end
 	
@@ -611,26 +622,21 @@ function env.screen.canvas.write( canvas, text, a, b )
 		end
 	end
 	
-	if options.background then
-		env.screen.canvas.rect( canvas, x, y, w, h, options.background )
-	end
-	
 	for i = 1, #text do
-		if string.sub(text,i,i) ~= "\n" and string.sub(text,i,i) ~= "\t" then
+		if (x >= env.screen.width or i+1 % options.max == 0) and options.overflow == "wrap" then
+			nextLine()
+		end
+		if options.background then
+			env.screen.canvas.rect( canvas, x, y, env.screen.font.width, env.screen.font.height, options.background )
+		end
+		if string.sub(text,i,i) == "\n" then
+			nextLine()
+		elseif string.sub(text,i,i) == "\t" then
+			nextCharPos()
+		else
 			env.screen.canvas.char( canvas, string.sub(text,i,i), x, y, options.color )
 		end
 		nextCharPos()
-		if x >= env.screen.width or string.sub(text,i,i) == "\n" or i % options.max == 0 then -- Next line
-			x = options.x or env.screen.pos.x
-			y = y + env.screen.font.height + 1
-			while y + env.screen.font.height > env.screen.height do
-				env.screen.canvas.move( canvas, 0, -env.screen.font.height-1 )
-				y = y - env.screen.font.height-1
-			end
-		end
-		if string.sub(text,i,i) == "\t" then -- Tab
-			nextCharPos()
-		end
 	end
 	env.screen.pos.x = x
 	env.screen.pos.y = y
