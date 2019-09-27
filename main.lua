@@ -49,6 +49,7 @@ function sandbox.new()
 	computer.screen.scale = settings.scale
 	computer.screen.canvas = love.graphics.newCanvas( computer.screen.w, computer.screen.h )
 	computer.screen.canvas:setFilter( "linear", "nearest" )
+	computer.screen.shader = nil
 	
 	return setmetatable( computer, {__index = sandbox} )
 end
@@ -236,7 +237,11 @@ function love.draw()
 			love.graphics.rectangle( "fill", 0, h-border, w, border )
 			love.graphics.rectangle( "fill", 0, 0, border, h )
 		else
+			if computer.screen.shader then
+				love.graphics.setShader(computer.screen.shader)
+			end
 			love.graphics.draw( active.screen.canvas, border, border, 0, settings.scale )
+			love.graphics.setShader() -- Reset shader
 		end
 	end
 end
