@@ -52,13 +52,13 @@ function env.read(history)
 	local timer = env.os.startTimer(0.5)
 	
 	local function draw()
-		env.screen.rect( x, y,
-		(length+1)*(env.screen.font.width+1),
-		env.screen.font.height,
-		env.screen.background )
-		env.screen.write( string.sub( history[selected], 1, pos-1 )
+		env.screen.write( string.rep(" ", length+1),
+			{x = x, y = y, background = env.screen.background} )
+		env.screen.write(
+			string.sub( history[selected], 1, pos-1 )
 			..( cursor and "_" or string.sub(history[selected], pos, pos) )
-			..string.sub( history[selected], pos+1, -1 ), x, y )
+			..string.sub( history[selected], pos+1, -1 )
+			.." ", x, y )
 	end
 	
 	local function getWords()
@@ -624,7 +624,7 @@ function env.screen.canvas.write( canvas, text, a, b )
 			nextLine()
 		end
 		if options.background then
-			env.screen.canvas.rect( canvas, x, y, env.screen.font.width, env.screen.font.height, options.background )
+			env.screen.canvas.rect( canvas, x+1, y+1, env.screen.font.width, env.screen.font.height, options.background ) -- TODO: remove "+1"
 		end
 		if string.sub(text,i,i) == "\n" then
 			nextLine()
