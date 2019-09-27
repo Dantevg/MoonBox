@@ -1007,6 +1007,24 @@ function env.screen.newCanvas( w, h )
 	return setmetatable( c, {__index = env.screen.canvas} )
 end
 
+function env.screen.newShader(path)
+	path = env.disk.absolute(path)
+	if not env.disk.exists(path) then
+		error( "No such file: "..path, 2 )
+	end
+	
+	local file = env.disk.read(path)
+	if not file then
+		error( "Could not read file: "..path, 2 )
+	end
+	
+	return love.graphics.newShader(path)
+end
+
+function env.screen.setShader(shader)
+	computer.screen.shader = shader
+end
+
 
 
 
