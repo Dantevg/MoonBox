@@ -254,17 +254,15 @@ function env.colors.rgb(color)
 end
 
 -- Convert color to hsla (0-255) value
-function env.colors.hsl( color, g, b, a )
-	if not color then return end
+function env.colors.hsl( r, g, b, a )
+	if not r then return end
 	
-	local r, g, b, a = color, g, b, a
-	
-	if type(color) == "table" then
-		r, g, b, a = color[1]/255, color[2]/255, color[3]/255, color[4]
+	if type(r) == "table" then
+		r, g, b, a = r[1]/255, r[2]/255, r[3]/255, r[4]
 	elseif g and b then
-		r, g, b = color/255, g/255, b/255
+		r, g, b = r/255, g/255, b/255
 	else
-		local name, brightness = env.colors.getComponents(color)
+		local name, brightness = env.colors.getComponents(r)
 	
 		brightness = tonumber(brightness) or 0
 		if env.screen.colors == env.screen.colors32 then
@@ -423,8 +421,8 @@ end
 
 function env.colors.random( brightness, opacity )
 	local keys = {}
-	for k, v in pairs(env.screen.colors) do
-		table.insert( keys, k )
+	for color in pairs(env.screen.colors) do
+		table.insert( keys, color )
 	end
 	
 	return env.colors.compose( keys[ math.random(#keys) ], brightness, opacity )
@@ -590,7 +588,6 @@ function env.screen.canvas.write( canvas, text, a, b )
 	x, y = options.x or env.screen.pos.x, options.y or env.screen.pos.y
 	options.max = options.max or math.floor(
 		(env.screen.width - x + 1) / (env.screen.font.width+1) )
-	local w, h = math.min(#text, options.max) * (env.screen.font.width+1), env.screen.font.height+1
 	if options.overflow == nil then
 		options.overflow = "wrap" -- Set default overflow to wrap
 	end
@@ -816,7 +813,7 @@ function env.screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	end
 	
 	local function draw( x, y )
-		local x, y = math.floor(x), math.floor(y)
+		x, y = math.floor(x), math.floor(y)
 		if filled ~= false then
 			env.screen.canvas.line( canvas, xc-x, yc-y, xc+x, yc-y, color )
 			env.screen.canvas.line( canvas, xc-x, yc+y, xc+x, yc+y, color )
