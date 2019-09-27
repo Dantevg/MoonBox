@@ -137,9 +137,8 @@ end
 
 function draw()
 	-- Background
-	local lineStart = math.floor( math.log10(#file) ) + 1 -- Width of line numbers
-	screen.clear("black")
-	screen.rect( 1, 1, lineStart * (screen.font.width+1) + 1, screen.height, "gray-2" )
+	local lineStart = math.floor( math.log10(#file) ) + 2 -- Width of line numbers
+	screen.clear("gray-2")
 	
 	-- File contents, line numbers
 	local maxY = math.min( screen.charHeight-1, #file - yScroll )
@@ -157,8 +156,7 @@ function draw()
 	end
 	
 	-- File info
-	screen.setColor("gray-2")
-	screen.rect( 1, screen.height - screen.font.height, screen.width, screen.font.height+1 )
+	screen.rect( 1, screen.height - screen.font.height, screen.width, screen.font.height+1, "gray-1" )
 	screen.setColor("white")
 	screen.setCharPos( 1, screen.charHeight )
 	screen.write( disk.getFilename(path) )
