@@ -6,8 +6,8 @@ while true do
 	-- Draw
 	screen.setColor("white")
 	local dir = #shell.dir > 1 and string.sub(shell.dir, 2) or shell.dir
-	screen.write( dir, {color = "yellow+1"} )
-	screen.write( "> " )
+	screen.write( dir, {color = "yellow+1", background = screen.background} )
+	screen.write( "> ", {background = screen.background} )
 	
 	-- Get input and save history
 	local input = read(history)
