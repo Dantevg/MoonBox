@@ -75,6 +75,8 @@ local patterns = {
 	{"^[^%w_]", "white"}
 }
 
+local lineStart = math.floor( math.log10(#file) ) + 2 -- Width of line numbers
+
 local running = true
 local timer = os.startTimer(0.5)
 local cursor = true
@@ -137,7 +139,6 @@ end
 
 function draw()
 	-- Background
-	local lineStart = math.floor( math.log10(#file) ) + 2 -- Width of line numbers
 	screen.clear("gray-2")
 	
 	-- File contents, line numbers
@@ -150,7 +151,7 @@ function draw()
 	if cursor then
 		screen.setCharPos( x-xScroll + lineStart, y-yScroll )
 		local x, y = screen.getPixelPos()
-		screen.rect( x+1, y+1, screen.font.width, screen.font.height, "black" )
+		screen.rect( x, y, screen.font.width, screen.font.height, "gray-2" )
 		screen.setColor("white")
 		screen.cursor( x, y+1 )
 	end
@@ -168,14 +169,13 @@ function setCursor( newX, newY )
 	x, y = newX, newY
 	local w = math.floor( screen.charWidth - 1 )
 	local h = math.floor( screen.charHeight + 1 )
-	local lineStart = math.floor( math.log10(#file) ) + 1 -- Width of line numbers
 	
 	local xScreen = x - xScroll + lineStart - 1
 	local yScreen = y - yScroll
 	
 	if xScreen <= lineStart then
 		xScroll = x - 1
-	elseif xScreen > w then
+	elseif xScreen >= w then
 		xScroll = x - w + lineStart - 1
 	end
 	
