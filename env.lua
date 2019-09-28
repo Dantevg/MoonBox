@@ -555,7 +555,7 @@ function env.screen.canvas.char( canvas, char, x, y, color )
 			for w in pairs(data[h]) do
 				if data[h][w] == 1 then
 					if rgb[4] ~= 1 then -- Partially transparent
-						local bg = { canvas.image:getPixel( x+w-0.5, y+env.screen.font.height-h-0.5 ) }
+						local bg = { canvas.image:getPixel( x+w-1.5, y+env.screen.font.height-h-1.5 ) }
 						local finalColor = {
 							rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
 							rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
@@ -565,7 +565,7 @@ function env.screen.canvas.char( canvas, char, x, y, color )
 					else
 						love.graphics.setColor(rgb)
 					end
-					love.graphics.points( x + w - 0.5, y + env.screen.font.height - h - 0.5 )
+					love.graphics.points( x + w - 1.5, y + env.screen.font.height - h - 1.5 )
 				end
 			end
 		end
@@ -624,7 +624,7 @@ function env.screen.canvas.write( canvas, text, a, b )
 			nextLine()
 		end
 		if options.background then
-			env.screen.canvas.rect( canvas, x+1, y+1, env.screen.font.width, env.screen.font.height, options.background ) -- TODO: remove "+1"
+			env.screen.canvas.rect( canvas, x, y, env.screen.font.width+1, env.screen.font.height, options.background )
 		end
 		if string.sub(text,i,i) == "\n" then
 			nextLine()
@@ -1471,7 +1471,8 @@ function env.shell.absolute(path)
 end
 
 function env.shell.error( msg, level )
-	env.screen.print( env.shell.traceback and debug.traceback(msg, level) or msg, "red+1" )
+	env.screen.write( (env.shell.traceback and debug.traceback(msg, level) or msg) .. "\n",
+		{color = "red+1", background = env.screen.background} )
 end
 
 
