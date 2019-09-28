@@ -330,12 +330,6 @@ function love.keypressed(key)
 		key = "gui"
 	end
 	table.insert( active.eventBuffer, { "key", key } )
-	
-	if key == "'" and keyDown("shift") then
-		table.insert( active.eventBuffer, { "char", '"' } )
-	elseif key == "'" and not keyDown("shift") then
-		table.insert( active.eventBuffer, { "char", "'" } )
-	end
 end
 function love.keyreleased(key)
 	if key == "return" then
@@ -353,9 +347,7 @@ function love.keyreleased(key)
 end
 
 function love.textinput(char)
-	if char ~= "'" and char ~= '"' then
-		table.insert( active.eventBuffer, { "char", char } )
-	end
+	table.insert( active.eventBuffer, { "char", char } )
 end
 
 local function getCoordinates( x, y )
