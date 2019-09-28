@@ -630,10 +630,11 @@ function env.screen.canvas.write( canvas, text, a, b )
 			nextLine()
 		elseif string.sub(text,i,i) == "\t" then
 			nextCharPos()
+			nextCharPos()
 		else
 			env.screen.canvas.char( canvas, string.sub(text,i,i), x, y, options.color )
+			nextCharPos()
 		end
-		nextCharPos()
 	end
 	env.screen.pos.x = x
 	env.screen.pos.y = y
