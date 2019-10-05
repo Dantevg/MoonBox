@@ -585,7 +585,7 @@ function env.screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	if not x1 or not y1 or not x2 or not y2 then
 		error( "Expected coordinates", 2 )
 	end
-	color = getColor(color) or getColor(env.screen.color)
+	local rgb = getColor(color) or getColor(env.screen.color)
 	
 	local function low( x1, y1, x2, y2 )
 		local dx = x2 - x1
@@ -598,7 +598,7 @@ function env.screen.canvas.line( canvas, x1, y1, x2, y2, color )
 		local D = 2*dy - dx
 		local y = y1
 		canvas.canvas:renderTo(function()
-			love.graphics.setColor(color)
+			love.graphics.setColor(rgb)
 			for x = x1, x2 do
 				love.graphics.points( x, y )
 				if D > 0 then
@@ -621,7 +621,7 @@ function env.screen.canvas.line( canvas, x1, y1, x2, y2, color )
 		local D = 2*dx - dy
 		local x = x1
 		canvas.canvas:renderTo(function()
-			love.graphics.setColor(color)
+			love.graphics.setColor(rgb)
 			for y = y1, y2 do
 				love.graphics.points( x, y )
 				if D > 0 then
@@ -651,21 +651,21 @@ end
 function env.screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	xc, yc = xc or env.screen.pos.x, yc or env.screen.pos.y
 	if not r then error( "Radius expected", 2 ) end
-	color = getColor(color) or getColor(env.screen.color)
+	local rgb = getColor(color) or getColor(env.screen.color)
 	
 	local d = (5 - 4*r) / 4
 	local x = 0
-	local y = r
+	local y = r-1
 	
 	local function draw( x, y )
-		canvas.canvas:renderTo(function()
-			love.graphics.setColor(color)
-			if filled then
-				env.screen.line( xc-x, yc-y, xc+x, yc+y )
-				env.screen.line( xc-x, yc+y, xc+x, yc-y )
-				env.screen.line( xc-y, yc-x, xc+y, yc+x )
-				env.screen.line( xc-y, yc+x, xc+y, yc-x )
-			else
+		if filled then
+			env.screen.canvas.line( canvas, xc-x, yc-y, xc+x, yc-y, color )
+			env.screen.canvas.line( canvas, xc-x, yc+y, xc+x, yc+y, color )
+			env.screen.canvas.line( canvas, xc-y, yc-x, xc+y, yc-x, color )
+			env.screen.canvas.line( canvas, xc-y, yc+x, xc+y, yc+x, color )
+		else
+			canvas.canvas:renderTo(function()
+				love.graphics.setColor(rgb)
 				love.graphics.points( xc+x, yc+y,
 															xc-x, yc+y,
 															xc+x, yc-y,
@@ -674,8 +674,8 @@ function env.screen.canvas.circle( canvas, xc, yc, r, color, filled )
 															xc-y, yc+x,
 															xc+y, yc-x,
 															xc-y, yc-x )
-			end
-		end)
+			end)
+		end
 	end
 	
 	draw( x, y )
