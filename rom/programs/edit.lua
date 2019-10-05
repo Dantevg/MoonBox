@@ -75,6 +75,8 @@ local patterns = {
 	{"^[^%w_]", "white"}
 }
 
+local lineStart = math.floor( math.log10(#file) ) + 2 -- Width of line numbers
+
 local running = true
 local timer = os.startTimer(0.5)
 local cursor = true
@@ -137,12 +139,10 @@ end
 
 function draw()
 	-- Background
-	local lineStart = math.floor( math.log10(#file) ) + 1 -- Width of line numbers
-	screen.clear("black")
-	screen.rect( 1, 1, lineStart * (screen.font.width+1) + 1, screen.height, "gray-2" )
+	screen.clear("gray-2")
 	
 	-- File contents, line numbers
-	local maxY = math.min( screen.charHeight-1, #file )
+	local maxY = math.min( screen.charHeight-1, #file - yScroll )
 	for row = 1, maxY do
 		drawLine( row, lineStart )
 	end
@@ -151,14 +151,13 @@ function draw()
 	if cursor then
 		screen.setCharPos( x-xScroll + lineStart, y-yScroll )
 		local x, y = screen.getPixelPos()
-		screen.rect( x+1, y+1, screen.font.width, screen.font.height, "black" )
+		screen.rect( x, y, screen.font.width, screen.font.height, "gray-2" )
 		screen.setColor("white")
 		screen.cursor( x, y+1 )
 	end
 	
 	-- File info
-	screen.setColor("gray-2")
-	screen.rect( 1, screen.height - screen.font.height, screen.width, screen.font.height+1 )
+	screen.rect( 1, screen.height - screen.font.height, screen.width, screen.font.height+1, "gray-1" )
 	screen.setColor("white")
 	screen.setCharPos( 1, screen.charHeight )
 	screen.write( disk.getFilename(path) )
@@ -170,14 +169,13 @@ function setCursor( newX, newY )
 	x, y = newX, newY
 	local w = math.floor( screen.charWidth - 1 )
 	local h = math.floor( screen.charHeight + 1 )
-	local lineStart = math.floor( math.log10(#file) ) + 1 -- Width of line numbers
 	
 	local xScreen = x - xScroll + lineStart - 1
 	local yScreen = y - yScroll
 	
 	if xScreen <= lineStart then
 		xScroll = x - 1
-	elseif xScreen > w then
+	elseif xScreen >= w then
 		xScroll = x - w + lineStart - 1
 	end
 	
@@ -213,7 +211,7 @@ function keyPress(key)
 				setCursor( x-1, y )
 			elseif y > 1 then
 				setCursor( #file[y-1]+1, y-1 )
-				file[y] = file[y] .. string.sub( file[y+1], 1, -1 )
+				file[y] = file[y] .. file[y+1]
 				table.remove( file, y+1 )
 			end
 		end
@@ -308,7 +306,6 @@ function keyPress(key)
 			os.sleep()
 		elseif key == "s" then
 			save()
-			inMenu = false
 		end
 	end
 end
@@ -319,7 +316,7 @@ while running do
 	local event, param = event.wait()
 	if event == "key" then
 		keyPress(param)
-	elseif event == "char" and not inMenu then
+	elseif event == "char" then
 		file[y] = string.sub( file[y], 1, x-1 )..param..string.sub( file[y], x )
 		setCursor( x+1, y )
 	elseif event == "timer" and param == timer then

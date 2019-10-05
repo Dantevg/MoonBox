@@ -49,6 +49,7 @@ function sandbox.new()
 	computer.screen.scale = settings.scale
 	computer.screen.canvas = love.graphics.newCanvas( computer.screen.w, computer.screen.h )
 	computer.screen.canvas:setFilter( "linear", "nearest" )
+	computer.screen.shader = nil
 	
 	return setmetatable( computer, {__index = sandbox} )
 end
@@ -74,6 +75,8 @@ function sandbox:start( env, bootPath )
 	end
 	
 	self.env._G = self.env
+	self.env.screen.colors = self.env.screen.colors64
+	self.env.shell.traceback = false
 	
 	-- Load boot program
 	local fn, err = love.filesystem.load( bootPath or "/rom/boot.lua" )
@@ -82,6 +85,15 @@ function sandbox:start( env, bootPath )
 	-- Start boot program
 	setfenv( fn, self.env )
 	self.co = coroutine.create(fn)
+	
+	-- Add debug hook to prevent infinite loops without waiting
+	function self.hook(trigger)
+		if trigger == "count" then
+			if love.timer.getTime() - self.chunkTime > 3 then
+				error( "Timeout", 0 )
+			end
+		end
+	end
 	
 	self:resume()
 end
@@ -92,11 +104,16 @@ function sandbox:resume(...)
 		-- love.load() -- Reboot
 		return false
 	end
+	
+	debug.sethook( self.co, self.hook, "", 1000 ) -- Activate infinite loop hook
+	self.chunkTime = love.timer.getTime() -- Reset starting time
 	local ok, result = coroutine.resume( self.co, ... )
+	debug.sethook(self.co) -- Reset hook
+	
 	if ok then
 		self.eventFilter = result
 	else
-		self.error = result
+		self.error = self.env.shell.traceback and debug.traceback( self.co, result ) or result
 	end
 end
 
@@ -130,7 +147,7 @@ function love.load()
 	computer = sandbox.new()
 	computer:start()
 	menu = sandbox.new()
-	menu:start( _G, "/rom/admin.lua" )
+	menu:start( setmetatable( _G, {__index = computer.env} ), "/rom/admin.lua" )
 	active = (firstBoot and menu or computer)
 end
 
@@ -176,13 +193,24 @@ function love.update(dt)
 	end
 	
 	-- Return events
-	for i = 1, #active.eventBuffer do
+	while #active.eventBuffer > 0 do
 		if active.eventBuffer[1][1] == "reboot" then
 			love.load()
 			return
-		end
-		
-		if active.eventFilter == nil or active.eventFilter == active.eventBuffer[1][1] then
+		elseif active.eventFilter == "elevateRequest" then
+			elevated = sandbox.new()
+			elevated:start( setmetatable( _G, {__index = computer.env} ), "/rom/elevate.lua" )
+			local _, fn = coroutine.resume( active.co, true )
+			table.insert( elevated.eventBuffer, {"elevateFunction", fn} )
+			active = elevated
+			return
+		elseif active.eventBuffer[1][1] == "elevateReturn" then
+			computer.eventFilter = nil
+			table.insert( computer.eventBuffer, {"elevateResult", unpack(active.eventBuffer[1], 2)} )
+			active = computer
+			elevated = nil
+			return
+		elseif active.eventFilter == nil or active.eventFilter == active.eventBuffer[1][1] or active.eventBuffer[1][1] == "terminate" then
 			active:resume( unpack(active.eventBuffer[1]) )
 		end
 		table.remove( active.eventBuffer, 1 )
@@ -200,7 +228,6 @@ function love.draw()
 	else
 		local border = settings.border*settings.scale
 		love.graphics.setColor( 1,1,1,1 )
-		love.graphics.draw( computer.screen.canvas, border, border, 0, settings.scale )
 		if active == menu then
 			love.graphics.draw( menu.screen.canvas, border, border, 0, settings.scale )
 			-- Draw borders
@@ -209,6 +236,12 @@ function love.draw()
 			love.graphics.rectangle( "fill", w-border, 0, border, h )
 			love.graphics.rectangle( "fill", 0, h-border, w, border )
 			love.graphics.rectangle( "fill", 0, 0, border, h )
+		else
+			if computer.screen.shader then
+				love.graphics.setShader(computer.screen.shader)
+			end
+			love.graphics.draw( active.screen.canvas, border, border, 0, settings.scale )
+			love.graphics.setShader() -- Reset shader
 		end
 	end
 end
@@ -297,12 +330,6 @@ function love.keypressed(key)
 		key = "gui"
 	end
 	table.insert( active.eventBuffer, { "key", key } )
-	
-	if key == "'" and keyDown("shift") then
-		table.insert( active.eventBuffer, { "char", '"' } )
-	elseif key == "'" and not keyDown("shift") then
-		table.insert( active.eventBuffer, { "char", "'" } )
-	end
 end
 function love.keyreleased(key)
 	if key == "return" then
@@ -320,19 +347,19 @@ function love.keyreleased(key)
 end
 
 function love.textinput(char)
-	if char ~= "'" and char ~= '"' then
-		table.insert( active.eventBuffer, { "char", char } )
-	end
+	table.insert( active.eventBuffer, { "char", char } )
 end
 
 local function getCoordinates( x, y )
-	return math.floor( x / settings.scale ) + 1,
-		math.floor( y / settings.scale ) + 1
+	return math.floor( x / settings.scale ) - settings.border + 1,
+		math.floor( y / settings.scale ) - settings.border + 1
 end
 
 function love.mousepressed( x, y, btn )
 	x, y = getCoordinates( x, y )
-	table.insert( active.eventBuffer, { "mouse", x, y, btn } )
+	if x >= 1 and x <= settings.width and y >= 1 and y <= settings.height then
+		table.insert( active.eventBuffer, { "mouse", x, y, btn } )
+	end
 end
 function love.mousereleased( x, y, btn )
 	x, y = getCoordinates( x, y )
@@ -341,9 +368,9 @@ function love.mousereleased( x, y, btn )
 	active.mouse.drag = false
 end
 
-function love.wheelmoved(dir)
+function love.wheelmoved( _, amount )
 	local x, y = getCoordinates( love.mouse.getPosition() )
-	table.insert( computer.eventBuffer, { "scroll", x, y, dir } )
+	table.insert( computer.eventBuffer, { "scroll", x, y, amount } )
 end
 
 function love.mousemoved( x, y )

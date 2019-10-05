@@ -6,7 +6,7 @@ end
 
 local path = shell.absolute(args[1])
 
-if disk.exists(path) and disk.info(path).type == "dir" then
+if disk.exists(path) and (disk.info(path).type == "dir" or disk.info(path).type == "drive") then
 	shell.dir = path
 else
 	error( "No such path", 2 )

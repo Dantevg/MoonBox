@@ -19,6 +19,28 @@ function getColor(color)
 	}
 end
 
+function closestColor( r, g, b, a )
+	if type(r) == "table" then
+		r, g, b, a = r[1]*255, r[2]*255, r[3]*255, r[4]
+	end
+	
+	local minName, minBrightness, minDist
+	for name, v in pairs(env.screen.colors) do
+		for brightness, color in ipairs(v) do
+			local dist = math.sqrt( (color[1]-r)^2 + (color[2]-g)^2 + (color[3]-b)^2 )
+			if not minDist or dist < minDist then
+				minDist = dist
+				minName, minBrightness = name, brightness
+			end
+		end
+	end
+	
+	return env.screen.colors[minName][minBrightness][1]/255,
+		env.screen.colors[minName][minBrightness][2]/255,
+		env.screen.colors[minName][minBrightness][3]/255,
+		a
+end
+
 function env.read(history)
 	history = history or {}
 	table.insert( history, "" )
@@ -30,13 +52,13 @@ function env.read(history)
 	local timer = env.os.startTimer(0.5)
 	
 	local function draw()
-		env.screen.rect( x, y,
-		(length+1)*(env.screen.font.width+1),
-		env.screen.font.height,
-		env.screen.background )
-		env.screen.write( string.sub( history[selected], 1, pos-1 )
+		env.screen.write( string.rep(" ", length+1),
+			{x = x, y = y, background = env.screen.background} )
+		env.screen.write(
+			string.sub( history[selected], 1, pos-1 )
 			..( cursor and "_" or string.sub(history[selected], pos, pos) )
-			..string.sub( history[selected], pos+1, -1 ), x, y )
+			..string.sub( history[selected], pos+1, -1 )
+			.." ", x, y )
 	end
 	
 	local function getWords()
@@ -170,7 +192,7 @@ function env.loadstring( str, name, mode, e )
 end
 
 function env.require(path)
-	local before = {"/", "/disk1/", "/disk1/apis/"}
+	local before = {"/", "/disk1/", "/disk1/lib/"}
 	local after = {"", ".lua"}
 	
 	for i = 1, #before do
@@ -231,11 +253,60 @@ function env.colors.rgb(color)
 	}
 end
 
+-- Convert color to hsla (0-255) value
+function env.colors.hsl( r, g, b, a )
+	if not r then return end
+	
+	if type(r) == "table" then
+		r, g, b, a = r[1]/255, r[2]/255, r[3]/255, r[4]
+	elseif g and b then
+		r, g, b = r/255, g/255, b/255
+	else
+		local name, brightness = env.colors.getComponents(r)
+	
+		brightness = tonumber(brightness) or 0
+		if env.screen.colors == env.screen.colors32 then
+			brightness = brightness + 2
+		elseif env.screen.colors == env.screen.colors64 then
+			brightness = brightness + 4
+		end
+		
+		-- Nonexisting color
+		if not env.screen.colors[name] or not env.screen.colors[name][brightness] then
+			return nil
+		end
+		
+		r, g, b = env.screen.colors[name][brightness][1]/255, env.screen.colors[name][brightness][2]/255, env.screen.colors[name][brightness][3]/255
+	end
+	
+	-- https://github.com/EmmanuelOga/columns/blob/master/utils/color.lua
+	local max, min = math.max(r, g, b), math.min(r, g, b)
+	local h, s, l
+
+	l = (max + min) / 2
+
+	if max == min then
+		h, s = 0, 0 -- achromatic
+	else
+		local d = max - min
+		if l > 0.5 then s = d / (2 - max - min) else s = d / (max + min) end
+		if max == r then
+			h = (g - b) / d
+			if g < b then h = h + 6 end
+		elseif max == g then h = (b - r) / d + 2
+		elseif max == b then h = (r - g) / d + 4
+		end
+		h = h / 6
+	end
+
+	return math.floor(h*255), math.floor(s*255), math.floor(l*255), a
+end
+
 -- Convert rgb (0-255) to color
 -- colors.color( rgba (table) )
 -- colors.color( r (number), g (number), b (number), a (number) )
 function env.colors.color( r, g, b, a )
-	if type(r) == table then
+	if type(r) == "table" then
 		r, g, b, a = r[1], r[2], r[3], r[4]
 	end
 	
@@ -348,6 +419,31 @@ function env.colors.blend( fg, a, bg )
 	return env.colors.color( result[1]*255, result[2]*255, result[3]*255 )
 end
 
+function env.colors.random( brightness, opacity )
+	local keys = {}
+	for color in pairs(env.screen.colors) do
+		table.insert( keys, color )
+	end
+	
+	return env.colors.compose( keys[ math.random(#keys) ], brightness, opacity )
+end
+
+function env.colors.all(variants)
+	local all = {}
+	
+	for color in pairs(env.screen.colors) do
+		if variants and color ~= "white" and color ~= "black" then
+			for brightness = -3, 3 do
+				table.insert( all, colors.compose( color, brightness ) )
+			end
+		elseif color ~= "white" and color ~= "black" then
+			table.insert( all, color )
+		end
+	end
+	
+	return all
+end
+
 
 
 
@@ -394,14 +490,12 @@ env.screen.colors32 = {
   white  = {{255,255,255}, {255,255,255}, {255,255,255}},
 }
 
-env.screen.colors = env.screen.colors64
-
 env.screen.canvas = {}
 
-function env.screen.canvas:draw( x, y )
+function env.screen.canvas:draw( x, y, scale )
 	computer.screen.canvas:renderTo(function()
 		love.graphics.setColor( 1, 1, 1, 1 )
-		love.graphics.draw( self.canvas, x-0.5, y-0.5 )
+		love.graphics.draw( self.canvas, x-1, y-1, nil, scale ) -- TODO: Check if -1 or -0.5
 	end)
 end
 
@@ -440,9 +534,7 @@ end
 
 function env.screen.canvas.char( canvas, char, x, y, color )
 	x, y = x or env.screen.pos.x, y or env.screen.pos.y
-	local rgb = getColor( color or env.screen.color )
-	
-	if not rgb then error( "No such color", 2 ) end
+	local rgb = getColor(color) or getColor(env.screen.color)
 	
 	if rgb[4] ~= 1 then -- Partially transparent
 		-- Update the screen image
@@ -463,7 +555,7 @@ function env.screen.canvas.char( canvas, char, x, y, color )
 			for w in pairs(data[h]) do
 				if data[h][w] == 1 then
 					if rgb[4] ~= 1 then -- Partially transparent
-						local bg = { canvas.image:getPixel( x+w-0.5, y+env.screen.font.height-h-0.5 ) }
+						local bg = { canvas.image:getPixel( x+w-1.5, y+env.screen.font.height-h-1.5 ) }
 						local finalColor = {
 							rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
 							rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
@@ -473,7 +565,7 @@ function env.screen.canvas.char( canvas, char, x, y, color )
 					else
 						love.graphics.setColor(rgb)
 					end
-					love.graphics.points( x + w - 0.5, y + env.screen.font.height - h - 0.5 )
+					love.graphics.points( x + w - 1.5, y + env.screen.font.height - h - 1.5 )
 				end
 			end
 		end
@@ -495,39 +587,53 @@ function env.screen.canvas.write( canvas, text, a, b )
 	end
 	x, y = options.x or env.screen.pos.x, options.y or env.screen.pos.y
 	options.max = options.max or math.floor(
-		(env.screen.width - x) / (env.screen.font.width+1) )
-	local w, h = math.min(#text, options.max) * (env.screen.font.width+1), env.screen.font.height+1
-	options.overflow = options.overflow ~= nil or "wrap" -- Set default overflow to wrap
+		(env.screen.width - x + 1) / (env.screen.font.width+1) )
+	if options.overflow == nil then
+		options.overflow = "wrap" -- Set default overflow to wrap
+	end
+	
+	local function nextCharPos()
+		if options.monospace == false then
+			x = x + env.screen.font.charWidth[ string.sub(text,i,i) ]
+		else
+			x = x + env.screen.font.width + 1
+		end
+	end
+	
+	local function nextLine()
+		x = options.x or env.screen.pos.x
+		y = y + env.screen.font.height + 1
+		while y + env.screen.font.height > env.screen.height do
+			env.screen.canvas.move( canvas, 0, -env.screen.font.height-1 )
+			y = y - env.screen.font.height-1
+		end
+	end
 	
 	if #text > options.max then
 		if options.overflow == "ellipsis" then
 			text = string.sub( text, 1, options.max-3 ) .. "..."
-		elseif options.overflow == "wrap"  then
+		elseif options.overflow == "wrap" then
 			h = math.ceil( #text / options.max ) * (env.screen.font.height+1)
 		else
 			text = string.sub( text, 1, options.max )
 		end
 	end
 	
-	if options.background then
-		env.screen.canvas.rect( canvas, x, y, w, h, options.background )
-	end
-	
 	for i = 1, #text do
-		if string.sub(text,i,i) ~= "\n" then
-			env.screen.canvas.char( canvas, string.sub(text,i,i), x, y, options.color )
+		if (x >= env.screen.width or i+1 % options.max == 0) and options.overflow == "wrap" then
+			nextLine()
 		end
-		if options.monospace == false then
-			x = x + env.screen.font.charWidth[ string.sub(text,i,i) ]
+		if options.background then
+			env.screen.canvas.rect( canvas, x, y, env.screen.font.width+1, env.screen.font.height, options.background )
+		end
+		if string.sub(text,i,i) == "\n" then
+			nextLine()
+		elseif string.sub(text,i,i) == "\t" then
+			nextCharPos()
+			nextCharPos()
 		else
-			x = x + env.screen.font.width + 1
-		end
-		if x >= env.screen.width or string.sub(text,i,i) == "\n" then -- Next line
-			x = options.x or env.screen.pos.x
-			y = y + env.screen.font.height + 1
-			while env.screen.pos.y + env.screen.font.height > env.screen.height do
-				env.screen.canvas.move( canvas, 0, -env.screen.font.height-1 )
-			end
+			env.screen.canvas.char( canvas, string.sub(text,i,i), x, y, options.color )
+			nextCharPos()
 		end
 	end
 	env.screen.pos.x = x
@@ -543,7 +649,8 @@ function env.screen.canvas.print( canvas, text, color )
 	end
 end
 
-function env.screen.canvas.rect( canvas, x, y, w, h, color )
+-- Default filled
+function env.screen.canvas.rect( canvas, x, y, w, h, color, filled )
 	x, y = x or env.screen.pos.x, y or env.screen.pos.y
 	w, h = (w or 0), (h or 0)
 	
@@ -552,9 +659,13 @@ function env.screen.canvas.rect( canvas, x, y, w, h, color )
 	if rgb[4] == 1 then -- Not transparent, use simple faster method
 		canvas.canvas:renderTo(function()
 			love.graphics.setColor(rgb)
-			love.graphics.rectangle( "fill", x-0.5, y-0.5, w, h )
+			if filled ~= false then
+				love.graphics.rectangle( "fill", x-0.5, y-0.5, w, h )
+			else
+				love.graphics.rectangle( "line", x-0.5, y-0.5, w-1, h-1 )
+			end
 		end)
-	elseif rgb[4] ~= 0 then -- Partially transparent, use slow method
+	elseif rgb[4] ~= 0 and filled ~= false then -- Partially transparent, use slow method
 		-- Update the screen image
 		canvas.image = canvas.canvas:newImageData()
 		canvas.imageFrame = computer.currentFrame
@@ -568,7 +679,7 @@ function env.screen.canvas.rect( canvas, x, y, w, h, color )
 					rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
 					rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
 				}
-				canvas.image:setPixel( i-0.5, j-0.5, unpack(finalColor) )
+				canvas.image:setPixel( i-0.5, j-0.5, closestColor(finalColor) )
 			end
 		end
 		
@@ -578,6 +689,11 @@ function env.screen.canvas.rect( canvas, x, y, w, h, color )
 			love.graphics.setColor( 1, 1, 1, 1 )
 			love.graphics.draw(image)
 		end)
+	elseif rgb[4] ~= 0 and filled == false then
+		env.screen.canvas.line( canvas, x+1, y, x+w-1, y, color )
+		env.screen.canvas.line( canvas, x+w-1, y+1, x+w-1, y+h-1, color )
+		env.screen.canvas.line( canvas, x, y+h-1, x+w-2, y+h-1, color )
+		env.screen.canvas.line( canvas, x, y, x, y+h-2, color )
 	end
 end
 
@@ -586,6 +702,26 @@ function env.screen.canvas.line( canvas, x1, y1, x2, y2, color )
 		error( "Expected coordinates", 2 )
 	end
 	local rgb = getColor(color) or getColor(env.screen.color)
+	
+	if rgb[4] ~= 1 then -- Partially transparent, update screen image
+		canvas.image = canvas.canvas:newImageData()
+		canvas.imageFrame = computer.currentFrame
+	end
+	
+	local function point( x, y )
+		if rgb[4] ~= 1 then
+			local bg = { canvas.image:getPixel(x-0.5, y-0.5) }
+			local finalColor = {
+				rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
+				rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
+				rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
+			}
+			love.graphics.setColor(finalColor)
+		else
+			love.graphics.setColor(rgb)
+		end
+		love.graphics.points( x-0.5, y-0.5 )
+	end
 	
 	local function low( x1, y1, x2, y2 )
 		local dx = x2 - x1
@@ -598,9 +734,8 @@ function env.screen.canvas.line( canvas, x1, y1, x2, y2, color )
 		local D = 2*dy - dx
 		local y = y1
 		canvas.canvas:renderTo(function()
-			love.graphics.setColor(rgb)
 			for x = x1, x2 do
-				love.graphics.points( x, y )
+				point( x, y )
 				if D > 0 then
 					y = y + yi
 					D = D - 2*dx
@@ -621,9 +756,8 @@ function env.screen.canvas.line( canvas, x1, y1, x2, y2, color )
 		local D = 2*dx - dy
 		local x = x1
 		canvas.canvas:renderTo(function()
-			love.graphics.setColor(rgb)
 			for y = y1, y2 do
-				love.graphics.points( x, y )
+				point( x, y )
 				if D > 0 then
 					x = x + xi
 					D = D - 2*dy
@@ -648,52 +782,77 @@ function env.screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	end
 end
 
+-- Default filled
 function env.screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	xc, yc = xc or env.screen.pos.x, yc or env.screen.pos.y
 	if not r then error( "Radius expected", 2 ) end
 	local rgb = getColor(color) or getColor(env.screen.color)
 	
-	local d = (5 - 4*r) / 4
-	local x = 0
-	local y = r-1
+	if rgb[4] ~= 1 and not filled then -- Partially transparent, update screen image
+		canvas.image = canvas.canvas:newImageData()
+		canvas.imageFrame = computer.currentFrame
+	end
+	
+	local x = r
+	local y = 0
+	local err = -r
+	
+	local function pixel( x, y )
+		if rgb[4] ~= 1 then
+			local bg = { canvas.image:getPixel(x-0.5, y-0.5) }
+			local finalColor = {
+				rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
+				rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
+				rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
+			}
+			love.graphics.setColor(finalColor)
+		else
+			love.graphics.setColor(rgb)
+		end
+		
+		love.graphics.points( x-0.5, y-0.5 )
+	end
 	
 	local function draw( x, y )
-		if filled then
+		x, y = math.floor(x), math.floor(y)
+		if filled ~= false then
 			env.screen.canvas.line( canvas, xc-x, yc-y, xc+x, yc-y, color )
 			env.screen.canvas.line( canvas, xc-x, yc+y, xc+x, yc+y, color )
 			env.screen.canvas.line( canvas, xc-y, yc-x, xc+y, yc-x, color )
 			env.screen.canvas.line( canvas, xc-y, yc+x, xc+y, yc+x, color )
 		else
 			canvas.canvas:renderTo(function()
-				love.graphics.setColor(rgb)
-				love.graphics.points( xc+x, yc+y,
-															xc-x, yc+y,
-															xc+x, yc-y,
-															xc-x, yc-y,
-															xc+y, yc+x,
-															xc-y, yc+x,
-															xc+y, yc-x,
-															xc-y, yc-x )
+				pixel( xc+x, yc+y )
+				pixel( xc-x, yc+y )
+				pixel( xc+x, yc-y )
+				pixel( xc-x, yc-y )
+				pixel( xc+y, yc+x )
+				pixel( xc-y, yc+x )
+				pixel( xc+y, yc-x )
+				pixel( xc-y, yc-x )
 			end)
 		end
 	end
 	
-	draw( x, y )
-	while x < y do
-		x = x+1
-		if d >= 0 then
-			y = y-1
-			d = d + 2*(x-y) + 1
-		else
-			d = d + 2*x + 1
-		end
+	while x >= y do
 		draw( x, y )
+		y = y+1
+		if err < 0 then
+			err = err + 2*y + 1
+		else
+			x = x-1
+			err = err + 2*(y-x) + 1
+		end
 	end
 end
 
 function env.screen.canvas.clear( canvas, color )
-	color = getColor(color) or getColor(env.screen.background)
-	color[4] = 1 -- No transparency
+	color = getColor(color)
+	if color then
+		color[4] = 1 -- No transparency
+	else
+		color = {0,0,0,0}
+	end
 	
 	canvas.canvas:renderTo(function()
 		love.graphics.clear(color)
@@ -852,6 +1011,24 @@ function env.screen.newCanvas( w, h )
 	return setmetatable( c, {__index = env.screen.canvas} )
 end
 
+function env.screen.newShader(path)
+	path = env.disk.absolute(path)
+	if not env.disk.exists(path) then
+		error( "No such file: "..path, 2 )
+	end
+	
+	local file = env.disk.read(path)
+	if not file then
+		error( "Could not read file: "..path, 2 )
+	end
+	
+	return love.graphics.newShader(path)
+end
+
+function env.screen.setShader(shader)
+	computer.screen.shader = shader
+end
+
 
 
 
@@ -1008,7 +1185,14 @@ env.disk.drives = {}
 env.disk.drives["/"] = setmetatable( {}, {__index = env.disk.defaults} )
 
 env.disk.drives["/"].list = function()
-	return env.disk.getDrives()
+	local drives = env.disk.getDrives()
+	for i = 1, #drives do
+		if drives[i] == "/" then
+			table.remove( drives, i )
+			break
+		end
+	end
+	return drives
 end
 env.disk.drives["/"].info = function(path)
 	if env.disk.drives[path] then
@@ -1047,6 +1231,22 @@ env.disk.drives["disk1"] = setmetatable( {}, {__index = env.disk.defaults} )
 
 env.disk.drives["rom"] = setmetatable( {}, {__index = env.disk.defaults} )
 
+env.disk.drives["rom"].write = function()
+	error( "Attempt to modify read-only location", 2 )
+end
+env.disk.drives["rom"].append = function()
+	error( "Attempt to modify read-only location", 2 )
+end
+env.disk.drives["rom"].mkdir = function()
+	error( "Attempt to modify read-only location", 2 )
+end
+env.disk.drives["rom"].newFile = function()
+	error( "Attempt to modify read-only location", 2 )
+end
+env.disk.drives["rom"].remove = function()
+	error( "Attempt to modify read-only location", 2 )
+end
+
 function env.disk.getDrives()
 	local d = {}
 	for k in pairs(env.disk.drives) do
@@ -1080,7 +1280,7 @@ setmetatable(env.disk, {
 env.os = {}
 
 env.os.FPS = computer.FPS
-env.os.version = "Oxygen v"..computer.version
+env.os.version = "Lunar sandbox v"..computer.version
 
 function env.os.clock()
 	return math.floor( computer.clock * 1000 ) / 1000
@@ -1094,8 +1294,12 @@ function env.os.time( h24, seconds )
 	end
 end
 
-function env.os.date()
-	return os.date("%d-%m-%Y")
+function env.os.date(yearFirst)
+	if yearFirst then
+		return os.date("%Y-%m-%d")
+	else
+		return os.date("%d-%m-%Y")
+	end
 end
 
 function env.os.datetime()
@@ -1142,6 +1346,13 @@ function env.os.run( path, ... )
 	if not success then
 		env.shell.error(err)
 	end
+end
+
+function env.os.elevate(fn)
+	env.event.wait("elevateRequest")
+	coroutine.yield(fn)
+	local result = {env.event.wait("elevateResult")}
+	return unpack( result, 2 )
 end
 
 
@@ -1261,7 +1472,8 @@ function env.shell.absolute(path)
 end
 
 function env.shell.error( msg, level )
-	env.screen.print( msg, "red+1" )
+	env.screen.write( (env.shell.traceback and debug.traceback(msg, level) or msg) .. "\n",
+		{color = "red+1", background = env.screen.background} )
 end
 
 
