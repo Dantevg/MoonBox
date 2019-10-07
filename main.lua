@@ -67,12 +67,21 @@ function sandbox:start( env, bootPath )
 		end
 	end
 	
-	-- Load Oxygen env
-	package.loaded.env = nil -- Reset if already loaded
+	-- Load general Oxygen env
 	local env = loadfile("env.lua")(self)
 	for k, v in pairs(env) do
 		self.env[k] = v
 	end
+	
+	-- Load Oxygen APIs
+	local files = love.filesystem.getDirectoryItems("env")
+	for _, name in pairs(files) do
+		local chunk = loadfile("env/"..name)
+		setfenv( chunk, setmetatable({}, {__index = self.env}) )
+		self.env[ name:match("^(.+)%.lua") ] = chunk( self, love ) -- Pass computer and love to API
+	end
+	
+	self.env.print = self.env.screen.print
 	
 	self.env._G = self.env
 	self.env.screen.colors = self.env.screen.colors64
