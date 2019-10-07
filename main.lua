@@ -1,6 +1,6 @@
 --[[
 	
-	MoonBox Lua emulator
+	MoonBox Lua sandbox
 	by RedPolygon
 	
 	VERSION 0.3
