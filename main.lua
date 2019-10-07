@@ -74,15 +74,20 @@ function sandbox:start( env, bootPath )
 	end
 	
 	-- Load MoonBox APIs and libraries
-	local files = love.filesystem.getDirectoryItems("env")
-	for _, name in pairs(files) do
-		local chunk = loadfile("env/"..name)
-		setfenv( chunk, setmetatable({}, {__index = self.env}) )
-		self.env[ name:match("^(.+)%.lua") ] = chunk( self, love ) -- Pass computer and love to API
+	local function load( path, ... )
+		local files = love.filesystem.getDirectoryItems(path)
+		for _, name in pairs(files) do
+			local chunk = loadfile(path.."/"..name)
+			setfenv( chunk, setmetatable({}, {__index = self.env}) )
+			self.env[ name:match("^(.+)%.lua") ] = chunk(...)
+		end
 	end
 	
-	self.env.print = self.env.screen.print
+	load( "env", self, love ) -- Load APIs, pass computer and love
+	load("rom/lib") -- Load libraries (which don't need special access)
 	
+	-- Set shortcuts, _G and options
+	self.env.print = self.env.screen.print
 	self.env._G = self.env
 	self.env.screen.colors = self.env.screen.colors64
 	self.env.shell.traceback = false
