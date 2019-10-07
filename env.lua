@@ -1,5 +1,17 @@
-local computer = ...
+--[[
+	
+	Globals
+	
+]]--
+
+local args = {...}
+local computer = args[1]
+local love = args[2]
 local env = setmetatable( {}, {__index = computer.env} )
+
+
+
+-- FILE / INPUT READING
 
 function env.read(history)
 	history = history or {}
@@ -174,6 +186,10 @@ function env.require(path)
 	error( "Couldn't find "..path, 2 )
 end
 
+
+
+-- LUA EXTENSIONS
+
 env.table = setmetatable( {}, {__index = table} )
 
 function env.table.serialize( t, level )
@@ -202,5 +218,9 @@ function env.table.serialize( t, level )
 	end
 	return s..string.rep("  ", level-1).."}"
 end
+
+
+
+-- RETURN
 
 return env
