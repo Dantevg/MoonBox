@@ -1,7 +1,18 @@
+--[[
+	
+	Screen API
+	Provides functions and variables for screen drawing
+	
+]]--
+
 local screen = {}
 local args = {...}
 local computer = args[1]
 local love = args[2]
+
+
+
+-- HELPER FUNCTIONS
 
 function getColor(color)
 	local c = colors.rgb(color)
@@ -35,6 +46,10 @@ function closestColor( r, g, b, a )
 		screen.colors[minName][minBrightness][3]/255,
 		a
 end
+
+
+
+-- VARIABLES
 
 screen.pos = {
 	x = 1,
@@ -75,6 +90,10 @@ screen.colors32 = {
   black  = {{0,  0,  0  }, {0,  0,  0  }, {0,  0,  0  }},
   white  = {{255,255,255}, {255,255,255}, {255,255,255}},
 }
+
+
+
+-- DRAWING FUNCTIONS
 
 screen.canvas = {}
 
@@ -465,6 +484,10 @@ function screen.canvas.cursor( canvas, x, y, color )
 	screen.canvas.char( canvas, "_", x, y, color )
 end
 
+
+
+-- GET, SET, LOAD, NEW
+
 function screen.setPixelPos( x, y )
 	screen.pos.x, screen.pos.y = x, y
 end
@@ -614,5 +637,9 @@ end
 function screen.setShader(shader)
 	computer.screen.shader = shader
 end
+
+
+
+-- RETURN
 
 return screen

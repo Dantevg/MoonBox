@@ -1,4 +1,15 @@
+--[[
+	
+	Shell lib
+	Helper for shell program, provides smarter path functions
+	
+]]--
+
 local shell = {}
+
+
+
+-- VARIABLES / CONSTANTS
 
 shell.path = {
 	"",
@@ -10,6 +21,10 @@ shell.extensions = {
 }
 
 shell.dir = "/disk1"
+
+
+
+-- SMARTER PATH FUNCTIONS
 
 -- Type: "f", "d", "fd", "df" (file/dir, in specified order)
 function shell.find( path, type )
@@ -52,9 +67,17 @@ function shell.absolute(path)
 	end
 end
 
+
+
+-- OTHER FUNCTIONS
+
 function shell.error( msg, level )
 	screen.write( (shell.traceback and debug.traceback(msg, level) or msg) .. "\n",
 		{color = "red+1", background = screen.background} )
 end
+
+
+
+-- RETURN
 
 return shell

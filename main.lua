@@ -73,7 +73,7 @@ function sandbox:start( env, bootPath )
 		self.env[k] = v
 	end
 	
-	-- Load MoonBox APIs
+	-- Load MoonBox APIs and libraries
 	local files = love.filesystem.getDirectoryItems("env")
 	for _, name in pairs(files) do
 		local chunk = loadfile("env/"..name)

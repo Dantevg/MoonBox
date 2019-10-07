@@ -1,10 +1,25 @@
+--[[
+	
+	OS API
+	Provides OS functions for time/timing, shutdown/reboot communication and execution
+	
+]]--
+
 local os = {}
 local args = {...}
 local computer = args[1]
 local love = args[2]
 
+
+
+-- VARIABLES / CONSTANTS
+
 os.FPS = computer.FPS
 os.version = "MoonBox v"..computer.version
+
+
+
+-- TIME FUNCTIONS
 
 function os.clock()
 	return math.floor( computer.clock * 1000 ) / 1000
@@ -45,6 +60,10 @@ function os.sleep(time)
 	until param == timer
 end
 
+
+
+-- REBOOT / SHUTDOWN COMMUNICATION
+
 function os.reboot()
 	table.insert( computer.eventBuffer, {"reboot"} )
 end
@@ -52,6 +71,10 @@ end
 function os.shutdown()
 	love.event.quit()
 end
+
+
+
+-- EXECUTION FUNCTIONS
 
 function os.run( path, ... )
 	if not disk.exists(path) then
@@ -78,5 +101,9 @@ function os.elevate(fn)
 	local result = {event.wait("elevateResult")}
 	return unpack( result, 2 )
 end
+
+
+
+-- RETURN
 
 return os

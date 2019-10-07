@@ -1,3 +1,12 @@
+--[[
+	
+	Net API
+	Provides internet access
+	
+	(currently disabled)
+	
+]]--
+
 local net = {}
 
 --[[
@@ -17,5 +26,9 @@ function net.request(url)
 	}
 end
 ]]--
+
+
+
+-- RETURN
 
 return net

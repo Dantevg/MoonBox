@@ -1,7 +1,18 @@
-event = {}
+--[[
+	
+	Event API
+	Provides event-based functions
+	
+]]
+
+local event = {}
 local args = {...}
 local computer = args[1]
 local love = args[2]
+
+
+
+-- EVENT FUNCTIONS
 
 function event.wait(event)
 	local e = { coroutine.yield(event) }
@@ -16,6 +27,10 @@ function event.push( event, ... )
 	table.insert( computer.eventBuffer, {event, ...} )
 end
 
+
+
+-- STATE FUNCTIONS
+
 function event.keyDown(key)
 	if key == "shift" then
 		return love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")
@@ -27,5 +42,9 @@ function event.keyDown(key)
 		return love.keyboard.isDown(key)
 	end
 end
+
+
+
+-- RETURN
 
 return event

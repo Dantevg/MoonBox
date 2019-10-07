@@ -1,9 +1,18 @@
+--[[
+	
+	Disk API
+	Provides file reading/writing and path manipulation functions
+	
+]]--
+
 local disk = {}
 local args = {...}
 local computer = args[1]
 local love = args[2]
 
--- Path functions (drive-independent)
+
+
+-- PATH MANIPULATION FUNCTIONS (drive-independent)
 
 function disk.getParts(path)
 	local tPath = {}
@@ -51,7 +60,9 @@ end
 
 disk.defaults = {}
 
--- Viewing functions
+
+
+-- VIEWING FUNCTIONS
 
 function disk.defaults.list( path, showHidden )
 	path = disk.absolute(path)
@@ -113,7 +124,9 @@ function disk.defaults.exists(path)
 	return disk.info(path) and true or false
 end
 
--- Modification functions
+
+
+-- MODIFICATION FUNCTIONS
 
 function disk.defaults.write( path, data )
 	return love.filesystem.write( disk.absolute(path), data )
@@ -146,7 +159,9 @@ function disk.defaults.remove(path)
 	love.filesystem.remove(path)
 end
 
--- Drives and functions
+
+
+-- DRIVES AND FUNCTIONS
 
 disk.drives = {}
 
@@ -240,5 +255,9 @@ setmetatable(disk, {
 		end
 	end
 })
+
+
+
+-- RETURN
 
 return disk

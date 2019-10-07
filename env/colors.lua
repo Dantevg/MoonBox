@@ -1,4 +1,15 @@
-colors = {}
+--[[
+	
+	Colors lib
+	Provides color conversion and manipulation functions
+	
+]]--
+
+local colors = {}
+
+
+
+-- CONVERSION FUNCTIONS
 
 -- Convert color to rgba (0-255) value
 function colors.rgb(color)
@@ -113,6 +124,10 @@ function colors.color( r, g, b, a )
 	return colors.compose( minName, minBrightness, a )
 end
 
+
+
+-- COLOR MANIPULATION FUNCTIONS
+
 -- Format color from name and brightness
 function colors.compose( name, brightness, opacity )
 	if not screen.colors[name] then
@@ -197,6 +212,10 @@ function colors.blend( fg, a, bg )
 	return colors.color( result[1]*255, result[2]*255, result[3]*255 )
 end
 
+
+
+-- COLOR CONVENIENCE FUNCTIONS
+
 function colors.random( brightness, opacity )
 	local keys = {}
 	for color in pairs(screen.colors) do
@@ -221,5 +240,9 @@ function colors.all(variants)
 	
 	return all
 end
+
+
+
+-- RETURN
 
 return colors
