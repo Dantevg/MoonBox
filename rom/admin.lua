@@ -10,6 +10,7 @@ local menu = {
 		{name = "Settings", type = "menu", data = "settings"},
 		{name = "Lua", type = "fn", data = "lua"},
 		{name = "Shell", type = "fn", data = "shell"},
+		{name = "Reboot", type = "fn", data = "reboot"},
 		selected = 1,
 	},
 	settings = {
@@ -42,6 +43,10 @@ end
 function fn.shell()
 	clearScreen()
 	os.run("/rom/shell.lua")
+end
+
+function fn.reboot()
+	os.reboot()
 end
 
 function fn.saveSettings()
