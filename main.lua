@@ -1,9 +1,9 @@
 --[[
 	
-	Oxygen Lua emulator
+	MoonBox Lua emulator
 	by RedPolygon
 	
-	VERSION 0.2
+	VERSION 0.3
 	
 ]]--
 
@@ -26,7 +26,7 @@ function sandbox.new()
 	
 	computer.env = {}
 	computer.FPS = 20
-	computer.version = "0.2"
+	computer.version = "0.3"
 	computer.nextFrame = 0
 	computer.clock = 0
 	computer.currentFrame = 0
@@ -67,13 +67,13 @@ function sandbox:start( env, bootPath )
 		end
 	end
 	
-	-- Load general Oxygen env
+	-- Load general MoonBox env
 	local env = loadfile("env.lua")(self)
 	for k, v in pairs(env) do
 		self.env[k] = v
 	end
 	
-	-- Load Oxygen APIs
+	-- Load MoonBox APIs
 	local files = love.filesystem.getDirectoryItems("env")
 	for _, name in pairs(files) do
 		local chunk = loadfile("env/"..name)
