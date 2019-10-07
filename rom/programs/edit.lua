@@ -157,12 +157,12 @@ function draw()
 	end
 	
 	-- File info
+	local h = screen.height - screen.font.height + 1
 	screen.rect( 1, screen.height - screen.font.height, screen.width, screen.font.height+1, "gray-1" )
-	screen.setColor("white")
-	screen.setCharPos( 1, screen.charHeight )
-	screen.write( disk.getFilename(path) )
+	screen.setColor("gray+1")
+	screen.write( disk.getFilename(path), 1, h )
 	screen.setCharPos( screen.charWidth-#(x..":"..y) + 1, screen.charHeight )
-	screen.write(x..":"..y)
+	screen.write( x..":"..y, screen.width-(screen.font.width+1) * #(x..":"..y) + 1, h )
 end
 
 function setCursor( newX, newY )
