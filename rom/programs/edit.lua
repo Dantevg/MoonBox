@@ -215,6 +215,7 @@ function keyPress(key)
 				table.remove( file, y+1 )
 			end
 		end
+		lineStart = math.floor( math.log10(#file) ) + 2 -- Recalculate line number width
 	elseif key == "delete" then
 		if event.keyDown("ctrl") and x < #file[y] then
 			local words = getWords(y)
@@ -236,12 +237,14 @@ function keyPress(key)
 				table.remove( file, y+1 )
 			end
 		end
+		lineStart = math.floor( math.log10(#file) ) + 2 -- Recalculate line number width
 	elseif key == "enter" then
 		table.insert( file, y+1, "" )
 		setIndent()
 		file[y+1] = string.rep( "  ", indent ) .. string.sub( file[y], x, -1 )
 		file[y] = string.sub( file[y], 1, x-1 )
 		setCursor( indent*2+1, y+1 )
+		lineStart = math.floor( math.log10(#file) ) + 2 -- Recalculate line number width
 	elseif key == "tab" then
 		file[y] = string.sub( file[y], 1, x ).."  "..string.sub( file[y], x+1, -1 )
 		x = x+2
