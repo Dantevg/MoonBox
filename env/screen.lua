@@ -495,10 +495,28 @@ function screen.canvas.drawImage( canvas, image, x, y, scale )
 	canvas.image = canvas.canvas:newImageData()
 	canvas.imageFrame = computer.currentFrame
 	
+	-- Scale image down
+	if scale < 1 then
+		local oldImage = image
+		local w = math.floor( oldImage:getWidth()*scale )
+		local h = math.floor( oldImage:getHeight()*scale )
+		image = love.image.newImageData( w, h )
+		image:mapPixel(function( ox, oy, r, g, b, a )
+			for i = 1, math.floor(1/scale) do
+				for j = 1, math.floor(1/scale) do
+					big = { oldImage:getPixel( (ox/scale)+i-1, (oy/scale)+j-1 ) }
+					r, g, b, a = r+big[1], g+big[2], b+big[3], a+big[4]
+				end
+			end
+			return r*scale^2, g*scale^2, b*scale^2, a*scale^2
+		end)
+		scale = 1
+	end
+	
 	-- Draw image on canvas image
 	image:mapPixel(function( ox, oy, r, g, b, a )
-		for px = 1, scale do
-			for py = 1, scale do
+		for px = 1, math.max(1, scale) do
+			for py = 1, math.max(1, scale) do
 				local screenX = x + ox*scale + (px-1) - 0.5
 				local screenY = y + oy*scale + (py-1) - 0.5
 				if screenX >= 0 and screenY >= 0 and screenX <= screen.width and screenY <= screen.height then
@@ -522,10 +540,6 @@ function screen.canvas.drawImage( canvas, image, x, y, scale )
 		love.graphics.setColor( 1, 1, 1, 1 )
 		love.graphics.draw(image)
 	end)
-	
-	-- canvas.canvas:renderTo(function()
-	-- 	love.graphics.draw( love.graphics.newImage(image), x or 0, y or 0 )
-	-- end)
 end
 
 
@@ -589,8 +603,7 @@ function screen.loadImage(path)
 	
 	-- Convert colors
 	imageData:mapPixel(function( x, y, r, g, b, a )
-		local rgba = colors.rgb( colors.color(r*255,g*255,b*255,a) )
-		return rgba[1]/255, rgba[2]/255, rgba[3]/255, rgba[4]
+		return closestColor({r,g,b,a})
 	end)
 	
 	return imageData
