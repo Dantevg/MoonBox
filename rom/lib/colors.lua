@@ -104,7 +104,7 @@ function colors.color( r, g, b, a )
 		for i = 1, #v do
 			if v[i][1] == r*255 and v[i][2] == g*255 and v[i][3] == b*255 then
 				-- Same color, return formatted name
-				return colors.compose( name, i-4 )
+				return colors.compose( name, i-4, a )
 			end
 		end
 	end
@@ -137,6 +137,10 @@ function colors.compose( name, brightness, opacity )
 	-- Make sure brightness and opacity are within range
 	brightness = math.min( math.max( -3, brightness or 0 ), 3 )
 	opacity = math.min( math.max( 0, opacity or 1 ), 1 )
+	
+	-- Round brightness and opacity
+	brightness = math.floor( brightness * 100 ) / 100
+	opacity = math.floor( opacity * 100 ) / 100
 	
 	local color
 	

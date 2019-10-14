@@ -484,6 +484,64 @@ function screen.canvas.cursor( canvas, x, y, color )
 	screen.canvas.char( canvas, "_", x, y, color )
 end
 
+function screen.canvas.drawImage( canvas, image, x, y, scale )
+	if type(image) == "string" then
+		image = screen.loadImage(image)
+	end
+	
+	x, y, scale = x or 1, y or 1, scale or 1
+	
+	-- Update the canvas image
+	canvas.image = canvas.canvas:newImageData()
+	canvas.imageFrame = computer.currentFrame
+	
+	-- Scale image down
+	if scale < 1 then
+		local oldImage = image
+		local w = math.floor( oldImage:getWidth()*scale )
+		local h = math.floor( oldImage:getHeight()*scale )
+		image = love.image.newImageData( w, h )
+		image:mapPixel(function( ox, oy, r, g, b, a )
+			for i = 1, math.floor(1/scale) do
+				for j = 1, math.floor(1/scale) do
+					big = { oldImage:getPixel( (ox/scale)+i-1, (oy/scale)+j-1 ) }
+					r, g, b, a = r+big[1], g+big[2], b+big[3], a+big[4]
+				end
+			end
+			return r*scale^2, g*scale^2, b*scale^2, a*scale^2
+		end)
+		scale = 1
+	end
+	
+	-- Draw image on canvas image
+	image:mapPixel(function( ox, oy, r, g, b, a )
+		for px = 1, math.max(1, scale) do
+			for py = 1, math.max(1, scale) do
+				local screenX = x + ox*scale + (px-1) - 0.5
+				local screenY = y + oy*scale + (py-1) - 0.5
+				if screenX >= 0 and screenY >= 0 and screenX <= screen.width and screenY <= screen.height then
+					local bg = { canvas.image:getPixel(screenX, screenY) }
+					local finalColor = {
+						r * a + bg[1] * (1-a),
+						g * a + bg[2] * (1-a),
+						b * a + bg[3] * (1-a),
+					}
+					canvas.image:setPixel( screenX, screenY, closestColor(finalColor) )
+				end
+			end
+		end
+		
+		return r, g, b, a -- mapPixel expects a return color, so return original color
+	end)
+	
+	-- Draw image on canvas
+	canvas.canvas:renderTo(function()
+		local image = love.graphics.newImage(canvas.image)
+		love.graphics.setColor( 1, 1, 1, 1 )
+		love.graphics.draw(image)
+	end)
+end
+
 
 
 -- GET, SET, LOAD, NEW
@@ -535,7 +593,23 @@ function screen.canvas.getPixel( canvas, x, y )
 	return colors.color( r, g, b )
 end
 
-function loadFont( path, data )
+function screen.loadImage(path)
+	path = disk.absolute(path)
+	if not disk.exists(path) then
+		error( "No such file: "..path, 2 )
+	end
+	
+	local imageData = love.image.newImageData(path)
+	
+	-- Convert colors
+	imageData:mapPixel(function( x, y, r, g, b, a )
+		return closestColor({r,g,b,a})
+	end)
+	
+	return imageData
+end
+
+local function loadFont( path, data )
 	local font = {}
 	font.name = data.description.family
 	font.monospace = true -- Only monospace support for now
