@@ -54,7 +54,7 @@ function read:key(key)
 		end
 	elseif key == "backspace" then
 		if event.keyDown("ctrl") then
-			local words = getWords()
+			local words = self:getWords()
 			for i = 1, #words do
 				if self.pos > words[i].s and self.pos <= words[i].e+1 then
 					local l = #words[i].data
@@ -74,7 +74,7 @@ function read:key(key)
 		end
 	elseif key == "delete" then
 		if event.keyDown("ctrl") then
-			local words = getWords()
+			local words = self:getWords()
 			for i = 1, #words do
 				if self.pos > words[i].s and self.pos <= words[i].e+1 then
 					words[i].data = string.sub( words[i].data, 1, self.pos - words[i].s )
@@ -97,7 +97,7 @@ function read:key(key)
 		self.pos = #self.history[self.selected]+1
 	elseif key == "left" then
 		if event.keyDown("ctrl") then
-			local words = getWords()
+			local words = self:getWords()
 			for i = 1, #words do
 				if self.pos > words[i].s and self.pos <= words[i].e+1 then
 					self.pos = (words[i].type == "word") and (words[i-1] and words[i-1].s) or words[i].s
@@ -109,7 +109,7 @@ function read:key(key)
 		end
 	elseif key == "right" then
 		if event.keyDown("ctrl") then
-			local words = getWords()
+			local words = self:getWords()
 			for i = 1, #words do
 				if self.pos >= words[i].s and self.pos <= words[i].e then
 					self.pos = (words[i].type == "separator") and words[i+1].e+1 or words[i].e+1
@@ -147,7 +147,7 @@ function read.new( history, async )
 	local r = {}
 	r.history = history or {}
 	table.insert( r.history, "" )
-	r.selected = #history
+	r.selected = #r.history
 	r.cursor = true
 	r.x, r.y = screen.pos.x, screen.pos.y
 	r.pos = 1
@@ -159,7 +159,7 @@ function read.new( history, async )
 			__index = read,
 			__call = r.update
 		} )
-	else -- Wait for input. Stals program until enter pressed (traditional)
+	else -- Wait for input. Stalls program until enter pressed (traditional)
 		setmetatable( r, {__index = read} )
 		while true do
 			r:draw()
