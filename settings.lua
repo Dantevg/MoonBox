@@ -1,7 +1,9 @@
 return {
-	width = 300, -- 300
-	height = 200, -- 200
-	scale = 2, -- 2
-	fullscreen = false, -- false
-	border = 1, -- 1
+	width = 300,
+	height = 200,
+	scale = 2,
+	fullscreen = false,
+	border = 1,
+	screenshotScale = 4,
+	screenshotBorder = true
 }

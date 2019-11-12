@@ -10,6 +10,7 @@ local menu = {
 		{name = "Settings", type = "menu", data = "settings"},
 		{name = "Lua", type = "fn", data = "lua"},
 		{name = "Shell", type = "fn", data = "shell"},
+		{name = "Screenshot", type = "fn", data = "screenshot"},
 		{name = "Reboot", type = "fn", data = "reboot"},
 		selected = 1,
 	},
@@ -24,6 +25,8 @@ local menu = {
 		{name = "Scale", type = "input.number", source = "scale", data = settings.scale},
 		{name = "Fullscreen", type = "input.boolean", source = "fullscreen", data = settings.fullscreen},
 		{name = "Border width", type = "input.number", source = "border", data = settings.border},
+		{name = "Screenshot scale", type = "input.number", source = "screenshotScale", data = settings.screenshotScale},
+		{name = "Screenshot border", type = "input.boolean", source = "screenshotBorder", data = settings.screenshotBorder},
 		{name = "------", type = "text"},
 		{name = "Save", type = "fn", data = "saveSettings"},
 		selected = 1
@@ -43,6 +46,34 @@ end
 function fn.shell()
 	clearScreen()
 	os.run("/rom/shell.lua")
+end
+
+function fn.screenshot()
+	if not disk.exists("/screenshots") or disk.info("/screenshots").type ~= "dir" then
+		love.filesystem.createDirectory("/screenshots") -- Bypass read-only restriction applied for sandbox
+	end
+	local d = os.datetime()
+	local filename = d.year.."_"..d.month.."_"..d.day.." "..d.hour.."_"..d.min.."_"..d.sec
+	
+	computer.screen.image = computer.screen.canvas:newImageData()
+	computer.screen.imageFrame = computer.currentFrame
+	local scale = settings.screenshotScale
+	local border = settings.screenshotBorder and settings.border or 0
+	local w = (computer.screen.image:getWidth() + 2*border) * math.ceil(scale)
+	local h = (computer.screen.image:getHeight() + 2*border) * math.ceil(scale)
+	
+	local screenshot = love.image.newImageData( w, h )
+	screenshot:mapPixel(function(x,y,r,g,b,a)
+		if x/scale < border or x/scale >= w/scale - border
+			or y/scale < border or y/scale >= h/scale - border then
+			return 0, 0, 0, 1
+		else
+			local r, g, b, a = computer.screen.image:getPixel( x/scale - border, y/scale - border )
+			return r, g, b, 1
+		end
+	end)
+	
+	screenshot:encode( "png", "/screenshots/"..filename..".png" )
 end
 
 function fn.reboot()
