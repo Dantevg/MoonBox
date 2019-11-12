@@ -135,7 +135,7 @@ function read:update( e, param )
 		return self:char(param)
 	elseif e == "key" then
 		return self:key(param)
-	elseif e == "timer" and key == self.timer then
+	elseif e == "timer" and param == self.timer then
 		self.timer = os.startTimer(0.5)
 		self.cursor = not self.cursor
 	end
