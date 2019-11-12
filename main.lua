@@ -83,7 +83,7 @@ function sandbox:start( env, bootPath )
 		end
 	end
 	
-	load( "env", self, love ) -- Load APIs, pass computer and love
+	load( "env", self, love, _G ) -- Load APIs, pass computer and love
 	load("rom/lib") -- Load libraries (which don't need special access)
 	
 	-- Set shortcuts, _G and options
@@ -133,13 +133,15 @@ end
 
 function setWindow(s)
 	s = s or {}
+	local _, _, window = love.window.getMode()
+	
 	love.window.setMode(
 		s.w and (s.w+2*settings.border) * settings.scale or (settings.width+2*settings.border) * settings.scale,
 		s.h and (s.h+2*settings.border) * settings.scale or (settings.height+2*settings.border) * settings.scale,
 		{
 			fullscreen = s.fullscreen or settings.fullscreen,
-			x = s.x,
-			y = s.y,
+			x = s.x or window.x,
+			y = s.y or window.y,
 			resizable = true,
 		}
 	)

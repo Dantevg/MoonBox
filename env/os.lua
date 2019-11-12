@@ -9,6 +9,7 @@ local os = {}
 local args = {...}
 local computer = args[1]
 local love = args[2]
+local osOld = args[3].os
 
 
 
@@ -27,22 +28,22 @@ end
 
 function os.time( h24, seconds )
 	if h24 then
-		return os.date( "%H:%M"..(seconds and ":%S" or "") )
+		return osOld.date( "%H:%M"..(seconds and ":%S" or "") )
 	else
-		return os.date("%I:%M"..(seconds and ":%S" or "").." %p")
+		return osOld.date("%I:%M"..(seconds and ":%S" or "").." %p")
 	end
 end
 
 function os.date(yearFirst)
 	if yearFirst then
-		return os.date("%Y-%m-%d")
+		return osOld.date("%Y-%m-%d")
 	else
-		return os.date("%d-%m-%Y")
+		return osOld.date("%d-%m-%Y")
 	end
 end
 
 function os.datetime()
-	return os.date("*t")
+	return osOld.date("*t")
 end
 
 function os.startTimer(time)
