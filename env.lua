@@ -58,7 +58,22 @@ end
 
 
 
--- LUA EXTENSIONS
+-- LUA EXTENSIONS / MODIFICATIONS
+
+function env.getfenv(level)
+	if level == 0 then
+		return env._G
+	elseif level >= 1 then
+		local e = getfenv(level)
+		if e == _G then
+			return env._G
+		else
+			return e
+		end
+	else
+		error( "bad agrument #1 to 'getfenv' (invalid level)", 2 ) -- Mimic standard lua error
+	end
+end
 
 env.table = setmetatable( {}, {__index = table} )
 
