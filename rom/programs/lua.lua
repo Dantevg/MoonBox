@@ -18,14 +18,15 @@ while running do
 	print()
 	
 	local fn, err
-	local fn1, err1 = load( input, "lua", "t", env )
-	local fn2, err2 = load( "return (function(...) return tostring(...) end)("..input..");", "lua", "t", env )
+	local fn1, err1 = load( input, "lua", "t", env ) -- Just execute
+	local fn2, err2 = load( [[ -- Print values
+			return (function(...)
+				local a = {...}
+				for i = 1, #a do a[i] = tostring(a[i]) end
+				return unpack(a)
+			end)(]]..input..");", "lua", "t", env )
 	
-	if fn2 then
-		fn = fn2
-	else
-		fn = fn1
-	end
+	fn = fn2 or fn1
 	err = err1
 	
 	if not fn then
