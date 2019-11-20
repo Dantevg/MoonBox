@@ -90,8 +90,8 @@ function love.load()
 	
 	computer = sandbox.new()
 	computer:start()
-	menu = sandbox.new()
-	menu:start( setmetatable( _G, {__index = computer.env} ), "/rom/admin.lua" )
+	menu = sandbox.new( _G, false )
+	menu:start("/rom/admin.lua")
 	active = (firstBoot and menu or computer)
 end
 
@@ -116,16 +116,16 @@ function love.update(dt)
 	end
 	
 	-- Ctrl-t detection (terminate)
-	if love.keyboard.isDown("lctrl") and love.keyboard.isDown("t") and computer.running then
-		if not computer.terminate then
-			computer.terminate = love.timer.getTime()
+	if love.keyboard.isDown("lctrl") and love.keyboard.isDown("t") and active.running then
+		if not active.terminate then
+			active.terminate = love.timer.getTime()
 		end
-		if computer.terminate + 2 < love.timer.getTime() then
-			table.insert( computer.eventBuffer, {"terminate"} )
-			computer.terminate = false
+		if active.terminate + 2 < love.timer.getTime() then
+			table.insert( active.eventBuffer, {"terminate"} )
+			active.terminate = false
 		end
 	else
-		computer.terminate = false
+		active.terminate = false
 	end
 	
 	-- Queue timer events
@@ -250,15 +250,11 @@ function love.keypressed(key)
 	-- Menu detection
 	if love.keyboard.isDown("lctrl") and key == "rctrl"
 		or love.keyboard.isDown("rctrl") and key == "lctrl" then
-		if active == menu then
-			active = computer
-			menu.running = false
-			computer.running = true
-		else
-			active = menu
-			menu.running = true
-			computer.running = false
-		end
+		active.running = false
+		active.reboot = false
+		active.terminate = false
+		active = (active == menu) and computer or menu
+		active.running = true
 	end
 	
 	local keyDown = active.env.event.keyDown
