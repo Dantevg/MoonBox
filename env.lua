@@ -13,14 +13,6 @@ local env = setmetatable( {}, {__index = computer.env} )
 
 -- FILE / INPUT READING
 
-function env.tostring(...)
-	if select( "#", ... ) == 0 then -- No argument received (not even a nil value)
-		return nil
-	else
-		return tostring(...)
-	end
-end
-
 function env.load( fn, name, mode, e )
 	return load( fn, name, mode or "bt", e or computer.env )
 end
@@ -61,10 +53,11 @@ end
 -- LUA EXTENSIONS / MODIFICATIONS
 
 function env.getfenv(level)
+	level = level or 1
 	if level == 0 then
 		return env._G
 	elseif level >= 1 then
-		local e = getfenv(level)
+		local e = getfenv(level+1)
 		if e == _G then
 			return env._G
 		else
