@@ -7,8 +7,50 @@
 
 local sandbox = {}
 
-function sandbox.new()
-	local computer = {}
+function sandbox:createEnv( env, loadGeneral )
+	if not env then
+		-- Load standard env
+		local vars = {
+			"coroutine", "assert", "tostring", "tonumber", "rawget", "xpcall", "pcall", "bit", "getfenv", "rawset", "setmetatable", "package", "getmetatable", "type", "ipairs", "_VERSION", "debug", "table", "collectgarbage", "module", "next", "math", "setfenv", "select", "string", "unpack", "require", "rawequal", "pairs", "error"
+		}
+		for _, v in ipairs(vars) do
+			self.env[v] = _G[v]
+		end
+	end
+	
+	-- Load MoonBox APIs and libraries
+	setmetatable( self.env, {__index = _G} )
+	local function load( path, ... )
+		local files = love.filesystem.getDirectoryItems(path)
+		for _, name in pairs(files) do
+			local chunk = loadfile(path.."/"..name)
+			setfenv( chunk, self.env )
+			self.env[ name:match("^(.+)%.lua") ] = chunk(...)
+		end
+	end
+	
+	load( "env", self, love ) -- Load APIs, pass computer and love
+	load("rom/lib") -- Load libraries (which don't need special access)
+	
+	-- Load general MoonBox env
+	if loadGeneral ~= false then
+		local general = loadfile("env.lua")(self)
+		for k, v in pairs(general) do
+			self.env[k] = v
+		end
+	end
+	
+	-- Set shortcuts, _G and options
+	self.env.print = self.env.screen.print
+	self.env._G = self.env
+	self.env.screen.colors = self.env.screen.colors64
+	self.env.shell.traceback = false
+	
+	setmetatable( self.env, env and {__index = env} or nil )
+end
+
+function sandbox.new( env, loadGeneral )
+	local computer = setmetatable( {}, {__index = sandbox} )
 	
 	computer.env = {}
 	computer.FPS = 20
@@ -37,47 +79,12 @@ function sandbox.new()
 	computer.screen.canvas:setFilter( "linear", "nearest" )
 	computer.screen.shader = nil
 	
-	return setmetatable( computer, {__index = sandbox} )
+	computer:createEnv( env, loadGeneral )
+	
+	return computer
 end
 
-function sandbox:start( env, bootPath )
-	if env then
-		self.env = setmetatable( {}, {__index = env} )
-	else
-		-- Load standard env
-		local vars = {
-			"coroutine", "assert", "tostring", "tonumber", "rawget", "xpcall", "pcall", "bit", "getfenv", "rawset", "setmetatable", "package", "getmetatable", "type", "ipairs", "_VERSION", "debug", "table", "collectgarbage", "module", "next", "math", "setfenv", "select", "string", "unpack", "require", "rawequal", "pairs", "error"
-		}
-		for _, v in ipairs(vars) do
-			self.env[v] = _G[v]
-		end
-	end
-	
-	-- Load general MoonBox env
-	local env = loadfile("env.lua")(self)
-	for k, v in pairs(env) do
-		self.env[k] = v
-	end
-	
-	-- Load MoonBox APIs and libraries
-	local function load( path, ... )
-		local files = love.filesystem.getDirectoryItems(path)
-		for _, name in pairs(files) do
-			local chunk = loadfile(path.."/"..name)
-			setfenv( chunk, setmetatable({}, {__index = self.env}) )
-			self.env[ name:match("^(.+)%.lua") ] = chunk(...)
-		end
-	end
-	
-	load( "env", self, love, _G ) -- Load APIs, pass computer and love
-	load("rom/lib") -- Load libraries (which don't need special access)
-	
-	-- Set shortcuts, _G and options
-	self.env.print = self.env.screen.print
-	self.env._G = self.env
-	self.env.screen.colors = self.env.screen.colors64
-	self.env.shell.traceback = false
-	
+function sandbox:start(bootPath)
 	-- Load boot program
 	local fn, err = love.filesystem.load( bootPath or "/rom/boot.lua" )
 	if err then error(err) end
