@@ -22,7 +22,7 @@ while running do
 	local fn2, err2 = load( [[ -- Print values
 			return (function(...)
 				local a = {...}
-				for i = 1, #a do a[i] = tostring(a[i]) end
+				for i = 1, select("#",...) do a[i] = tostring(a[i]) end
 				return unpack(a)
 			end)(]]..input..");", "lua", "t", env )
 	
