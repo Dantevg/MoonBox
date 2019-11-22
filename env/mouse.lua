@@ -1,9 +1,18 @@
+--[[
+	
+	Mouse API
+	Provides mouse position and button information
+	
+]]--
+
 local mouse = {}
 local args = {...}
 local computer = args[1]
 local love = args[2]
 
 function mouse.isDown(button)
+	expect( button, "number" )
+	
 	return love.mouse.isDown(button)
 end
 

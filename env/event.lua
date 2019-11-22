@@ -15,6 +15,8 @@ local love = args[2]
 -- EVENT FUNCTIONS
 
 function event.wait(event)
+	expect( event, {"string", "nil"} )
+	
 	local e = { coroutine.yield(event) }
 	if e[1] == "terminate" then
 		error( "Terminated", 0 )
@@ -24,6 +26,8 @@ function event.wait(event)
 end
 
 function event.push( event, ... )
+	expect( event, {"string", "nil"} )
+	
 	table.insert( computer.eventBuffer, {event, ...} )
 end
 
@@ -32,6 +36,8 @@ end
 -- STATE FUNCTIONS
 
 function event.keyDown(key)
+	expect( key, "string" )
+	
 	if key == "shift" then
 		return love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")
 	elseif key == "ctrl" or key == "control" then

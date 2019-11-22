@@ -26,6 +26,13 @@ function getColor(color)
 end
 
 function closestColor( r, g, b, a )
+	expect( r, {"number", "table"} )
+	if type(r) == "number" then
+		expect( g, {"number", "nil"} )
+		expect( b, {"number", "nil"} )
+		expect( a, {"number", "nil"} )
+	end
+	
 	if type(r) == "table" then
 		r, g, b, a = r[1]*255, r[2]*255, r[3]*255, r[4]
 	end
@@ -98,6 +105,10 @@ screen.colors32 = {
 screen.canvas = {}
 
 function screen.canvas:draw( x, y, scale )
+	expect( x, "number", 1, "(Canvas):draw" )
+	expect( y, "number", 2, "(Canvas):draw" )
+	expect( scale, {"number", "nil"}, 3, "(Canvas):draw" )
+	
 	computer.screen.canvas:renderTo(function()
 		love.graphics.setColor( 1, 1, 1, 1 )
 		love.graphics.draw( self.canvas, x-1, y-1, nil, scale ) -- TODO: Check if -1 or -0.5
@@ -119,6 +130,10 @@ setmetatable( screen, {
 } )
 
 function screen.canvas.pixel( canvas, x, y, color )
+	expect( x, "number", 1, "screen.pixel" )
+	expect( y, "number", 2, "screen.pixel" )
+	expect( color, {"string", "nil"}, 3, "screen.pixel" )
+	
 	x, y = x or screen.pos.x, y or screen.pos.y
 	if x <= 0 or y <= 0 or x > screen.width or y > screen.height then
 		return
@@ -138,6 +153,11 @@ function screen.canvas.pixel( canvas, x, y, color )
 end
 
 function screen.canvas.char( canvas, char, x, y, color )
+	expect( char, "string", 1, "screen.char" )
+	expect( x, {"number", "nil"}, 2, "screen.char" )
+	expect( y, {"number", "nil"}, 3, "screen.char" )
+	expect( color, {"string", "nil"}, 4, "screen.char" )
+	
 	x, y = x or screen.pos.x, y or screen.pos.y
 	local rgb = getColor(color) or getColor(screen.color)
 	
@@ -182,6 +202,9 @@ end
 -- Options: x (number), y (number), color (string), background (string),
 -- 	max (number), overflow: (string) ["wrap", "ellipsis"], monospace (boolean)
 function screen.canvas.write( canvas, text, a, b )
+	expect( a, {"number", "table", "nil"}, 2, "screen.write" )
+	expect( b, {"number", "nil"}, 3, "screen.write" )
+	
 	text = text and tostring(text) or ""
 	local options = {}
 	if type(a) == "number" then
@@ -246,6 +269,8 @@ function screen.canvas.write( canvas, text, a, b )
 end
 
 function screen.canvas.print( canvas, text, color )
+	expect( color, {"string", "nil"}, 2, "screen.print" )
+	
 	screen.canvas.write( canvas, text, {color = color} )
 	screen.pos.x = 1
 	screen.pos.y = screen.pos.y + (screen.font.height+1)
@@ -256,6 +281,13 @@ end
 
 -- Default filled
 function screen.canvas.rect( canvas, x, y, w, h, color, filled )
+	expect( x, {"number", "nil"}, 1, "screen.rect" )
+	expect( y, {"number", "nil"}, 2, "screen.rect" )
+	expect( w, {"number", "nil"}, 3, "screen.rect" )
+	expect( h, {"number", "nil"}, 4, "screen.rect" )
+	expect( color, {"string", "nil"}, 5, "screen.rect" )
+	expect( filled, {"boolean", "nil"}, 6, "screen.rect" )
+	
 	x, y = x or screen.pos.x, y or screen.pos.y
 	w, h = (w or 0), (h or 0)
 	
@@ -303,9 +335,12 @@ function screen.canvas.rect( canvas, x, y, w, h, color, filled )
 end
 
 function screen.canvas.line( canvas, x1, y1, x2, y2, color )
-	if not x1 or not y1 or not x2 or not y2 then
-		error( "Expected coordinates", 2 )
-	end
+	expect( x1, "number", 1, "screen.line" )
+	expect( y1, "number", 2, "screen.line" )
+	expect( x2, "number", 3, "screen.line" )
+	expect( y2, "number", 4, "screen.line" )
+	expect( color, {"number", "nil"}, 5, "screen.line" )
+	
 	local rgb = getColor(color) or getColor(screen.color)
 	
 	if rgb[4] ~= 1 then -- Partially transparent, update screen image
@@ -389,8 +424,13 @@ end
 
 -- Default filled
 function screen.canvas.circle( canvas, xc, yc, r, color, filled )
+	expect( xc, {"number", "nil"}, 1, "screen.circle" )
+	expect( yc, {"number", "nil"}, 2, "screen.circle" )
+	expect( r, "number", 3, "screen.circle" )
+	expect( color, {"number", "nil"}, 4, "screen.circle" )
+	expect( filled, {"boolean", "nil"}, 5, "screen.circle" )
+	
 	xc, yc = xc or screen.pos.x, yc or screen.pos.y
-	if not r then error( "Radius expected", 2 ) end
 	local rgb = getColor(color) or getColor(screen.color)
 	
 	if rgb[4] ~= 1 and not filled then -- Partially transparent, update screen image
@@ -452,6 +492,8 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 end
 
 function screen.canvas.clear( canvas, color )
+	expect( color, {"string", "nil"} )
+	
 	color = getColor(color)
 	if color then
 		color[4] = 1 -- No transparency
@@ -465,6 +507,9 @@ function screen.canvas.clear( canvas, color )
 end
 
 function screen.canvas.move( canvas, x, y )
+	expect( x, "number", 1, "screen.move" )
+	expect( y, "number", 2, "screen.move" )
+	
 	local newCanvas = love.graphics.newCanvas(
 		screen.width,
 		screen.height)
@@ -481,10 +526,19 @@ function screen.canvas.move( canvas, x, y )
 end
 
 function screen.canvas.cursor( canvas, x, y, color )
+	expect( x, {"number", "nil"}, 1, "screen.cursor" )
+	expect( y, {"number", "nil"}, 2, "screen.cursor" )
+	expect( color, {"string", "nil"}, 3, "screen.cursor" )
+	
 	screen.canvas.char( canvas, "_", x, y, color )
 end
 
 function screen.canvas.drawImage( canvas, image, x, y, scale )
+	expect( image, {"string", "userdata"}, 1, "screen.drawImage" )
+	expect( x, {"number", "nil"}, 2, "screen.drawImage" )
+	expect( y, {"number", "nil"}, 3, "screen.drawImage" )
+	expect( scale, {"number", "nil"}, 4, "screen.drawImage" )
+	
 	if type(image) == "string" then
 		image = screen.loadImage(image)
 	end
@@ -547,10 +601,16 @@ end
 -- GET, SET, LOAD, NEW
 
 function screen.setPixelPos( x, y )
+	expect( x, "number" )
+	expect( y, "number" )
+	
 	screen.pos.x, screen.pos.y = x, y
 end
 
 function screen.getPixelPos( x, y )
+	expect( x, {"number", "nil"} )
+	expect( y, {"number", "nil"} )
+	
 	if not x or not y then
 		return screen.pos.x, screen.pos.y
 	end
@@ -560,11 +620,17 @@ function screen.getPixelPos( x, y )
 end
 
 function screen.setCharPos( x, y )
+	expect( x, "number" )
+	expect( y, "number" )
+	
 	screen.pos.x = (x-1) * (screen.font.width+1) + 1
 	screen.pos.y = (y-1) * (screen.font.height+1) + 1
 end
 
 function screen.getCharPos( x, y )
+	expect( x, {"number", "nil"} )
+	expect( y, {"number", "nil"} )
+	
 	x, y = x or screen.pos.x, y or screen.pos.y
 	return
 		math.floor( x / (screen.font.width+1) ) + 1,
@@ -572,14 +638,21 @@ function screen.getCharPos( x, y )
 end
 
 function screen.setColor(color)
+	expect( color, "string" )
+	
 	screen.color = color
 end
 
 function screen.setBackground(color)
+	expect( color, "string" )
+	
 	screen.background = color
 end
 
 function screen.canvas.getPixel( canvas, x, y )
+	expect( x, "number" )
+	expect( y, "number" )
+	
 	if x <= 0 or y <= 0 or x > screen.width or y > screen.height then
 		return screen.background
 	end
@@ -594,6 +667,8 @@ function screen.canvas.getPixel( canvas, x, y )
 end
 
 function screen.loadImage(path)
+	expect( path, "string" )
+	
 	path = disk.absolute(path)
 	if not disk.exists(path) then
 		error( "No such file: "..path, 2 )
@@ -610,6 +685,9 @@ function screen.loadImage(path)
 end
 
 local function loadFont( path, data )
+	expect( path, "string" )
+	expect( data, "table" )
+	
 	local font = {}
 	font.name = data.description.family
 	font.monospace = true -- Only monospace support for now
@@ -656,6 +734,8 @@ local function loadFont( path, data )
 end
 
 function screen.setFont(path)
+	expect( path, "string" )
+	
 	path = disk.absolute(path)
 	if not disk.exists(path) then
 		error( "No such file: "..path, 2 )
@@ -684,6 +764,9 @@ function screen.setFont(path)
 end
 
 function screen.newCanvas( w, h )
+	expect( w, {"number", "nil"} )
+	expect( h, {"number", "nil"} )
+	
 	w, h = w or 0, h or 0
 	local c = {
 		w = w,
@@ -695,6 +778,8 @@ function screen.newCanvas( w, h )
 end
 
 function screen.newShader(path)
+	expect( path, "string" )
+	
 	path = disk.absolute(path)
 	if not disk.exists(path) then
 		error( "No such file: "..path, 2 )
@@ -709,6 +794,8 @@ function screen.newShader(path)
 end
 
 function screen.setShader(shader)
+	expect( shader, "userdata" )
+	
 	computer.screen.shader = shader
 end
 

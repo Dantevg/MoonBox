@@ -28,7 +28,8 @@ shell.dir = "/disk1"
 
 -- Type: "f", "d", "fd", "df" (file/dir, in specified order)
 function shell.find( path, type )
-	if not path then error( "Expected path [,type]", 2 ) end
+	expect( path, "string", 1, "shell.find" )
+	expect( type, {"string", "nil"}, 2, "shell.find" )
 	
 	local found = {}
 	table.insert( shell.path, shell.dir.."/" ) -- Add current dir to the list
@@ -60,6 +61,8 @@ function shell.find( path, type )
 end
 
 function shell.absolute(path)
+	expect( path, {"string", "nil"} )
+	
 	if not path or string.sub( path, 1, 1 ) == "/" then -- Absolute
 		return disk.absolute(path)
 	else -- Relative
@@ -72,6 +75,9 @@ end
 -- OTHER FUNCTIONS
 
 function shell.error( msg, level )
+	expect( msg, {"string", "nil"}, 1, "shell.error" )
+	expect( level, {"number", "nil"}, 2, "shell.error" )
+	
 	screen.write( (shell.traceback and debug.traceback(msg, level) or msg) .. "\n",
 		{color = "red+1", background = screen.background} )
 end

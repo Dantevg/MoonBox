@@ -38,6 +38,49 @@ active = nil
 
 -- FUNCTIONS
 
+-- expect( value (any), expectation (string|table) )
+   --> expectation expected, got type(value)
+-- expect( value (any), expectation (string|table), n (number), name (string) )
+   --> bad argument #n to name (expectation expected, got type(value))
+function expect( value, expectation, n, name )
+	local function correct( v, e )
+		if e == "tonumber" then
+			return type(v) == "number" or type(tonumber(v)) == "number"
+		else
+			return type(v) == e
+		end
+	end
+	
+	local function concat(tbl)
+		for k, v in pairs(tbl) do
+			if v == "tonumber" then
+				tbl[k] = "number"
+			end
+		end
+		return table.concat( tbl, " or " )
+	end
+	
+	local function makeError( v, e, n, fnName, argName )
+		if n then
+			return "bad argument #"..n.." to '"..name.."' (expected "..concat(e," or ")..", got "..type(v)..")"
+		else
+			return concat(e," or ").." expected, got "..type(v)
+		end
+	end
+	
+	if type(expectation) == "string" then
+		if not correct( value, expectation ) then
+			error( makeError( value, (expectation=="tonumber" and {"number"} or {expectation}), n, name ), 3 )
+		end
+	elseif type(expectation) == "table" then
+		for _, e in ipairs(expectation) do
+			if correct( value, e ) then return true end
+		end
+		error( makeError( value, expectation, n, name ), 3 )
+	end
+	return true
+end
+
 function setWindow(s)
 	s = s or {}
 	local _, _, window = love.window.getMode()

@@ -26,6 +26,8 @@ function env.loadstring( str, name, mode, e )
 end
 
 function env.require(path)
+	expect( path, "string" )
+	
 	local before = {"/", "/disk1/", "/disk1/lib/"}
 	local after = {"", ".lua"}
 	
@@ -53,6 +55,8 @@ end
 -- LUA EXTENSIONS / MODIFICATIONS
 
 function env.getfenv(level)
+	expect( level, {"number", "nil"} )
+	
 	level = level or 1
 	if level == 0 then
 		return env._G
@@ -71,6 +75,8 @@ end
 env.table = setmetatable( {}, {__index = table} )
 
 function env.table.serialize( t, level )
+	expect( t, "table" )
+	
 	level = level or 1
 	local s = "{\n"
 	if type(t) ~= "table" then error( "Expected table", 2 ) end
@@ -96,6 +102,8 @@ function env.table.serialize( t, level )
 	end
 	return s..string.rep("  ", level-1).."}"
 end
+
+env.expect = expect
 
 
 

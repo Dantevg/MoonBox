@@ -37,12 +37,16 @@ function read:getWords()
 end
 
 function read:char(char)
+	expect( char, "string" )
+	
 	self.history[#self.history] = string.sub( self.history[self.selected], 1, self.pos-1 )..char..string.sub( self.history[self.selected], self.pos, -1 )
 		self.selected = #self.history
 		self.pos = self.pos+1
 end
 
 function read:key(key)
+	expect( key, "string" )
+	
 	if key == "enter" then
 		self.cursor = false
 		self:draw()
@@ -131,6 +135,8 @@ end
 -- INTERNAL / READ OBJECT FUNCTIONS
 
 function read:update( e, param )
+	expect( e, "string", 1, "(Read):update" )
+	
 	if e == "char" then
 		return self:char(param)
 	elseif e == "key" then
@@ -144,6 +150,9 @@ end
 -- read.new( [history [,async]] )
 -- Note: for async, history doesn't need to be specified
 function read.new( history, async )
+	expect( history, {"table", "nil"}, 1, "read" )
+	expect( async, {"boolean", "nil"}, 2, "read" )
+	
 	local r = {}
 	r.history = history or {}
 	table.insert( r.history, "" )

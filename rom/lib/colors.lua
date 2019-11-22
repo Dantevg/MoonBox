@@ -13,6 +13,8 @@ local colors = {}
 
 -- Convert color to rgba (0-255) value
 function colors.rgb(color)
+	expect( color, {"string", "nil"} )
+	
 	if not color then return end
 	
 	if type(color) == "table" then
@@ -44,7 +46,12 @@ end
 
 -- Convert color to hsla (0-255) value
 function colors.hsl( r, g, b, a )
-	if not r then return end
+	expect( r, {"number", "table"}, 1, "colors.hsl" )
+	if type(a) == "number" then
+		expect( g, "number", 2, "colors.hsl" )
+		expect( g, "number", 2, "colors.hsl" )
+		expect( a, "number", 4, "colors.hsl" )
+	end
 	
 	if type(r) == "table" then
 		r, g, b, a = r[1]/255, r[2]/255, r[3]/255, r[4]
@@ -95,6 +102,13 @@ end
 -- colors.color( rgba (table) )
 -- colors.color( r (number), g (number), b (number), a (number) )
 function colors.color( r, g, b, a )
+	expect( r, {"number", "table"}, 1, "colors.hsl" )
+	if type(a) == "number" then
+		expect( g, "number", 2, "colors.hsl" )
+		expect( g, "number", 2, "colors.hsl" )
+		expect( a, "number", 4, "colors.hsl" )
+	end
+	
 	if type(r) == "table" then
 		r, g, b, a = r[1], r[2], r[3], r[4]
 	end
@@ -130,6 +144,10 @@ end
 
 -- Format color from name and brightness
 function colors.compose( name, brightness, opacity )
+	expect( name, "string", 1, "colors.compose" )
+	expect( brightness, {"number", "nil"}, 2, "colors.compose" )
+	expect( opacity, {"number", "nil"}, 3, "colors.compose" )
+	
 	if not screen.colors[name] then
 		error( "No such color", 2 )
 	end
@@ -160,28 +178,39 @@ function colors.compose( name, brightness, opacity )
 end
 
 function colors.getComponents(color)
+	expect( color, "string" )
+	
 	return string.match( color, "(%a+)(%S*)%s*%(*([^%)]*)%)*")
 end
 
 -- Get color name from color
 function colors.getName(color)
+	expect( color, "string" )
+	
 	local name = colors.getComponents(color)
 	return name
 end
 
 -- Get brightness from color
 function colors.getBrightness(color)
+	expect( color, "string" )
+	
 	local _, brightness = colors.getComponents(color)
 	return tonumber(brightness) or 0
 end
 
 -- Get opacity from color
 function colors.getOpacity(color)
+	expect( color, "string" )
+	
 	local _, _, opacity = colors.getComponents(color)
 	return tonumber(opacity) or 1
 end
 
 function colors.darker( color, amount )
+	expect( color, "string", 1, "colors.darker" )
+	expect( amount, {"number", "nil"}, 2, "colors.darker" )
+	
 	local name, brightness = colors.getComponents(color)
 	if name == "white" then
 		name = "gray"
@@ -191,15 +220,22 @@ function colors.darker( color, amount )
 end
 
 function colors.lighter( color, amount )
+	expect( color, "string", 1, "colors.lighter" )
+	expect( amount, {"number", "nil"}, 2, "colors.lighter" )
+	
 	local name, brightness = colors.getComponents(color)
 	if name == "black" then
 		name = "gray"
 		brightness = "-3"
 	end
-	return colors.compose( name, (tonumber(brightness) or 0) - (amount or 1) )
+	return colors.compose( name, (tonumber(brightness) or 0) + (amount or 1) )
 end
 
 function colors.blend( fg, a, bg )
+	expect( fg, "string", 1, "colors.blend" )
+	expect( fg, "number", 2, "colors.blend" )
+	expect( bg, "string", 3, "colors.blend" )
+	
 	fg = getColor(fg)
 	bg = getColor(bg)
 	
@@ -221,6 +257,9 @@ end
 -- COLOR CONVENIENCE FUNCTIONS
 
 function colors.random( brightness, opacity )
+	expect( brightness, {"number", "nil"}, 1, "colors.random" )
+	expect( opacity, {"number", "nil"}, 2, "colors.random" )
+	
 	local keys = {}
 	for color in pairs(screen.colors) do
 		table.insert( keys, color )
@@ -230,6 +269,8 @@ function colors.random( brightness, opacity )
 end
 
 function colors.all(variants)
+	expect( variants, {"boolean", "nil"} )
+	
 	local all = {}
 	
 	for color in pairs(screen.colors) do
