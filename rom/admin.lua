@@ -98,6 +98,10 @@ function fn.saveSettings()
 	-- Save
 	love.filesystem.write( "/settings.lua", "return "..table.serialize(s) )
 	
+	loadSettings()
+	setWindow()
+	love.resize( love.graphics.getWidth(), love.graphics.getHeight() )
+	
 	-- To main menu
 	currentMenu = menu.main
 end
