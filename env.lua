@@ -72,37 +72,6 @@ function env.getfenv(level)
 	end
 end
 
-env.table = setmetatable( {}, {__index = table} )
-
-function env.table.serialize( t, level )
-	expect( t, "table" )
-	
-	level = level or 1
-	local s = "{\n"
-	if type(t) ~= "table" then error( "Expected table", 2 ) end
-	for k, v in pairs(t) do
-		local serializable = (type(k) == "string" or type(k) == "number" or type(k) == "boolean")
-			and (type(v) == "string" or type(v) == "number" or type(v) == "boolean" or type(v) == "table")
-		
-		if type(k) == "string" and not string.find(k, "(%s)") and serializable then
-			s = s .. string.rep("  ", level)..k.." = "
-		elseif type(k) == "string" and serializable then
-			s = s .. string.rep("  ", level).."["..string.format("%q",k).."] = "
-		elseif serializable then
-			s = s .. string.rep("  ", level).."["..tostring(k).."] = "
-		end
-		
-		if type(v) == "string" and serializable then
-			s = s .. string.format("%q",v)..",\n"
-		elseif type(v) == "table" and serializable then
-			s = s .. env.table.serialize( v, level and level+1 )..",\n"
-		elseif serializable then
-			s = s .. tostring(v)..",\n"
-		end
-	end
-	return s..string.rep("  ", level-1).."}"
-end
-
 env.expect = expect
 
 
