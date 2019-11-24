@@ -246,7 +246,7 @@ function keyPress(key)
 		setCursor( indent*2+1, y+1 )
 		lineStart = math.floor( math.log10(#file) ) + 2 -- Recalculate line number width
 	elseif key == "tab" then
-		file[y] = string.sub( file[y], 1, x ).."  "..string.sub( file[y], x+1, -1 )
+		file[y] = string.sub( file[y], 1, x-1 ).."  "..string.sub( file[y], x, -1 )
 		x = x+2
 		setIndent()
 	elseif key == "up" then
