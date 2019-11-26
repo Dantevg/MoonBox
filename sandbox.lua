@@ -23,7 +23,8 @@ function sandbox:createEnv( env, loadGeneral )
 	local function load( path, ... )
 		local files = love.filesystem.getDirectoryItems(path)
 		for _, name in pairs(files) do
-			local chunk = loadfile(path.."/"..name)
+			local chunk, err = loadfile(path.."/"..name)
+			if not chunk then error( err, 0 ) end
 			setfenv( chunk, self.env )
 			self.env[ name:match("^(.+)%.lua") ] = chunk(...)
 		end
@@ -34,7 +35,9 @@ function sandbox:createEnv( env, loadGeneral )
 	
 	-- Load general MoonBox env
 	if loadGeneral ~= false then
-		local general = loadfile("env.lua")(self)
+		local chunk, err = loadfile("env.lua")
+		if not chunk then error( err, 0 ) end
+		local general = chunk(self)
 		for k, v in pairs(general) do
 			self.env[k] = v
 		end
