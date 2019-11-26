@@ -1,3 +1,50 @@
+-- Themes
+local themes = {}
+themes.dark = {
+	background = "gray-2",
+	linenumbers = "gray+2",
+	toolbarbg = "gray-1",
+	toolbartext = "gray+1",
+	text = "white",
+	comment = "gray",
+	string = "green+1",
+	number = "red+1",
+	keyword = "yellow+1",
+	boolean = "purple+2",
+	["self"] = "blue+2",
+	punctuation = "gray+2"
+}
+themes.light = {
+	background = "gray+3",
+	linenumbers = "gray+1",
+	toolbarbg = "blue",
+	toolbartext = "white",
+	text = "gray-2",
+	comment = "gray",
+	string = "green-1",
+	number = "red+1",
+	keyword = "blue",
+	boolean = "yellow",
+	["self"] = "purple",
+	punctuation = "gray"
+}
+themes.gray = {
+	background = "gray-1",
+	linenumbers = "gray+2",
+	toolbarbg = "gray",
+	toolbartext = "gray-1",
+	text = "gray+1",
+	comment = "gray-2",
+	string = "white",
+	number = "gray-2",
+	keyword = "white",
+	boolean = "black",
+	["self"] = "gray+2",
+	punctuation = "white"
+}
+
+local theme = themes.dark
+
 -- Open file
 local path = ...
 if not path then
@@ -34,7 +81,7 @@ local keywords = {
 	["else"] = true,
 	["elseif"] = true,
 	["end"] = true,
-	["false"] = true,
+	["false"] = theme.boolean,
 	["for"] = true,
 	["function"] = true,
 	["if"] = true,
@@ -45,34 +92,38 @@ local keywords = {
 	["or"] = true,
 	["repeat"] = true,
 	["return"] = true,
+	["self"] = theme["self"],
 	["then"] = true,
-	["true"] = true,
+	["true"] = theme.boolean,
 	["until"]= true,
 	["while"] = true,
 }
 
 local patterns = {
 	-- Comments
-	{"^%-%-%[%[.-%]%]", "gray"},
-	{"^%-%-.*", "gray"},
+	{"^%-%-%[%[.-%]%]", theme.comment},
+	{"^%-%-.*", theme.comment},
 	-- Strings
-	{"^\"\"", "green+1"},
-	{"^\".-[^\\]\"", "green+1"},
-	{"^\'\'", "green+1"},
-	{"^\'.-[^\\]\'", "green+1"},
-	{"^%[%[.-%]%]", "green+1"},
+	{"^\"\"", theme.string},
+	{"^\".-[^\\]\"", theme.string},
+	{"^\'\'", theme.string},
+	{"^\'.-[^\\]\'", theme.string},
+	{"^%[%[.-%]%]", theme.string},
 	-- Numbers
-	{"^%d+", "red+1"},
+	{"^%d+", theme.number},
 	-- (Key)words
 	{"^[%w_]+", function(match)
-		if keywords[match] then
-			return "yellow+1"
+		if keywords[match] == true then
+			return theme.keyword
+		elseif keywords[match] then
+			return keywords[match]
 		else
-			return "white"
+			return theme.text
 		end
 	end},
+	{"^%p", theme.punctuation},
 	-- Everything else
-	{"^[^%w_]", "white"}
+	{"^[^%w_]", theme.text}
 }
 
 local lineStart = math.floor( math.log10(#file) ) + 2 -- Width of line numbers
@@ -115,7 +166,7 @@ end
 function drawLine( row, start )
 	local line = file[row+yScroll]
 	screen.setCharPos( 1, row )
-	screen.setColor("gray+2")
+	screen.setColor(theme.linenumbers)
 	screen.write(row + yScroll)
 	screen.setCharPos( start+1, row )
 	
@@ -139,7 +190,7 @@ end
 
 function draw()
 	-- Background
-	screen.clear("gray-2")
+	screen.clear(theme.background)
 	
 	-- File contents, line numbers
 	local maxY = math.min( screen.charHeight-1, #file - yScroll )
@@ -151,15 +202,15 @@ function draw()
 	if cursor then
 		screen.setCharPos( x-xScroll + lineStart, y-yScroll )
 		local x, y = screen.getPixelPos()
-		screen.rect( x, y, screen.font.width, screen.font.height, "gray-2" )
-		screen.setColor("white")
+		screen.rect( x, y, screen.font.width, screen.font.height, theme.background )
+		screen.setColor(theme.text)
 		screen.cursor( x, y+1 )
 	end
 	
 	-- File info
 	local h = screen.height - screen.font.height + 1
-	screen.rect( 1, screen.height - screen.font.height, screen.width, screen.font.height+1, "gray-1" )
-	screen.setColor("gray+1")
+	screen.rect( 1, screen.height - screen.font.height, screen.width, screen.font.height+1, theme.toolbarbg )
+	screen.setColor(theme.toolbartext)
 	screen.write( disk.getFilename(path), 1, h )
 	screen.setCharPos( screen.charWidth-#(x..":"..y) + 1, screen.charHeight )
 	screen.write( x..":"..y, screen.width-(screen.font.width+1) * #(x..":"..y) + 1, h )
