@@ -10,7 +10,7 @@ themes.dark = {
 	string = "green+1",
 	number = "red+1",
 	keyword = "yellow+1",
-	boolean = "purple+2",
+	boolean = "orange+2",
 	["self"] = "blue+2",
 	punctuation = "gray+2"
 }
