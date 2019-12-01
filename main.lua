@@ -85,6 +85,7 @@ function table.serialize( t, level )
 	expect( t, "table" )
 	
 	level = level or 1
+	if level > 128 then error( "Max table depth (128) reached (recursive tables are not supported)" ) end
 	local s = "{\n"
 	if type(t) ~= "table" then error( "Expected table", 2 ) end
 	for k, v in pairs(t) do
@@ -102,7 +103,7 @@ function table.serialize( t, level )
 		if type(v) == "string" and serializable then
 			s = s .. string.format("%q",v)..",\n"
 		elseif type(v) == "table" and serializable then
-			s = s .. env.table.serialize( v, level and level+1 )..",\n"
+			s = s .. table.serialize( v, level and level+1 )..",\n"
 		elseif serializable then
 			s = s .. tostring(v)..",\n"
 		end
