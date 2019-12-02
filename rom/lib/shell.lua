@@ -70,6 +70,21 @@ function shell.absolute(path)
 	end
 end
 
+function shell.autocomplete(input)
+	local path = shell.absolute(input)
+	if not disk.info(path) or string.sub( input, -1 ) ~= "/" then
+		path = disk.getPath(path)
+	end
+	if not disk.info(path) then return end
+	local files = disk.list(path)
+	for k, file in pairs(files) do
+		local s, e = string.find( path.."/"..file, "/"..input, 1, true )
+		if s then
+			return string.sub( path.."/"..file, s + #input+1 )
+		end
+	end
+end
+
 
 
 -- OTHER FUNCTIONS
@@ -77,6 +92,7 @@ end
 function shell.error( msg, level )
 	expect( msg, {"string", "nil"}, 1, "shell.error" )
 	expect( level, {"number", "nil"}, 2, "shell.error" )
+	msg = msg or ""
 	
 	screen.write( (shell.traceback and debug.traceback(msg, level) or msg) .. "\n",
 		{color = "red+1", background = screen.background} )
