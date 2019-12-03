@@ -36,7 +36,7 @@ function disk.getFilename(path)
 	expect( path, "string" )
 	
 	local parts = disk.getParts( disk.absolute(path) )
-	return parts[ #parts ]
+	return parts[ #parts ] or ""
 end
 
 function disk.getExtension(path)
@@ -137,14 +137,18 @@ function disk.defaults.info(path)
 			modified = info.modtime,
 		}
 	else
-		return false
+		return {
+			type = false,
+			size = 0,
+			modified = 0,
+		}
 	end
 end
 
 function disk.defaults.exists(path)
 	expect( path, {"string", "nil"} )
 	
-	return disk.info(path) and true or false
+	return disk.info(path).type and true or false
 end
 
 
@@ -217,7 +221,11 @@ disk.drives["/"].info = function(path)
 			modified = 0,
 		}
 	else
-		return false
+		return {
+			type = false,
+			size = 0,
+			modified = 0,
+		}
 	end
 end
 disk.drives["/"].read = function()
