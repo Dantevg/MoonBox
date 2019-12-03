@@ -71,16 +71,21 @@ function shell.absolute(path)
 end
 
 function shell.autocomplete(input)
-	local path = shell.absolute(input)
-	if not disk.info(path) or string.sub( input, -1 ) ~= "/" then
-		path = disk.getPath(path)
+	local path = disk.getPath( shell.absolute(input) )
+	local search = disk.getFilename( shell.absolute(input) )
+	if not disk.exists(path) or disk.info(path).type == "file" then
+		return false
 	end
-	if not disk.info(path) then return end
+	
 	local files = disk.list(path)
-	for k, file in pairs(files) do
-		local s, e = string.find( path.."/"..file, "/"..input, 1, true )
+	for k, file in ipairs(files) do
+		local filePath = path.."/"..file
+		if disk.info(path.."/"..file).type ~= "file" then
+			filePath = filePath.."/"
+		end
+		local s, e = string.find( filePath, "/"..search, 1, true )
 		if s then
-			return string.sub( path.."/"..file, s + #input+1 )
+			return string.sub( filePath, (string.sub(input, -1) == "/" and s+1 or s) + #search + 1 )
 		end
 	end
 end
