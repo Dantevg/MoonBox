@@ -16,10 +16,10 @@ he._VERSION = "0.2"
 
 he.make = {}
 function he.make.x( obj, x )
-	return function() return x + (obj.parent and obj.parent:x() or 0) end
+	return function() return x + (obj.parent and obj.parent:x()-1 or 0) end
 end
 function he.make.y( obj, y )
-	return function() return y + (obj.parent and obj.parent:y() or 0) end
+	return function() return y + (obj.parent and obj.parent:y()-1 or 0) end
 end
 
 function he.proxy(...)
@@ -36,11 +36,11 @@ end ]]
 
 function he:setx(x)
 	if type(x) ~= "number" and type(x) ~= "function" then return end
-	self.x = (type(x) == "number" and he.make.x(x) or x)
+	self.x = (type(x) == "number" and he.make.x(self, x) or x)
 end
 function he:sety(y)
 	if type(y) ~= "number" and type(y) ~= "function" then return end
-	self.y = (type(y) == "number" and he.make.y(y) or y)
+	self.y = (type(y) == "number" and he.make.y(self, y) or y)
 end
 
 --[[ function he:x(x)
@@ -98,17 +98,17 @@ function he.box.new( p, x, y, w, h, color )
 	local obj = {}
 	
 	obj.parent = p
+	obj.x = he.make.x(obj, x)
+	obj.y = he.make.y(obj, y)
 	obj.w = he.proxy(w)
 	obj.h = he.proxy(h)
 	obj.color = color
-	obj.x = he.make.x(obj, x)
-	obj.y = he.make.y(obj, y)
 	
 	return setmetatable( obj, {__index = he.box} )
 end
 function he.box:draw(parent)
 	self.parent = parent or self.parent
-	screen.rect( self.x()-1, self.y()-1, self.w(), self.h(), self.color )
+	screen.rect( self.x(), self.y(), self.w(), self.h(), self.color )
 end
 setmetatable( he.box, {
 	__index = he,
@@ -120,14 +120,14 @@ function he.text.new( p, x, y, text, color )
 	local obj = {}
 	
 	obj.parent = p
+	obj.x = he.make.x(obj, x)
+	obj.y = he.make.y(obj, y)
 	obj.w = function()
 		return (screen.font.width+1) * #obj.text
 	end
 	obj.h = he.proxy(screen.font.height)
 	obj.text = text
 	obj.color = color
-	obj.x = he.make.x(obj, x)
-	obj.y = he.make.y(obj, y)
 	
 	return setmetatable( obj, {__index = he.text} )
 end
@@ -138,6 +138,34 @@ end
 setmetatable( he.text, {
 	__index = he,
 	__call = function( _, ... ) return he.text.new(...) end
+})
+
+he.input = {}
+function he.input.new( p, x, y, w, h, color )
+	local obj = {}
+	
+	obj.parent = p
+	obj.x = he.make.x(obj, x)
+	obj.y = he.make.y(obj, y)
+	obj.w = function()
+		return (screen.font.width+1) * #self.read + 2*self.padding
+	end
+	obj.h = function()
+		return h + 2*self.padding
+	end
+	obj.color = color
+	obj.padding = 2
+	obj.read = read.new()
+	
+	return setmetatable( obj, {__index = he.input} )
+end
+function he.input:draw(parent)
+	self.parent = parent or self.parent
+	screen.rect( self.x(), self.y(), self.w(), self.h(), self.color )
+end
+setmetatable( he.input, {
+	__index = he,
+	__call = function( _, ... ) return he.input.new(...) end
 })
 
 
