@@ -339,7 +339,7 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	expect( y1, "number", 2, "screen.line" )
 	expect( x2, "number", 3, "screen.line" )
 	expect( y2, "number", 4, "screen.line" )
-	expect( color, {"number", "nil"}, 5, "screen.line" )
+	expect( color, {"string", "nil"}, 5, "screen.line" )
 	
 	local rgb = getColor(color) or getColor(screen.color)
 	
@@ -427,7 +427,7 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	expect( xc, {"number", "nil"}, 1, "screen.circle" )
 	expect( yc, {"number", "nil"}, 2, "screen.circle" )
 	expect( r, "number", 3, "screen.circle" )
-	expect( color, {"number", "nil"}, 4, "screen.circle" )
+	expect( color, {"string", "nil"}, 4, "screen.circle" )
 	expect( filled, {"boolean", "nil"}, 5, "screen.circle" )
 	
 	xc, yc = xc or screen.pos.x, yc or screen.pos.y
@@ -797,6 +797,10 @@ function screen.setShader(shader)
 	expect( shader, "userdata" )
 	
 	computer.screen.shader = shader
+end
+
+function screen.getFPS()
+	return love.timer.getFPS()
 end
 
 
