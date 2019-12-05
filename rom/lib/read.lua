@@ -174,7 +174,10 @@ function read.new( history, async )
 			r:draw()
 			r.length = #r.history[r.selected]
 			local result = r:update( event.wait() )
-			if result then return result end
+			if result then
+				os.cancelTimer(r.timer)
+				return result
+			end
 		end
 	end
 end
