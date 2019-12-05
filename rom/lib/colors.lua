@@ -46,7 +46,7 @@ end
 
 -- Convert color to hsla (0-255) value
 function colors.hsl( r, g, b, a )
-	expect( r, {"number", "table"}, 1, "colors.hsl" )
+	expect( r, {"number", "table", "string"}, 1, "colors.hsl" )
 	if type(a) == "number" then
 		expect( g, "number", 2, "colors.hsl" )
 		expect( g, "number", 2, "colors.hsl" )
