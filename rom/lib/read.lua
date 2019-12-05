@@ -16,22 +16,38 @@ local read = {}
 -- INTERNAL FUNCTIONS
 
 function read:draw()
-	screen.write( string.rep(" ", self.length+1),
+	-- Background
+	screen.write( string.rep(" ", self.length + #self.completion + 1),
 		{x = self.x, y = self.y, background = screen.background} )
-	screen.write(
-		string.sub( self.history[self.selected], 1, self.pos-1 )
-		..( self.cursor and "_" or string.sub(self.history[self.selected], self.pos, self.pos) )
-		..string.sub( self.history[self.selected], self.pos+1, -1 )
-		.." ", self.x, self.y )
+		
+	-- Input
+	local input = self.history[self.selected]
+	screen.write( string.sub( input, 1, self.pos-1 ), self.x, self.y )
+	screen.write( self.cursor and "_" or string.sub(input, self.pos, self.pos) )
+	screen.write( string.sub( input, self.pos+1, -1 ) )
+	
+	if self.autocomplete then
+		local words = self:getWords("(%S*)(%s*)")
+		self.completion = #words[#words-1].data > 0 and self.autocomplete( words[#words-1].data ) or ""
+		if self.cursor and self.pos > #input then
+			screen.write( string.sub( self.completion, 2, -1 ), {color="gray-1"} )
+		else
+			screen.write( self.completion, {color="gray-1"} )
+		end
+	end
 end
 
-function read:getWords()
+function read:getWords(regex)
 	local words = {}
 	local length = 1
-	for word, separator in string.gmatch( self.history[self.selected], "(%w*)(%W*)" ) do
+	for word, separator in string.gmatch( self.history[self.selected], regex or "(%w*)(%W*)" ) do
 		table.insert( words, { type="word", data=word, s=length, e=length+#word-1 } )
 		table.insert( words, { type="separator", data=separator, s=length+#word, e=length+#word+#separator-1 } )
 		length = length + #word + #separator
+	end
+	if #words > 2 then
+		table.remove( words, #words )
+		table.remove( words, #words )
 	end
 	return words
 end
@@ -147,11 +163,12 @@ function read:update( e, param )
 	end
 end
 
--- read.new( [history [,async]] )
+-- read.new( [history [,async [,autocomplete]]] )
 -- Note: for async, history doesn't need to be specified
-function read.new( history, async )
+function read.new( history, async, autocomplete )
 	expect( history, {"table", "nil"}, 1, "read" )
 	expect( async, {"boolean", "nil"}, 2, "read" )
+	expect( autocomplete, {"function", "nil"}, 3, "read" )
 	
 	local r = {}
 	r.history = history or {}
@@ -162,6 +179,8 @@ function read.new( history, async )
 	r.pos = 1
 	r.length = 0
 	r.timer = os.startTimer(0.5)
+	r.autocomplete = autocomplete
+	r.completion = ""
 	
 	if async then
 		return setmetatable( r, {

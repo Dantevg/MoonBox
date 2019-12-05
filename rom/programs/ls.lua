@@ -24,19 +24,18 @@ for i = 1, #list do
 	end
 end
 
--- screen.setColor("green+1")
--- for i = 1, #folders do
--- 	print(folders[i])
--- end
 if #folders >= 1 then
-	screen.write( table.concat(folders, " ") .. "\n", {overflow = "wrap", color = "green+1"} )
+	screen.setColor("green+1")
+	screen.tabulate(folders)
 end
 
-for i = 1, #files do
-	local ext = disk.getExtension( files[i] )
-	local name = string.sub( files[i], 1, -1-(ext and #ext or 0) )
-	screen.setColor("white")
-	screen.write(name)
-	screen.setColor("gray")
-	print(ext)
+if #files >= 1 then
+	screen.tabulate( files, nil, function(file)
+		local ext = disk.getExtension(file)
+		local name = string.sub( file, 1, -1-(ext and #ext or 0) )
+		screen.setColor("white")
+		screen.write(name)
+		screen.setColor("gray")
+		screen.write(ext)
+	end )
 end
