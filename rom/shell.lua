@@ -10,7 +10,7 @@ while true do
 	screen.write( "> ", {background = screen.background} )
 	
 	-- Get input and save history
-	local input = read(history)
+	local input = read( history, false, shell.autocomplete )
 	if input ~= "" and input ~= history[#history] then
 		table.insert( history, input )
 	end

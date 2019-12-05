@@ -85,6 +85,7 @@ function table.serialize( t, level )
 	expect( t, "table" )
 	
 	level = level or 1
+	if level > 128 then error( "Max table depth (128) reached (recursive tables are not supported)" ) end
 	local s = "{\n"
 	if type(t) ~= "table" then error( "Expected table", 2 ) end
 	for k, v in pairs(t) do
@@ -102,7 +103,7 @@ function table.serialize( t, level )
 		if type(v) == "string" and serializable then
 			s = s .. string.format("%q",v)..",\n"
 		elseif type(v) == "table" and serializable then
-			s = s .. env.table.serialize( v, level and level+1 )..",\n"
+			s = s .. table.serialize( v, level and level+1 )..",\n"
 		elseif serializable then
 			s = s .. tostring(v)..",\n"
 		end
@@ -209,7 +210,9 @@ function love.update(dt)
 	end
 	
 	-- Return events
+	-- if #active.eventBuffer > 0 then table.insert( active.events, {} ) end -- For event debugging
 	while #active.eventBuffer > 0 do
+		-- table.insert( active.events[#active.events], active.eventBuffer[1][1] ) -- For event debugging
 		if active.eventBuffer[1][1] == "reboot" then
 			love.load()
 			return
@@ -260,61 +263,68 @@ function love.draw()
 			love.graphics.setShader() -- Reset shader
 		end
 	end
+	
+	
+	--[[love.graphics.print( active.currentFrame%100, love.graphics.getWidth()-60, 10 )
+	love.graphics.print( love.timer.getFPS(), love.graphics.getWidth()-30, 10 )
+	for i = 1, #active.events do
+		local y = 20 + (#active.events-i+1) * 15
+		for j = 1, #active.events[i] do
+			local x = love.graphics.getWidth() - 60*j
+			love.graphics.print( active.events[i][j], x, y )
+		end
+	end]]-- For event debugging
 end
 
-function love.run() -- Modified v1.10 from https://love2d.org/wiki/love.run
-	if love.math then
-		love.math.setRandomSeed(os.time())
-	end
-	
-	if love.load then love.load(arg) end
-	
+function love.run() -- Modified v11.0 from https://love2d.org/wiki/love.run
+	if love.load then love.load(love.arg.parseGameArguments(arg), arg) end
+ 
 	-- We don't want the first frame's dt to include time taken by love.load.
 	if love.timer then love.timer.step() end
-	
+ 
 	local dt = 0
-	
+ 
 	-- Main loop time.
-	while true do
+	return function()
 		-- Process events.
 		if love.event then
 			love.event.pump()
 			for name, a,b,c,d,e,f in love.event.poll() do
 				if name == "quit" then
 					if not love.quit or not love.quit() then
-						return a
+						return a or 0
 					end
 				end
 				love.handlers[name](a,b,c,d,e,f)
 			end
 		end
-		
+ 
 		-- Update dt, as we'll be passing it to update
-		if love.timer then
-			love.timer.step()
-			dt = love.timer.getDelta()
-		end
-		
+		if love.timer then dt = love.timer.step() end
+ 
 		-- Call update and draw
 		if love.update then love.update(dt) end -- will pass 0 if love.timer is disabled
-		
+ 
 		if love.graphics and love.graphics.isActive() then
-			love.graphics.clear(love.graphics.getBackgroundColor())
 			love.graphics.origin()
+			love.graphics.clear(love.graphics.getBackgroundColor())
+ 
 			if love.draw then love.draw() end
+ 
 			love.graphics.present()
 		end
 		
-		-- MODIFIED! (Custom FPS cap)
+		-- MODIFIED (custom FPS cap)
 		if love.timer then
+			computer.nextFrame = computer.nextFrame + 1/computer.FPS
 			local current = love.timer.getTime()
-			if current < computer.nextFrame then
-				love.timer.sleep( computer.nextFrame - current )
+			if computer.nextFrame <= current then
+				computer.nextFrame = current
+				return
 			end
-			computer.nextFrame = current + 1/computer.FPS
+			love.timer.sleep( computer.nextFrame - current )
 		end
 	end
-	
 end
 
 function love.keypressed(key)
@@ -396,8 +406,8 @@ function love.mousemoved( x, y )
 			table.insert( active.eventBuffer, { "drag", dx, dy, 2 } )
 			if not active.mouse.drag then active.mouse.drag = {x=x, y=y} end
 		end
-		active.mouse.x, active.mouse.y = x, y
 	end
+	active.mouse.x, active.mouse.y = math.min(math.max(x, 1), active.screen.w), math.min(math.max(y, 1), active.screen.h)
 end
 
 function love.resize( w, h )

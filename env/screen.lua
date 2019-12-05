@@ -339,7 +339,7 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	expect( y1, "number", 2, "screen.line" )
 	expect( x2, "number", 3, "screen.line" )
 	expect( y2, "number", 4, "screen.line" )
-	expect( color, {"number", "nil"}, 5, "screen.line" )
+	expect( color, {"string", "nil"}, 5, "screen.line" )
 	
 	local rgb = getColor(color) or getColor(screen.color)
 	
@@ -427,7 +427,7 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	expect( xc, {"number", "nil"}, 1, "screen.circle" )
 	expect( yc, {"number", "nil"}, 2, "screen.circle" )
 	expect( r, "number", 3, "screen.circle" )
-	expect( color, {"number", "nil"}, 4, "screen.circle" )
+	expect( color, {"string", "nil"}, 4, "screen.circle" )
 	expect( filled, {"boolean", "nil"}, 5, "screen.circle" )
 	
 	xc, yc = xc or screen.pos.x, yc or screen.pos.y
@@ -491,48 +491,6 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	end
 end
 
-function screen.canvas.clear( canvas, color )
-	expect( color, {"string", "nil"} )
-	
-	color = getColor(color)
-	if color then
-		color[4] = 1 -- No transparency
-	else
-		color = {0,0,0,0}
-	end
-	
-	canvas.canvas:renderTo(function()
-		love.graphics.clear(color)
-	end)
-end
-
-function screen.canvas.move( canvas, x, y )
-	expect( x, "number", 1, "screen.move" )
-	expect( y, "number", 2, "screen.move" )
-	
-	local newCanvas = love.graphics.newCanvas(
-		screen.width,
-		screen.height)
-		
-	newCanvas:renderTo(function()
-		love.graphics.setColor( 1, 1, 1, 1 )
-		love.graphics.draw( canvas.canvas, x, y )
-	end)
-	
-	canvas.canvas = newCanvas
-	canvas.canvas:setFilter( "linear", "nearest" )
-	screen.pos.x = screen.pos.x + x
-	screen.pos.y = screen.pos.y + y
-end
-
-function screen.canvas.cursor( canvas, x, y, color )
-	expect( x, {"number", "nil"}, 1, "screen.cursor" )
-	expect( y, {"number", "nil"}, 2, "screen.cursor" )
-	expect( color, {"string", "nil"}, 3, "screen.cursor" )
-	
-	screen.canvas.char( canvas, "_", x, y, color )
-end
-
 function screen.canvas.drawImage( canvas, image, x, y, scale )
 	expect( image, {"string", "userdata"}, 1, "screen.drawImage" )
 	expect( x, {"number", "nil"}, 2, "screen.drawImage" )
@@ -594,6 +552,76 @@ function screen.canvas.drawImage( canvas, image, x, y, scale )
 		love.graphics.setColor( 1, 1, 1, 1 )
 		love.graphics.draw(image)
 	end)
+end
+
+function screen.canvas.tabulate( canvas, elements, nColumns, fn )
+	expect( elements, "table", 1, "screen.tabulate" )
+	expect( nColumns, {"number", "nil"}, 2, "screen.tabulate" )
+	expect( fn, {"function", "nil"}, 3, "screen.tabulate" )
+	
+	local columnWidth = 0
+	for k, v in pairs(elements) do
+		columnWidth = math.max( columnWidth, #v )
+	end
+	nColumns = nColumns or math.floor( screen.width / (screen.font.width+1) / (columnWidth+2) )
+	
+	local x, y = screen.pos.x, screen.pos.y
+	for k, v in pairs(elements) do
+		screen.pos.x = x + (screen.font.width+1) * ((k-1) % nColumns) * (columnWidth+2)
+		screen.pos.y = y + (screen.font.height+1) * math.floor((k-1)/nColumns)
+		while screen.pos.y + screen.font.height > screen.height do
+			screen.canvas.move( canvas, 0, -screen.font.height-1 )
+			y = y - screen.font.height - 1
+		end
+		if fn then
+			fn(v)
+		else
+			screen.canvas.write( canvas, v )
+		end
+	end
+	screen.print()
+end
+
+function screen.canvas.clear( canvas, color )
+	expect( color, {"string", "nil"} )
+	
+	color = getColor(color)
+	if color then
+		color[4] = 1 -- No transparency
+	else
+		color = {0,0,0,0}
+	end
+	
+	canvas.canvas:renderTo(function()
+		love.graphics.clear(color)
+	end)
+end
+
+function screen.canvas.move( canvas, x, y )
+	expect( x, "number", 1, "screen.move" )
+	expect( y, "number", 2, "screen.move" )
+	
+	local newCanvas = love.graphics.newCanvas(
+		screen.width,
+		screen.height)
+		
+	newCanvas:renderTo(function()
+		love.graphics.setColor( 1, 1, 1, 1 )
+		love.graphics.draw( canvas.canvas, x, y )
+	end)
+	
+	canvas.canvas = newCanvas
+	canvas.canvas:setFilter( "linear", "nearest" )
+	screen.pos.x = screen.pos.x + x
+	screen.pos.y = screen.pos.y + y
+end
+
+function screen.canvas.cursor( canvas, x, y, color )
+	expect( x, {"number", "nil"}, 1, "screen.cursor" )
+	expect( y, {"number", "nil"}, 2, "screen.cursor" )
+	expect( color, {"string", "nil"}, 3, "screen.cursor" )
+	
+	screen.canvas.char( canvas, "_", x, y, color )
 end
 
 
@@ -797,6 +825,10 @@ function screen.setShader(shader)
 	expect( shader, "userdata" )
 	
 	computer.screen.shader = shader
+end
+
+function screen.getFPS()
+	return love.timer.getFPS()
 end
 
 
