@@ -6,7 +6,6 @@
 
 local args = {...}
 local computer = args[1]
-local love = args[2]
 local env = setmetatable( {}, {__index = computer.env} )
 
 
