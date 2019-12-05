@@ -80,6 +80,7 @@ function shell.error( msg, level )
 	
 	screen.write( (shell.traceback and debug.traceback(msg, level) or msg) .. "\n",
 		{color = "red+1", background = screen.background} )
+	screen.pos.x = 1
 end
 
 
