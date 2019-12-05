@@ -62,6 +62,10 @@ function os.startTimer(time)
 	return computer.timers.n-1
 end
 
+function os.cancelTimer(id)
+	computer.timers[id] = nil
+end
+
 function os.sleep(time)
 	expect( time, {"number", "nil"} )
 	
