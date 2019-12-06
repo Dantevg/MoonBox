@@ -11,9 +11,9 @@ while true do
 	
 	-- Get input and save history
 	local input = read( history, false, shell.autocomplete )
-	if input ~= "" and input ~= history[#history] then
-		table.insert( history, input )
-	end
+	-- if input ~= "" and input ~= history[#history] then
+	-- 	table.insert( history, input )
+	-- end
 	print()
 	
 	-- Get program params

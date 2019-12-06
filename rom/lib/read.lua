@@ -66,12 +66,10 @@ function read:key(key)
 	if key == "enter" then
 		self.cursor = false
 		self:draw()
-		if self.selected == #self.history then
-			return table.remove( self.history, #self.history )
-		else
-			table.remove( self.history, #self.history )
-			return self.history[self.selected]
+		if self.selected ~= #self.history then
+			self.history[#self.history] = self.history[self.selected]
 		end
+		return self.history[#self.history]
 	elseif key == "backspace" then
 		if event.keyDown("ctrl") then
 			local words = self:getWords()
