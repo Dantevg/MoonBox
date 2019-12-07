@@ -24,7 +24,11 @@ end
 
 function he.proxy(...)
 	local arg = {...}
-	return function() return unpack(arg) end
+	if type(arg[1]) == "function" then
+		return arg[1]
+	else
+		return function() return unpack(arg) end
+	end
 end
 
 --[[ function he:getx()
@@ -41,6 +45,10 @@ end
 function he:sety(y)
 	if type(y) ~= "number" and type(y) ~= "function" then return end
 	self.y = (type(y) == "number" and he.make.y(self, y) or y)
+end
+
+function he:set( field, value )
+	self[field] = he.proxy(value)
 end
 
 --[[ function he:x(x)
@@ -62,14 +70,19 @@ function he:center(what)
 	end
 end
 
-function he:autosize( what, ... )
+function he:autosize( what, padding, ... )
 	local objects = {...}
+	
+	if type(padding) ~= "number" then
+		table.insert( objects, 1, padding )
+		padding = nil
+	end
 	
 	if string.find( what, "w" ) then
 		self.w = function()
 			local w = 0
 			for i, obj in pairs(objects) do
-				w = math.max( w, obj.x() - self.x() + obj.w() - 1 + (self.padding or 0) )
+				w = math.max( w, obj.x() - self.x() + obj.w() + (padding or self.padding or 0) )
 			end
 			return w
 		end
@@ -78,11 +91,20 @@ function he:autosize( what, ... )
 		self.h = function()
 			local h = 0
 			for i, obj in pairs(objects) do
-				h = math.max( h, obj.y() - self.y() + obj.h() - 1 + (self.padding or 0) )
+				h = math.max( h, obj.y() - self.y() + obj.h() + (padding or self.padding or 0) )
 			end
 			return h
 		end
 	end
+end
+
+function he:within( x, y )
+	return x >= self.x() and x < self.x() + self.w()
+		and y >= self.y() and y < self.y() + self.h()
+end
+
+function he:toLocalCoords( x, y )
+	return x - self.x() + 1, y - self.y() + 1
 end
 
 function he.new( x, y, w, h )
@@ -102,13 +124,13 @@ function he.box.new( p, x, y, w, h, color )
 	obj.y = he.make.y(obj, y)
 	obj.w = he.proxy(w)
 	obj.h = he.proxy(h)
-	obj.color = color
+	obj.color = he.proxy(color)
 	
 	return setmetatable( obj, {__index = he.box} )
 end
 function he.box:draw(parent)
 	self.parent = parent or self.parent
-	screen.rect( self.x(), self.y(), self.w(), self.h(), self.color )
+	screen.rect( self.x(), self.y(), self.w(), self.h(), self.color() )
 end
 setmetatable( he.box, {
 	__index = he,
@@ -127,13 +149,13 @@ function he.text.new( p, x, y, text, color )
 	end
 	obj.h = he.proxy(screen.font.height)
 	obj.text = text
-	obj.color = color
+	obj.color = he.proxy(color)
 	
 	return setmetatable( obj, {__index = he.text} )
 end
 function he.text:draw(parent)
 	self.parent = parent or self.parent
-	screen.write( self.text, {x = self.x(), y = self.y(), color = self.color} )
+	screen.write( self.text, {x = self.x(), y = self.y(), color = self.color()} )
 end
 setmetatable( he.text, {
 	__index = he,
