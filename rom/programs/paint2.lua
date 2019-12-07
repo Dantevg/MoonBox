@@ -73,24 +73,41 @@ function colourPicker:draw(parent)
 		end
 	end
 end
+function colourPicker:mouse( x, y, btn )
+	if not self:within( x, y ) then return end
+	x, y = self:toLocalCoords( x, y )
+	
+	local color = self.rainbow[ math.floor(y/self.hColour())+1 ]
+	local brightness = math.floor(x/self.wColour()) - 3
+	if btn == 1 then
+		primary = colors.compose( color, brightness )
+	elseif btn == 2 then
+		secondary = colors.compose( color, brightness )
+	end
+end
 setmetatable( colourPicker, {
 	__index = helium,
 	__call = function( _, ... ) return colourPicker.new(...) end
 })
 
 gui.paint = he:box( 1, 1, nil, nil, "gray-2" )
-gui.paint.w = function() return he.w() end
-gui.paint.h = function() return he.h() end
-
-gui.menu = he:box( 1, 1 )
-gui.menu.w = function() return he.w() end
-gui.menu.h = function() return he.h() end
+gui.paint:autosize( "wh", he )
 
 gui.picker = colourPicker( gui.paint, 1, 1, 5, 10 )
 gui.picker.h = function() return he.h() - 10 end
 
-gui.primary = gui.picker:box( 1, gui.picker.hColour() * #gui.picker.rainbow + 1, gui.picker.w()/2 - 1, 15, primary )
-gui.secondary = gui.picker:box( gui.picker.w()/2+1, gui.picker.hColour() * #gui.picker.rainbow + 1, gui.picker.w()/2 - 1, 15, secondary )
+gui.primary = gui.picker:box( 1, gui.picker.hColour() * #gui.picker.rainbow + 1, gui.picker.w()/2 - 1, 15, function() return primary end )
+gui.secondary = gui.picker:box( gui.picker.w()/2+1, gui.picker.hColour() * #gui.picker.rainbow + 1, gui.picker.w()/2 - 1, 15, function() return secondary end )
+
+gui.menu = he:box( 1, 1, nil, nil, "white" )
+gui.menu:autosize( "wh", he )
+
+gui.open = gui.menu:box( 20, 20, nil, 20, "gray+2" )
+gui.open:autosize( "w", -20, gui.menu )
+
+gui.open.title = gui.open:text( 5, 5, "OPEN FILE", "black" )
+
+gui.open:autosize( "h", 3, gui.open.title )
 
 
 
@@ -104,6 +121,23 @@ function saveFile()
 	
 end
 
+local events = {}
+
+function events.key(key)
+	if key == "escape" then
+		inMenu = not inMenu
+	end
+end
+
+function events.mouse( x, y, btn )
+	gui.picker:mouse( x, y, btn )
+end
+
+function events.scroll( x, y, dir )
+	zoom = math.max( 1, zoom + dir/5 )
+	zoomInt = math.floor(zoom)
+end
+
 
 
 -- PROGRAM FUNCTIONS
@@ -111,6 +145,8 @@ end
 function draw()
 	if inMenu then
 		gui.menu:draw()
+		gui.open:draw()
+		gui.open.title:draw()
 	else
 		gui.paint:draw()
 		gui.picker:draw()
@@ -125,5 +161,8 @@ end
 
 while running do
 	draw()
-	os.sleep()
+	local e = {event.wait()}
+	if events[ e[1] ] then
+		events[ e[1] ]( unpack(e,2) )
+	end
 end
