@@ -71,6 +71,8 @@ function shell.absolute(path)
 end
 
 function shell.autocomplete(input)
+	expect( input, "string" )
+	
 	local path = disk.getPath( shell.absolute(input) )
 	local search = disk.getFilename( shell.absolute(input) )
 	if string.sub( input, -1 ) == "/" then -- Peek into dir
