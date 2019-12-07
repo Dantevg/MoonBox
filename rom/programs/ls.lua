@@ -30,7 +30,7 @@ if #folders >= 1 then
 end
 
 if #files >= 1 then
-	screen.tabulate( files, nil, function(file)
+	screen.tabulate( files, nil, true, function(file)
 		local ext = disk.getExtension(file)
 		local name = string.sub( file, 1, -1-(ext and #ext or 0) )
 		screen.setColor("white")
