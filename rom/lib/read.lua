@@ -69,7 +69,11 @@ function read:key(key)
 		if self.selected ~= #self.history then
 			self.history[#self.history] = self.history[self.selected]
 		end
-		return self.history[#self.history]
+		if self.history[#self.history] == "" then
+			return table.remove( self.history, #self.history )
+		else
+			return self.history[#self.history]
+		end
 	elseif key == "backspace" then
 		if event.keyDown("ctrl") then
 			local words = self:getWords()
