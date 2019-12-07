@@ -15,7 +15,7 @@ local read = {}
 
 -- INTERNAL FUNCTIONS
 
-function read:draw()
+function read:draw(autocomplete)
 	-- Background
 	screen.write( string.rep(" ", self.length + #self.completion + 1),
 		{x = self.x, y = self.y, background = screen.background} )
@@ -26,7 +26,7 @@ function read:draw()
 	screen.write( self.cursor and "_" or string.sub(input, self.pos, self.pos) )
 	screen.write( string.sub( input, self.pos+1, -1 ) )
 	
-	if self.autocomplete then
+	if self.autocomplete and autocomplete ~= false then
 		local words = self:getWords("(%S*)(%s*)")
 		self.completion = #words[#words-1].data > 0 and self.autocomplete( words[#words-1].data ) or ""
 		if self.cursor and self.pos > #input then
@@ -65,7 +65,7 @@ function read:key(key)
 	
 	if key == "enter" then
 		self.cursor = false
-		self:draw()
+		self:draw(false)
 		if self.selected ~= #self.history then
 			self.history[#self.history] = self.history[self.selected]
 		end
@@ -141,6 +141,10 @@ function read:key(key)
 		self.pos = 1
 	elseif key == "end" then
 		self.pos = #self.history[self.selected]+1
+	elseif key == "tab" then
+		self.history[#self.history] = self.history[self.selected] .. self.completion
+		self.selected = #self.history
+		self.pos = #self.history[self.selected] + 1
 	end
 end
 
