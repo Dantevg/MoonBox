@@ -170,30 +170,32 @@ function screen.canvas.char( canvas, char, x, y, color )
 	canvas.canvas:renderTo(function()
 		love.graphics.setColor(rgb)
 		local data
-		if screen.font.data[ string.byte(char) ] then
-			data = screen.font.data[ string.byte(char) ]
+		if screen.font.chars[ string.byte(char) ] then
+			data = screen.font.chars[ string.byte(char) ]
 		else
-			data = screen.font.data[63]
+			data = screen.font.chars[63]
 		end
 		
-		for h in pairs(data) do
-			for w in pairs(data[h]) do
-				if data[h][w] == 1 then
-					if rgb[4] ~= 1 then -- Partially transparent
-						local bg = { canvas.image:getPixel( x+w-1.5, y+screen.font.height-h-1.5 ) }
-						local finalColor = {
-							rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
-							rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
-							rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
-						}
-						love.graphics.setColor(finalColor)
-					else
-						love.graphics.setColor(rgb)
-					end
-					love.graphics.points( x + w - 1.5, y + screen.font.height - h - 1.5 )
-				end
-			end
-		end
+		love.graphics.draw( screen.font.image, data, x, y )
+		
+		-- for h in pairs(data) do
+		-- 	for w in pairs(data[h]) do
+		-- 		if data[h][w] == 1 then
+		-- 			if rgb[4] ~= 1 then -- Partially transparent
+		-- 				local bg = { canvas.image:getPixel( x+w-1.5, y+screen.font.height-h-1.5 ) }
+		-- 				local finalColor = {
+		-- 					rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
+		-- 					rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
+		-- 					rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
+		-- 				}
+		-- 				love.graphics.setColor(finalColor)
+		-- 			else
+		-- 				love.graphics.setColor(rgb)
+		-- 			end
+		-- 			love.graphics.points( x + w - 1.5, y + screen.font.height - h - 1.5 )
+		-- 		end
+		-- 	end
+		-- end
 	end)
 end
 
@@ -723,7 +725,7 @@ function screen.loadImage(path)
 	return imageData
 end
 
-local function loadFont( path, data )
+--[[ local function loadFont( path, data )
 	expect( path, "string" )
 	expect( data, "table" )
 	
@@ -767,6 +769,42 @@ local function loadFont( path, data )
 		end
 		
 		font.data[ string.byte(charData.char) ] = char
+	end
+	
+	return font
+end ]]
+
+local function loadFont( path, data )
+	expect( path, "string" )
+	expect( data, "table" )
+	
+	local font = {}
+	font.name = data.description.family
+	font.monospace = true -- Only monospace support for now
+	font.width = 0
+	font.height = 0
+	font.charWidth = {}
+	font.chars = {}
+	
+	local image = love.image.newImageData( disk.absolute(path.."/"..data.file) )
+	if not image then error( "Could not load font resource: "..disk.absolute(data.file), 2 ) end
+	
+	font.image = love.graphics.newImage(image)
+	
+	-- Get font width
+	for i = 1, #data.chars do
+		font.width = math.max( font.width, data.chars[i].w ) -- Set font monospace width
+		font.height = math.max( font.height, data.chars[i].h ) -- Set font monospace width
+		font.charWidth[ data.chars[i].char ] = data.chars[i].width
+	end
+	
+	-- Get characters
+	for i = 1, #data.chars do
+		local charData = data.chars[i]
+		-- local x, y = (font.monospace and math.floor( (font.width-charData.w) / 2 ) or 0), 0
+		font.chars[ string.byte(charData.char) ] = love.graphics.newQuad(
+			charData.x, charData.y + charData.h - charData.oy, charData.w, charData.h, font.image:getDimensions()
+		)
 	end
 	
 	return font
