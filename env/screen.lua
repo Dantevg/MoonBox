@@ -871,7 +871,7 @@ function screen.newShader(path)
 end
 
 function screen.setShader(shader)
-	expect( shader, "userdata" )
+	expect( shader, {"userdata", "nil"} )
 	
 	computer.screen.shader = shader
 end

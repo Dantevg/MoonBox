@@ -66,13 +66,14 @@ function read:key(key)
 	if key == "enter" then
 		self.cursor = false
 		self:draw(false)
-		if self.selected ~= #self.history then
-			self.history[#self.history] = self.history[self.selected]
+		local h = self.history
+		if self.selected ~= #h then
+			h[#h] = h[self.selected]
 		end
-		if self.history[#self.history] == "" then
-			return table.remove( self.history, #self.history )
+		if h[#h] == "" or h[#h] == h[#h-1] then
+			return table.remove( h, #h )
 		else
-			return self.history[#self.history]
+			return h[#h]
 		end
 	elseif key == "backspace" then
 		if event.keyDown("ctrl") then
