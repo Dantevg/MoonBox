@@ -7,6 +7,17 @@
 
 local colors = {}
 
+local function getColor(color)
+	local c = colors.rgb(color)
+	if not c then return end
+	return {
+		c[1]/255,
+		c[2]/255,
+		c[3]/255,
+		c[4]
+	}
+end
+
 
 
 -- CONVERSION FUNCTIONS
@@ -233,7 +244,7 @@ end
 
 function colors.blend( fg, a, bg )
 	expect( fg, "string", 1, "colors.blend" )
-	expect( fg, "number", 2, "colors.blend" )
+	expect( a, "number", 2, "colors.blend" )
 	expect( bg, "string", 3, "colors.blend" )
 	
 	fg = getColor(fg)

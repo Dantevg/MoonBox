@@ -14,7 +14,7 @@ local love = args[2]
 
 -- HELPER FUNCTIONS
 
-function getColor(color)
+local function getColor(color)
 	local c = colors.rgb(color)
 	if not c then return end
 	return {
@@ -25,7 +25,7 @@ function getColor(color)
 	}
 end
 
-function closestColor( r, g, b, a )
+local function closestColor( r, g, b, a )
 	expect( r, {"number", "table"} )
 	if type(r) == "number" then
 		expect( g, {"number", "nil"} )
