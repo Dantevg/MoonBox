@@ -176,7 +176,11 @@ function screen.canvas.char( canvas, char, x, y, color )
 			data = screen.font.chars[63]
 		end
 		
-		love.graphics.draw( screen.font.image, data, x, y )
+		local height = screen.font.height + screen.font.descender
+		local xOff = (screen.font.monospace and math.floor( (screen.font.width-data.w) / 2 ) or 0) - 1
+		local yOff = screen.font.height + screen.font.descender - data.oy - 1
+		
+		love.graphics.draw( screen.font.image, data.quad, x+xOff, y+yOff )
 		
 		-- for h in pairs(data) do
 		-- 	for w in pairs(data[h]) do
@@ -783,7 +787,9 @@ local function loadFont( path, data )
 	font.monospace = true -- Only monospace support for now
 	font.width = 0
 	font.height = 0
-	font.charWidth = {}
+	font.ascender = data.metrics.ascender
+	font.descender = data.metrics.descender
+	-- font.charWidth = {}
 	font.chars = {}
 	
 	local image = love.image.newImageData( disk.absolute(path.."/"..data.file) )
@@ -793,19 +799,33 @@ local function loadFont( path, data )
 	
 	-- Get font width
 	for i = 1, #data.chars do
+		font.chars[ string.byte(data.chars[i].char) ] = data.chars[i]
 		font.width = math.max( font.width, data.chars[i].w ) -- Set font monospace width
 		font.height = math.max( font.height, data.chars[i].h ) -- Set font monospace width
-		font.charWidth[ data.chars[i].char ] = data.chars[i].width
+		-- font.charWidth[ data.chars[i].char ] = data.chars[i].width
 	end
 	
 	-- Get characters
-	for i = 1, #data.chars do
-		local charData = data.chars[i]
-		-- local x, y = (font.monospace and math.floor( (font.width-charData.w) / 2 ) or 0), 0
-		font.chars[ string.byte(charData.char) ] = love.graphics.newQuad(
-			charData.x, charData.y + charData.h - charData.oy, charData.w, charData.h, font.image:getDimensions()
+	for k, char in pairs(font.chars) do
+		font.chars[k].quad = love.graphics.newQuad(
+			char.x, char.y, char.w, char.h, font.image:getDimensions()
 		)
 	end
+	
+	--[[ for i = 1, #data.chars do
+		local charData = data.chars[i]
+		-- local height = font.height+data.metrics.descender
+		-- local xOff = (font.monospace and math.floor( (font.width-charData.w) / 2 ) or 0)
+		-- font.chars[ string.byte(charData.char) ] = love.graphics.newQuad(
+		-- 	charData.x - xOff, charData.y + charData.oy - height,
+		-- 	charData.w + xOff, charData.h - charData.oy + height,
+		-- 	font.image:getDimensions()
+		-- )
+		
+		font.chars[ string.byte(charData.char) ].quad = love.graphics.newQuad(
+			charData.x, charData.y, charData.w, charData.h, font.image:getDimensions()
+		)
+	end ]]
 	
 	return font
 end
