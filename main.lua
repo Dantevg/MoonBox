@@ -3,7 +3,7 @@
 	MoonBox Lua sandbox
 	by RedPolygon
 	
-	VERSION 0.3
+	VERSION 0.4
 	
 ]]--
 

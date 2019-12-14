@@ -57,7 +57,7 @@ function sandbox.new( env, loadGeneral )
 	
 	computer.env = {}
 	computer.FPS = 20
-	computer.version = "0.3"
+	computer.version = "0.4"
 	computer.nextFrame = 0
 	computer.clock = 0
 	computer.currentFrame = 0

@@ -17,7 +17,7 @@ local love = args[2]
 -- VARIABLES / CONSTANTS
 
 os.FPS = computer.FPS
-os.version = "MoonBox v"..computer.version
+os.version = "MoonBox "..computer.version
 
 
 
