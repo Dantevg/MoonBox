@@ -12,9 +12,6 @@ while running do
 	
 	-- Get input and save history
 	local input = read(history)
-	if input ~= "" and input ~= history[#history] then
-		table.insert( history, input )
-	end
 	print()
 	
 	local fn, err

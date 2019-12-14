@@ -67,9 +67,7 @@ function read:key(key)
 		self.cursor = false
 		self:draw(false)
 		local h = self.history
-		if self.selected ~= #h then
-			h[#h] = h[self.selected]
-		end
+		h[#h] = h[self.selected]
 		if h[#h] == "" or h[#h] == h[#h-1] then
 			return table.remove( h, #h )
 		else
