@@ -1,7 +1,12 @@
+local args = {...}
 local running = true
 local history = {}
 
-local env = setmetatable( {exit = function() running = false end}, {__index = _G} )
+local mt = {__index = _G}
+if args[1] == "-G" or args[1] == "--global" then
+	mt = {__index = _G, __newindex = _G}
+end
+local env = setmetatable( {exit = function() running = false end}, mt )
 
 local keywords = {
 	["and"] = true,
@@ -34,7 +39,7 @@ local function autocomplete(input)
 	start = 1
 	
 	-- Traverse through environment tables to get to input destination
-	local t = _G
+	local t = env
 	local dot = string.find( input, ".", start, true )
 	while dot do
 		local part = string.sub( input, start, dot-1 )
