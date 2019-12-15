@@ -221,6 +221,8 @@ function setCursor( newX, newY )
 	local w = math.floor( screen.charWidth - 1 )
 	local h = math.floor( screen.charHeight + 1 )
 	
+	x = math.min( x, #file[y]+1 )
+	
 	local xScreen = x - xScroll + lineStart - 1
 	local yScreen = y - yScroll
 	
@@ -348,7 +350,7 @@ function keyPress(key)
 		yScroll = math.max( yScroll - screen.charHeight, 0 )
 		setCursor( x, math.max(y-screen.charHeight, 1) )
 	elseif key == "pagedown" then
-		yScroll = math.min( yScroll + screen.charHeight, #file - screen.charHeight )
+		yScroll = math.min( yScroll + screen.charHeight, #file - screen.charHeight + 1 )
 		setCursor( x, math.min(y+screen.charHeight, #file) )
 	elseif key == "end" then
 		setCursor( #file[y]+1, y )
@@ -367,15 +369,21 @@ end
 -- Run
 while running do
 	draw()
-	local event, param = event.wait()
-	if event == "key" then
-		keyPress(param)
-	elseif event == "char" then
-		file[y] = string.sub( file[y], 1, x-1 )..param..string.sub( file[y], x )
+	local e, p1, p2, p3 = event.wait()
+	if e == "key" then
+		keyPress(p1)
+	elseif e == "char" then
+		file[y] = string.sub( file[y], 1, x-1 )..p1..string.sub( file[y], x )
 		setCursor( x+1, y )
-	elseif event == "timer" and param == timer then
+	elseif e == "timer" and p1 == timer then
 		cursor = not cursor
 		timer = os.startTimer(0.5)
+	elseif e == "scroll" then
+		yScroll = math.max( 0, math.min( yScroll - p3, #file - screen.charHeight + 1 ) )
+	elseif e == "mouse" then
+		local x = math.ceil( p1 / (screen.font.width+1) - lineStart + xScroll )
+		local y = math.ceil( p2 / (screen.font.height+1) + yScroll )
+		setCursor( x, y )
 	end
 end
 
