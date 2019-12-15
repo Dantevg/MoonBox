@@ -579,7 +579,7 @@ function screen.canvas.tabulate( canvas, elements, nColumns, horizontal, fn )
 			screen.pos.x = x + (screen.font.width+1) * ((k-1) % nColumns) * (columnWidth+2)
 			screen.pos.y = y + (screen.font.height+1) * math.floor((k-1)/nColumns)
 		else
-			screen.pos.x = x + (screen.font.width+1) * math.floor( (k-1) / nRows ) * (columnWidth+2)
+			screen.pos.x = x + (screen.font.width+1) * (k-1) * (columnWidth+2)
 			screen.pos.y = y + (screen.font.height+1) * math.floor((k-1) % nRows)
 		end
 		while screen.pos.y + screen.font.height > screen.height do
