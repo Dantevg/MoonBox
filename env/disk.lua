@@ -203,7 +203,11 @@ disk.drives = {}
 
 disk.drives["/"] = setmetatable( {}, {__index = disk.defaults} )
 
-disk.drives["/"].list = function()
+disk.drives["/"].list = function(path)
+	local drive = disk.getParts( disk.absolute(path) )[1] or "/"
+	if not disk.drives[drive] then
+		error( "No such drive", 2 )
+	end
 	local drives = disk.getDrives()
 	for i = 1, #drives do
 		if drives[i] == "/" then

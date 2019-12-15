@@ -5,6 +5,8 @@ if args[1] then
 	path = shell.absolute(args[1])
 end
 
+if not disk.exists(path) then error( "No such path", 0 ) end
+
 for i = 1, #args do
 	if args[i] == "-h" then
 		showHidden = true
