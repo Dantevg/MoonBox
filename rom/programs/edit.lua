@@ -133,6 +133,7 @@ local timer = os.startTimer(0.5)
 local cursor = true
 local x, y, xScroll, yScroll = 1, 1, 0, 0
 local indent = 0
+local selection
 
 
 -- Functions
@@ -218,7 +219,15 @@ function drawLine( row, start )
 			local match = string.match( line, patterns[i][1] )
 			if match then
 				screen.setColor( type(patterns[i][2]) == "string" and patterns[i][2] or patterns[i][2](match) )
-				screen.write( string.sub( match, math.max(min-col, 0), max-col ) )
+				local bg = theme.background
+				if selection then
+					if row > selection[1][2] and row < selection[2][2]
+						or row == selection[1][2] and col >= selection[1][1]
+						or row == selection[2][2] and col <= selection[2][1] then
+						bg = "blue+2"
+					end
+				end
+				screen.write( string.sub( match, math.max(min-col, 0), max-col ), {background=bg} )
 				line = string.sub( line, #match+1 )
 				col = col + #match
 				break
@@ -259,11 +268,16 @@ function draw()
 end
 
 function setCursor( newX, newY )
-	x, y = newX, newY
+	if event.keyDown("shift") then
+		selection = selection or { {x,y} }
+		selection[2] = { math.min(newX, #file[y]+1), newY }
+	else
+		selection = nil
+	end
+	
+	x, y = math.min(newX, #file[y]+1), newY
 	local w = math.floor( screen.charWidth - 1 )
 	local h = math.floor( screen.charHeight + 1 )
-	
-	x = math.min( x, #file[y]+1 )
 	
 	local xScreen = x - xScroll + lineStart - 1
 	local yScreen = y - yScroll
