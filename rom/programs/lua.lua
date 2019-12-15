@@ -54,7 +54,7 @@ local function autocomplete(input)
 	
 	-- Find element in keywords
 	local part = string.sub( input, start )
-	if t == _G then
+	if t == env then
 		for k, v in pairs(keywords) do
 			if string.sub( k, 1, #part ) == part then
 				return string.sub( k, #part+1 )
