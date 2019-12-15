@@ -39,7 +39,7 @@ local function autocomplete(input)
 	start = 1
 	
 	-- Traverse through environment tables to get to input destination
-	local t = getmetatable(env).__index
+	local t = env
 	local dot = string.find( input, ".", start, true )
 	while dot do
 		local part = string.sub( input, start, dot-1 )
@@ -63,11 +63,14 @@ local function autocomplete(input)
 	end
 	
 	-- Find element in table
-	for k, v in pairs(t) do
-		if string.sub( k, 1, #part ) == part and type(k) == "string" then
-			local suffix = type(v) == "table" and "." or (type(v) == "function" and "(" or "")
-			return string.sub( k..suffix, #part+1 )
+	while t do
+		for k, v in pairs(t) do
+			if string.sub( k, 1, #part ) == part and type(k) == "string" then
+				local suffix = type(v) == "table" and "." or (type(v) == "function" and "(" or "")
+				return string.sub( k..suffix, #part+1 )
+			end
 		end
+		t = getmetatable(t) and getmetatable(t).__index or nil
 	end
 end
 
