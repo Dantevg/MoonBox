@@ -39,7 +39,7 @@ local function autocomplete(input)
 	start = 1
 	
 	-- Traverse through environment tables to get to input destination
-	local t = env
+	local t = getmetatable(env).__index
 	local dot = string.find( input, ".", start, true )
 	while dot do
 		local part = string.sub( input, start, dot-1 )
