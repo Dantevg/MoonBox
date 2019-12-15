@@ -227,7 +227,7 @@ function drawLine( row, start )
 	end
 	
 	-- Suggestion
-	screen.write( string.sub( complete, 1, screen.charWidth-start+xScroll-col ), {color="gray"} )
+	screen.write( string.sub( suggestion, 1, screen.charWidth-start+xScroll-col ), {color="gray"} )
 end
 
 function draw()
@@ -341,9 +341,22 @@ function keyPress(key)
 		setCursor( indent*2+1, y+1 )
 		lineStart = math.floor( math.log10(#file) ) + 2 -- Recalculate line number width
 	elseif key == "tab" then
-		file[y] = string.sub( file[y], 1, x-1 ).."  "..string.sub( file[y], x, -1 )
-		x = x+2
-		setIndent()
+		if event.keyDown("shift") then -- Remove one level of indentation
+			if string.sub( file[y], 1, 2 ) == "  " then
+				file[y] = string.sub( file[y], 3 )
+				x = x-2
+			end
+		else
+			local completion = autocomplete( file[y] )
+			if #file[y] > 0 and x == #file[y]+1 and completion and completion ~= "" then -- Accept autocompletion
+				file[y] = file[y] .. completion
+				setCursor( x + #completion, y )
+			else -- Insert tab
+				file[y] = string.sub( file[y], 1, x-1 ).."  "..string.sub( file[y], x, -1 )
+				x = x+2
+				setIndent()
+			end
+		end
 	elseif key == "up" then
 		if y > 1 then
 			setCursor( math.min( x, #file[y-1]+1 ), y-1 )
