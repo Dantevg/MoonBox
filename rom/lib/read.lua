@@ -66,6 +66,7 @@ function read:key(key)
 	if key == "enter" then
 		self.cursor = false
 		self:draw(false)
+		os.cancelTimer(self.timer)
 		local h = self.history
 		h[#h] = h[self.selected]
 		if h[#h] == "" or h[#h] == h[#h-1] then
@@ -198,10 +199,7 @@ function read.new( history, async, autocomplete )
 			r:draw()
 			r.length = #r.history[r.selected]
 			local result = r:update( event.wait() )
-			if result then
-				os.cancelTimer(r.timer)
-				return result
-			end
+			if result then return result end
 		end
 	end
 end
