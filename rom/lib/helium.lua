@@ -16,10 +16,10 @@ he._VERSION = "0.2"
 
 he.make = {}
 function he.make.x( obj, x )
-	return function() return x + (obj.parent and obj.parent:x()-1 or 0) end
+	return function() return (x or 0) + (obj.parent and obj.parent:x()-1 or 0) end
 end
 function he.make.y( obj, y )
-	return function() return y + (obj.parent and obj.parent:y()-1 or 0) end
+	return function() return (y or 0) + (obj.parent and obj.parent:y()-1 or 0) end
 end
 
 function he.proxy(...)
@@ -163,28 +163,53 @@ setmetatable( he.text, {
 })
 
 he.input = {}
-function he.input.new( p, x, y, w, h, color )
+function he.input.new( p, x, y, w, h, color, background )
 	local obj = {}
 	
 	obj.parent = p
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
 	obj.w = function()
-		return (screen.font.width+1) * #self.read + 2*self.padding
+		return (screen.font.width+1) * #obj.read + 2*obj.padding
 	end
 	obj.h = function()
-		return h + 2*self.padding
+		return h + 2*obj.padding
 	end
-	obj.color = color
+	obj.color = he.proxy( color or "white" )
+	obj.background = he.proxy( background or "black" )
 	obj.padding = 2
-	obj.read = read.new()
+	obj.read = read.new( nil, true )
+	obj.read.x = obj.x() + obj.padding
+	obj.read.y = obj.y() + obj.padding
+	obj.input = ""
 	
 	return setmetatable( obj, {__index = he.input} )
 end
 function he.input:draw(parent)
 	self.parent = parent or self.parent
-	screen.rect( self.x(), self.y(), self.w(), self.h(), self.color )
+	screen.rect( self.x(), self.y(), self.w(), self.h(), self.background() )
+	
+	local prevBg, prevColor = screen.background, screen.color
+	screen.background = self.background()
+	screen.color = self.color()
+	self.read:draw()
+	screen.background = prevBg
+	screen.color = prevColor
 end
+function he.input:update( e, param )
+	if self.active == false then return end
+	self.read.length = #self.read.history[self.read.selected]
+	local result = self.read:update( e, param )
+	if result then
+		self.input = result
+		if type(self.callback) == "function" then
+			self:callback(result)
+		end
+	end
+end
+function he.input:key(key) self:update( "key", key ) end
+function he.input:char(char) self:update( "char", char ) end
+function he.input:timer(id) self:update( "timer", id ) end
 setmetatable( he.input, {
 	__index = he,
 	__call = function( _, ... ) return he.input.new(...) end
