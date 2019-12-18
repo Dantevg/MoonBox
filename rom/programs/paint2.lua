@@ -12,6 +12,7 @@
 local he = helium.new( 1, 1, screen.width, screen.height )
 local gui = {}
 local brushes = {}
+local margin = 10
 
 
 
@@ -90,28 +91,111 @@ setmetatable( colourPicker, {
 	__call = function( _, ... ) return colourPicker.new(...) end
 })
 
+local function createInput( obj )
+	obj.padding = 1
+	obj.border = he.proxy("gray+1")
+	obj.background = function() return obj.active and "gray+1" or "gray+2" end
+	obj.y = function() return obj.parent.obj.title.y() + obj.parent.obj.title.h() + 5 end
+	obj.read.x = obj:x() + obj.padding
+	obj.read.y = obj:y() + obj.padding
+	obj.read.cursor = false
+	obj.active = false
+	obj.mouse = function( self, x, y, btn )
+		if self:within( x, y ) then
+			self.read.timer = os.startTimer(0.5)
+			eachObj( gui.menu, function(obj)
+				if obj.active then
+					obj.active = false
+					obj.read.cursor = false
+				end
+			end )
+			self.active = true
+			self.read.cursor = true
+		end
+	end
+end
+
 gui.paint = he:box( 1, 1, nil, nil, "gray-2" )
 gui.paint:autosize( "wh", he )
+gui.paint.obj = {}
 
-gui.picker = colourPicker( gui.paint, 1, 1, 5, 10 )
-gui.picker.h = function() return he.h() - 10 end
+	gui.paint.obj.picker = colourPicker( gui.paint, 1, 1, 5, 10 )
+	gui.paint.obj.picker.h = function() return he.h() - 10 end
+	gui.paint.obj.picker.obj = {}
+	local Picker = gui.paint.obj.picker
 
-gui.primary = gui.picker:box( 1, gui.picker.hColour() * #gui.picker.rainbow + 1, gui.picker.w()/2 - 1, 15, function() return primary end )
-gui.secondary = gui.picker:box( gui.picker.w()/2+1, gui.picker.hColour() * #gui.picker.rainbow + 1, gui.picker.w()/2 - 1, 15, function() return secondary end )
+		Picker.obj.primary = Picker:box( 1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 15, function() return primary end )
+		Picker.obj.secondary = Picker:box( Picker.w()/2+1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 15, function() return secondary end )
 
-gui.menu = he:box( 1, 1, nil, nil, "white" )
+gui.menu = he:box( 1, 1, nil, nil, "gray+2" )
 gui.menu:autosize( "wh", he )
+gui.menu.obj = {}
 
-gui.open = gui.menu:box( 20, 20, nil, 20, "gray+2" )
-gui.open:autosize( "w", -20, gui.menu )
+	gui.menu.obj.open = gui.menu:box( margin, margin, nil, 20, "gray+2" )
+	gui.menu.obj.open:autosize( "w", -margin, gui.menu )
+	gui.menu.obj.open.obj = {}
+	local Open = gui.menu.obj.open
 
-gui.open.title = gui.open:text( 5, 5, "OPEN FILE", "black" )
+		Open.obj.title = Open:text( 5, 5, "OPEN FILE", "black" )
+		Open.obj.input = Open:input( 5, nil, nil, screen.font.height, "black" )
+		Open.obj.input:autosize( "w", -5, Open )
+		createInput(Open.obj.input)
+		Open.obj.input.callback = function( self, input )
+			loadFile(input)
+			self.active = false
+		end
+	
+	Open:autosize( "h", 5, Open.obj.title, Open.obj.input )
 
-gui.open:autosize( "h", 3, gui.open.title )
+	gui.menu.obj.create = gui.menu:box( margin, nil, nil, 20, "gray+2" )
+	gui.menu.obj.create:autosize( "w", -margin, gui.menu )
+	gui.menu.obj.create.y = function() return Open.y() + Open.h() + margin end
+	gui.menu.obj.create.obj = {}
+	local Create = gui.menu.obj.create
+
+		Create.obj.title = Create:text( 5, 5, "NEW IMAGE", "black" )
+		
+		Create.obj.widthLabel = Create:text( 5, nil, "Width", "black" )
+		Create.obj.widthLabel.y = function() return Create.obj.title.y() + Create.obj.title.h() + 6 end
+		Create.obj.width = Create:input( nil, nil, 50, screen.font.height, "black" )
+		Create.obj.width.x = function() return Create.obj.widthLabel.x() + Create.obj.widthLabel.w() + 5 end
+		createInput(Create.obj.width)
+		Create.obj.width.callback = function( self, input )
+			createImage(input)
+			self.active = false
+		end
+		
+		Create.obj.heightLabel = Create:text( nil, nil, "Height", "black" )
+		Create.obj.heightLabel.x = function() return Create.obj.width.x() + Create.obj.width.w() + 20 end
+		Create.obj.heightLabel.y = Create.obj.widthLabel.y
+		Create.obj.height = Create:input( nil, nil, 50, screen.font.height, "black" )
+		Create.obj.height.x = function() return Create.obj.heightLabel.x() + Create.obj.heightLabel.w() + 5 end
+		createInput(Create.obj.height)
+		Create.obj.height.callback = function( self, input )
+			createImage(input)
+			self.active = false
+		end
+		
+		Create.obj.submit = Create:button( nil, nil, 50, 11, "CREATE" )
+		Create.obj.submit.x = function() return Create.w() - Create.obj.submit.w() end
+		Create.obj.submit.y = function() return Create.obj.title.y() + Create.obj.title.h() + 4 end
+		Create.obj.submit.color = he.proxy("white")
+		Create.obj.submit.background = he.proxy("gray-1")
+		Create.obj.submit.activeColor = he.proxy("white")
+		Create.obj.submit.activeBackground = he.proxy("gray")
+		Create.obj.submit.callback = function(obj)
+			
+		end
+	
+	Create:autosize( "h", 5, Create.obj.title, Create.obj.width )
 
 
 
 -- HELPER FUNCTIONS
+
+function createImage()
+	
+end
 
 function loadFile()
 	
@@ -126,11 +210,21 @@ local events = {}
 function events.key(key)
 	if key == "escape" then
 		inMenu = not inMenu
+	elseif key == "q" and event.keyDown("ctrl") then
+		screen.clear()
+		screen.pos = {x=1,y=1}
+		running = false
 	end
 end
 
 function events.mouse( x, y, btn )
-	gui.picker:mouse( x, y, btn )
+	-- gui.paint.obj.picker:mouse( x, y, btn )
+	eachObj( gui.menu, function(obj)
+		if obj.active then
+			obj.active = false
+			obj.read.cursor = false
+		end
+	end )
 end
 
 function events.scroll( x, y, dir )
@@ -138,21 +232,27 @@ function events.scroll( x, y, dir )
 	zoomInt = math.floor(zoom)
 end
 
+function eachObj( obj, fn, ... )
+	fn( obj, ... )
+	if obj.obj then
+		for k, v in pairs(obj.obj) do
+			eachObj( v, fn, ... )
+		end
+	end
+end
+
+function propagateEvents( obj, e, ... )
+	eachObj( obj, function( obj, e, ... )
+		if obj[e] then obj[e]( obj, ... ) end
+	end, e, ... )
+end
+
 
 
 -- PROGRAM FUNCTIONS
 
-function draw()
-	if inMenu then
-		gui.menu:draw()
-		gui.open:draw()
-		gui.open.title:draw()
-	else
-		gui.paint:draw()
-		gui.picker:draw()
-		gui.primary:draw()
-		gui.secondary:draw()
-	end
+function draw(obj)
+	eachObj( obj, function(obj) obj:draw() end )
 end
 
 
@@ -160,9 +260,12 @@ end
 -- RUN
 
 while running do
-	draw()
+	draw( inMenu and gui.menu or gui.paint )
+	
 	local e = {event.wait()}
 	if events[ e[1] ] then
 		events[ e[1] ]( unpack(e,2) )
 	end
+	
+	propagateEvents( inMenu and gui.menu or gui.paint, unpack(e) )
 end
