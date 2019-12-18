@@ -180,7 +180,7 @@ function screen.canvas.char( canvas, char, x, y, color )
 		local xOff = (screen.font.monospace and math.floor( (screen.font.width-data.w) / 2 ) or 0) - 1
 		local yOff = screen.font.height + screen.font.descender - data.oy - 1
 		
-		love.graphics.draw( screen.font.image, data.quad, x+xOff, y+yOff )
+		love.graphics.draw( screen.font.image, data.quad, math.floor(x)+xOff, math.floor(y)+yOff )
 		
 		-- for h in pairs(data) do
 		-- 	for w in pairs(data[h]) do
