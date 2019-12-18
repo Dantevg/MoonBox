@@ -169,9 +169,7 @@ function he.input.new( p, x, y, w, h, color, background )
 	obj.parent = p
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
-	obj.w = function()
-		return (screen.font.width+1) * #obj.read + 2*obj.padding
-	end
+	obj.w = he.proxy(w)
 	obj.h = function()
 		return h + 2*obj.padding
 	end
@@ -188,6 +186,9 @@ end
 function he.input:draw(parent)
 	self.parent = parent or self.parent
 	screen.rect( self.x(), self.y(), self.w(), self.h(), self.background() )
+	if self.border then
+		screen.rect( self.x()-1, self.y()-1, self.w()+2, self.h()+2, self.border(), false )
+	end
 	
 	local prevBg, prevColor = screen.background, screen.color
 	screen.background = self.background()
@@ -213,6 +214,48 @@ function he.input:timer(id) self:update( "timer", id ) end
 setmetatable( he.input, {
 	__index = he,
 	__call = function( _, ... ) return he.input.new(...) end
+})
+
+he.button = {}
+function he.button.new( p, x, y, w, h, title, callback )
+	local obj = {}
+	
+	obj.parent = p
+	obj.x = he.make.x(obj, x)
+	obj.y = he.make.y(obj, y)
+	obj.w = he.proxy(w)
+	obj.h = he.proxy(h)
+	
+	obj.color = he.proxy("white")
+	obj.background = he.proxy("black")
+	obj.activeColor = he.proxy("white")
+	obj.activeBackground = he.proxy("gray-2")
+	obj.padding = 3
+	obj.title = title or "button"
+	obj.callback = callback
+	
+	return setmetatable( obj, {__index = he.button} )
+end
+function he.button:draw(parent)
+	self.parent = parent or self.parent
+	
+	screen.rect( self.x(), self.y(), self.w(), self.h(),
+		self.active and self.activeBackground() or self.background() )
+	screen.write( self.title, {x = self.x() + self.padding, y = self.y() + self.padding,
+		color = self.active and self.activeColor() or self.color(),
+		background = self.active and self.activeBackground() or self.background()} )
+end
+function he.button:mouse( x, y, btn )
+	if not self:within( x, y ) then return end
+	self.active = true
+	if type(self.callback) == "function" then self:callback() end
+end
+function he.button:mouseUp( e, x, y, btn )
+	self.active = false
+end
+setmetatable( he.button, {
+	__index = he,
+	__call = function( _, ... ) return he.button.new(...) end
 })
 
 
