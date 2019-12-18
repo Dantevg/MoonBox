@@ -379,7 +379,7 @@ end
 
 function love.mousepressed( x, y, btn )
 	x, y = getCoordinates( x, y )
-	if x >= 1 and x <= settings.width and y >= 1 and y <= settings.height then
+	if x >= 1 and x <= active.screen.w and y >= 1 and y <= active.screen.h then
 		table.insert( active.eventBuffer, { "mouse", x, y, btn } )
 	end
 end
