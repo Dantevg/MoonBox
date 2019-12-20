@@ -16,6 +16,16 @@ local love = args[2]
 math.random = love.math.random
 math.noise = love.math.noise
 
+function math.hash( algorithm, data )
+	expect( algorithm, "string", 1, "math.hash" )
+	expect( data, "string", 2, "math.hash" )
+	if algorithm ~= "md5" and algorithm ~= "sha256" and algorithm ~= "sha512" then
+		error( "Invalid hash function", 2 )
+	end
+	
+	return love.data.encode( "string", "hex", love.data.hash(algorithm, data) )
+end
+
 
 
 -- FUNCTIONS
