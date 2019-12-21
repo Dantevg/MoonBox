@@ -26,7 +26,7 @@ function he.proxy(...)
 	local arg = {...}
 	if type(arg[1]) == "function" then
 		return arg[1]
-	else
+	elseif #arg > 0 then
 		return function() return unpack(arg) end
 	end
 end
@@ -107,8 +107,24 @@ function he:toLocalCoords( x, y )
 	return x - self.x() + 1, y - self.y() + 1
 end
 
+function he:get(field)
+	if type(self[field]) == "function" then
+		return self[field]()
+	end
+	
+	-- Find in styles
+	for k, tag in ipairs(self.tags) do
+		if self.styles[tag] then
+			return self.styles[tag][field]
+		end
+	end
+end
+
 function he.new( x, y, w, h )
-	return setmetatable( {x=he.proxy(x), y=he.proxy(y), w=he.proxy(w), h=he.proxy(h)}, {__index = he} )
+	return setmetatable( {
+		x=he.proxy(x), y=he.proxy(y), w=he.proxy(w), h=he.proxy(h),
+		styles = {}
+	}, {__index = he} )
 end
 
 
@@ -116,10 +132,13 @@ end
 -- HELIUM ELEMENTS
 
 he.box = {}
+
 function he.box.new( p, x, y, w, h, color )
 	local obj = {}
 	
 	obj.parent = p
+	obj.styles = setmetatable( {}, {__index = function(t,k) return obj.parent.styles[k] end} )
+	obj.tags = {"box"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
 	obj.w = he.proxy(w)
@@ -128,20 +147,26 @@ function he.box.new( p, x, y, w, h, color )
 	
 	return setmetatable( obj, {__index = he.box} )
 end
+
 function he.box:draw(parent)
 	self.parent = parent or self.parent
-	screen.rect( self.x(), self.y(), self.w(), self.h(), self.color() )
+	screen.rect( self:get("x"), self:get("y"), self:get("w"), self:get("h"), self:get("color") )
 end
+
 setmetatable( he.box, {
 	__index = he,
 	__call = function( _, ... ) return he.box.new(...) end
 })
 
+
+
 he.text = {}
+
 function he.text.new( p, x, y, text, color )
 	local obj = {}
 	
 	obj.parent = p
+	obj.tags = {"text"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
 	obj.w = function()
@@ -153,20 +178,26 @@ function he.text.new( p, x, y, text, color )
 	
 	return setmetatable( obj, {__index = he.text} )
 end
+
 function he.text:draw(parent)
 	self.parent = parent or self.parent
 	screen.write( self.text, {x = self.x(), y = self.y(), color = self.color()} )
 end
+
 setmetatable( he.text, {
 	__index = he,
 	__call = function( _, ... ) return he.text.new(...) end
 })
 
+
+
 he.input = {}
+
 function he.input.new( p, x, y, w, h, color, background )
 	local obj = {}
 	
 	obj.parent = p
+	obj.tags = {"input"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
 	obj.w = he.proxy(w)
@@ -183,6 +214,7 @@ function he.input.new( p, x, y, w, h, color, background )
 	
 	return setmetatable( obj, {__index = he.input} )
 end
+
 function he.input:draw(parent)
 	self.parent = parent or self.parent
 	screen.rect( self.x(), self.y(), self.w(), self.h(), self.background() )
@@ -197,6 +229,7 @@ function he.input:draw(parent)
 	screen.background = prevBg
 	screen.color = prevColor
 end
+
 function he.input:update( e, param )
 	if self.active == false then return end
 	self.read.length = #self.read.history[self.read.selected]
@@ -208,19 +241,25 @@ function he.input:update( e, param )
 		end
 	end
 end
+
 function he.input:key(key) self:update( "key", key ) end
 function he.input:char(char) self:update( "char", char ) end
 function he.input:timer(id) self:update( "timer", id ) end
+
 setmetatable( he.input, {
 	__index = he,
 	__call = function( _, ... ) return he.input.new(...) end
 })
 
+
+
 he.button = {}
+
 function he.button.new( p, x, y, w, h, title, callback )
 	local obj = {}
 	
 	obj.parent = p
+	obj.tags = {"button"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
 	obj.w = he.proxy(w)
@@ -236,6 +275,7 @@ function he.button.new( p, x, y, w, h, title, callback )
 	
 	return setmetatable( obj, {__index = he.button} )
 end
+
 function he.button:draw(parent)
 	self.parent = parent or self.parent
 	
@@ -245,14 +285,17 @@ function he.button:draw(parent)
 		color = self.active and self.activeColor() or self.color(),
 		background = self.active and self.activeBackground() or self.background()} )
 end
+
 function he.button:mouse( x, y, btn )
 	if not self:within( x, y ) then return end
 	self.active = true
 	if type(self.callback) == "function" then self:callback() end
 end
+
 function he.button:mouseUp( e, x, y, btn )
 	self.active = false
 end
+
 setmetatable( he.button, {
 	__index = he,
 	__call = function( _, ... ) return he.button.new(...) end
