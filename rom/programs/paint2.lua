@@ -91,6 +91,9 @@ setmetatable( colourPicker, {
 	__call = function( _, ... ) return colourPicker.new(...) end
 })
 
+he.styles.box = {}
+he.styles.box.color = "red"
+
 local function createInput( obj )
 	obj.padding = 1
 	obj.border = he.proxy("gray+1")
@@ -131,7 +134,7 @@ gui.menu = he:box( 1, 1, nil, nil, "gray+2" )
 gui.menu:autosize( "wh", he )
 gui.menu.obj = {}
 
-	gui.menu.obj.open = gui.menu:box( margin, margin, nil, 20, "gray+2" )
+	gui.menu.obj.open = gui.menu:box( margin, margin, nil, 20 )
 	gui.menu.obj.open:autosize( "w", -margin, gui.menu )
 	gui.menu.obj.open.obj = {}
 	local Open = gui.menu.obj.open
