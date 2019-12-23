@@ -71,6 +71,9 @@ local function autocomplete(input)
 			end
 		end
 		t = getmetatable(t) and getmetatable(t).__index or nil
+		if type(t) ~= "table" then
+			return ""
+		end
 	end
 end
 
