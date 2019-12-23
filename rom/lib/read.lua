@@ -56,8 +56,8 @@ function read:char(char)
 	expect( char, "string" )
 	
 	self.history[#self.history] = string.sub( self.history[self.selected], 1, self.pos-1 )..char..string.sub( self.history[self.selected], self.pos, -1 )
-		self.selected = #self.history
-		self.pos = self.pos+1
+	self.selected = #self.history
+	self.pos = self.pos+1
 end
 
 function read:key(key)
@@ -85,14 +85,16 @@ function read:key(key)
 					break
 				end
 			end
-			self.history[self.selected] = ""
+			self.history[#self.history] = ""
 			for i = 1, #words do
-				self.history[self.selected] = self.history[self.selected] .. words[i].data
+				self.history[#self.history] = self.history[self.selected] .. words[i].data
 			end
+			self.selected = #self.history
 		else
-			self.history[self.selected] = string.sub( self.history[self.selected], 1, math.max(0,self.pos-2) )
+			self.history[#self.history] = string.sub( self.history[self.selected], 1, math.max(0,self.pos-2) )
 				..string.sub( self.history[self.selected], self.pos, -1 )
 				self.pos = math.max( 1, self.pos-1 )
+			self.selected = #self.history
 		end
 	elseif key == "delete" then
 		if event.keyDown("ctrl") then
@@ -103,13 +105,15 @@ function read:key(key)
 					break
 				end
 			end
-			self.history[self.selected] = ""
+			self.history[#self.history] = ""
 			for i = 1, #words do
-				self.history[self.selected] = self.history[self.selected] .. words[i].data
+				self.history[#self.history] = self.history[self.selected] .. words[i].data
 			end
+			self.selected = #self.history
 		else
-			self.history[self.selected] = string.sub( self.history[self.selected], 1,self. self.pos-1 )
+			self.history[#self.history] = string.sub( self.history[self.selected], 1,self. self.pos-1 )
 				..string.sub( self.history[self.selected], self.pos+1, -1 )
+			self.selected = #self.history
 		end
 	elseif key == "up" then
 		self.selected = math.max( 1, self.selected-1 )
