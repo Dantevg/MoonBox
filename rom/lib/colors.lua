@@ -24,7 +24,7 @@ end
 
 -- Convert color to rgba (0-255) value
 function colors.rgb(color)
-	expect( color, {"string", "nil"} )
+	expect( color, {"string", "table", "nil"} )
 	
 	if not color then return end
 	
