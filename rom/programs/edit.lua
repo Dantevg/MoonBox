@@ -204,7 +204,7 @@ end
 
 function drawLine( row, start )
 	local line = file[row+yScroll]
-	local suggestion = #line>0 and autocomplete(line) or ""
+	local suggestion = #line>0 and y == row and x == #line+1 and autocomplete(line) or ""
 	screen.setCharPos( 1, row )
 	screen.setColor(theme.linenumbers)
 	screen.write(row + yScroll)
@@ -275,7 +275,7 @@ function setCursor( newX, newY )
 		selection = nil
 	end
 	
-	x, y = math.min(newX, #file[y]+1), newY
+	x, y = math.min(newX, #file[newY]+1), newY
 	local w = math.floor( screen.charWidth - 1 )
 	local h = math.floor( screen.charHeight + 1 )
 	
@@ -419,7 +419,7 @@ function keyPress(key)
 		yScroll = math.max( yScroll - screen.charHeight, 0 )
 		setCursor( x, math.max(y-screen.charHeight, 1) )
 	elseif key == "pagedown" then
-		yScroll = math.min( yScroll + screen.charHeight, #file - screen.charHeight + 1 )
+		yScroll = math.min( yScroll + screen.charHeight, math.max( 0, #file-screen.charHeight+1 ) )
 		setCursor( x, math.min(y+screen.charHeight, #file) )
 	elseif key == "end" then
 		setCursor( #file[y]+1, y )
