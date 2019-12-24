@@ -55,6 +55,7 @@ function colourPicker.new( p, x, y, w, h )
 		end )
 	
 	obj.parent = p
+	obj.styles = obj.parent.styles
 	obj.x = helium.make.x(obj, x)
 	obj.y = helium.make.y(obj, y)
 	obj.w = helium.proxy( w * 7 )
