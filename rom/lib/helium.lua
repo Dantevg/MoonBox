@@ -127,6 +127,15 @@ function he.new( x, y, w, h )
 	}, {__index = he} )
 end
 
+setmetatable( he, {__index = function(t,k)
+	if not rawget(t, "tags") then error("no tags") end
+	for k, tag in ipairs(t.tags) do
+		if t.styles[tag] then
+			return t.styles[tag][field]
+		end
+	end
+end} )
+
 
 
 -- HELIUM ELEMENTS
@@ -137,7 +146,7 @@ function he.box.new( p, x, y, w, h, color )
 	local obj = {}
 	
 	obj.parent = p
-	obj.styles = setmetatable( {}, {__index = function(t,k) return obj.parent.styles[k] end} )
+	obj.styles = obj.parent.styles
 	obj.tags = {"box"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
@@ -145,12 +154,16 @@ function he.box.new( p, x, y, w, h, color )
 	obj.h = he.proxy(h)
 	obj.color = he.proxy(color)
 	
+	-- obj.get = setmetatable( {}, {__index = function(t,k) return he.get(obj, k) end} )
+	
 	return setmetatable( obj, {__index = he.box} )
 end
 
 function he.box:draw(parent)
 	self.parent = parent or self.parent
-	screen.rect( self:get("x"), self:get("y"), self:get("w"), self:get("h"), self:get("color") )
+	screen.rect( self:x(), self:y(), self:w(), self:h(), self:color() )
+	-- screen.rect( self.get.x, self.get.y, self.get.w, self.get.h, self.get.color )
+	-- screen.rect( self:get("x"), self:get("y"), self:get("w"), self:get("h"), self:get("color") )
 end
 
 setmetatable( he.box, {
@@ -166,6 +179,7 @@ function he.text.new( p, x, y, text, color )
 	local obj = {}
 	
 	obj.parent = p
+	obj.styles = obj.parent.styles
 	obj.tags = {"text"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
@@ -197,6 +211,7 @@ function he.input.new( p, x, y, w, h, color, background )
 	local obj = {}
 	
 	obj.parent = p
+	obj.styles = obj.parent.styles
 	obj.tags = {"input"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
@@ -259,6 +274,7 @@ function he.button.new( p, x, y, w, h, title, callback )
 	local obj = {}
 	
 	obj.parent = p
+	obj.styles = obj.parent.styles
 	obj.tags = {"button"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
