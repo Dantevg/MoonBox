@@ -26,6 +26,26 @@ function math.hash( algorithm, data )
 	return love.data.encode( "string", "hex", love.data.hash(algorithm, data) )
 end
 
+function math.compress( algorithm, data )
+	expect( algorithm, "string", 1, "math.compress" )
+	expect( data, "string", 2, "math.compress" )
+	if algorithm ~= "lz4" and algorithm ~= "zlib" and algorithm ~= "gzip" and algorithm ~= "deflate" then
+		error( "Invalid compression function", 2 )
+	end
+	
+	return love.data.compress( "string", algorithm, data )
+end
+
+function math.decompress( algorithm, data )
+	expect( algorithm, "string", 1, "math.decompress" )
+	expect( data, "string", 2, "math.decompress" )
+	if algorithm ~= "lz4" and algorithm ~= "zlib" and algorithm ~= "gzip" and algorithm ~= "deflate" then
+		error( "Invalid compression function", 2 )
+	end
+	
+	return love.data.decompress( "string", algorithm, data )
+end
+
 
 
 -- FUNCTIONS
