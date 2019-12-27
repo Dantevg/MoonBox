@@ -206,7 +206,7 @@ end
 -- screen.write( text, options )
 -- screen.write( text, x, y )
 -- Options: x (number), y (number), color (string), background (string),
--- 	max (number), overflow: (string) ["wrap", "ellipsis"], monospace (boolean)
+-- 	max (number), overflow: (string/boolean) ["wrap", "ellipsis", "scroll", false], monospace (boolean)
 function screen.canvas.write( canvas, text, a, b )
 	expect( a, {"number", "table", "nil"}, 2, "screen.write" )
 	expect( b, {"number", "nil"}, 3, "screen.write" )
@@ -225,6 +225,7 @@ function screen.canvas.write( canvas, text, a, b )
 	if options.overflow == nil then
 		options.overflow = "wrap" -- Set default overflow to wrap
 	end
+	local scroll = 0
 	
 	local function nextCharPos()
 		if options.monospace == false then
@@ -240,6 +241,7 @@ function screen.canvas.write( canvas, text, a, b )
 		while y + screen.font.height > screen.height do
 			screen.canvas.move( canvas, 0, -screen.font.height-1 )
 			y = y - screen.font.height-1
+			scroll = scroll+1
 		end
 	end
 	
@@ -248,6 +250,8 @@ function screen.canvas.write( canvas, text, a, b )
 			text = string.sub( text, 1, options.max-3 ) .. "..."
 		elseif options.overflow == "wrap" then
 			h = math.ceil( #text / options.max ) * (screen.font.height+1)
+		elseif options.overflow == "scroll" then
+			text = string.sub( text, -options.max )
 		else
 			text = string.sub( text, 1, options.max )
 		end
@@ -272,6 +276,8 @@ function screen.canvas.write( canvas, text, a, b )
 	end
 	screen.pos.x = x
 	screen.pos.y = y
+	
+	return scroll
 end
 
 function screen.canvas.print( canvas, text, color )
