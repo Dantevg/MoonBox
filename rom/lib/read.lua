@@ -16,23 +16,27 @@ local read = {}
 -- INTERNAL FUNCTIONS
 
 function read:draw(autocomplete)
-	-- Background
-	screen.write( string.rep(" ", self.length + #self.completion + 1),
-		{x = self.x, y = self.y, background = screen.background} )
-		
-	-- Input
 	local input = self.history[self.selected]
-	screen.write( string.sub( input, 1, self.pos-1 ), self.x, self.y )
-	screen.write( self.cursor and "_" or string.sub(input, self.pos, self.pos) )
-	screen.write( string.sub( input, self.pos+1, -1 ) )
 	
+	-- Background
+	local bgLength = math.max( self.length + #self.completion, #input )
+	self.y = self.y - (screen.font.height+1) * screen.write( string.rep(" ", bgLength+1),
+		{x = self.x, y = self.y, background = screen.background, overflow = false} )
+	
+	-- Input
+	local maxLength = math.floor( (screen.width-self.x+1) / (screen.font.width+1) ) - 1
+	screen.write( string.sub( input, 1, self.pos-1 ), {x=self.x, y=self.y, overflow = "scroll", max = maxLength} )
+	screen.write( self.cursor and "_" or string.sub(input, self.pos, self.pos), {overflow = false} )
+	screen.write( string.sub( input, self.pos+1, -1 ), {overflow = false} )
+	
+	-- Autocompletion
 	if self.autocomplete and autocomplete ~= false then
 		local words = self:getWords("(%S*)(%s*)")
 		self.completion = #words[#words-1].data > 0 and self.autocomplete( words[#words-1].data ) or ""
 		if self.cursor and self.pos > #input then
-			screen.write( string.sub( self.completion, 2, -1 ), {color="gray-1"} )
+			screen.write( string.sub( self.completion, 2, -1 ), {color="gray-1", overflow = false} )
 		else
-			screen.write( self.completion, {color="gray-1"} )
+			screen.write( self.completion, {color="gray-1", overflow = false} )
 		end
 	end
 end
