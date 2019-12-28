@@ -108,14 +108,9 @@ function he:toLocalCoords( x, y )
 end
 
 function he:get(field)
-	if type(self[field]) == "function" then
-		return self[field]()
-	end
-	
-	-- Find in styles
 	for k, tag in ipairs(self.tags) do
 		if self.styles[tag] then
-			return self.styles[tag][field]
+			return he.proxy( self.styles[tag][field] )
 		end
 	end
 end
@@ -126,15 +121,6 @@ function he.new( x, y, w, h )
 		styles = {}
 	}, {__index = he} )
 end
-
-setmetatable( he, {__index = function(t,k)
-	if not rawget(t, "tags") then error("no tags") end
-	for k, tag in ipairs(t.tags) do
-		if t.styles[tag] then
-			return t.styles[tag][field]
-		end
-	end
-end} )
 
 
 
@@ -154,16 +140,14 @@ function he.box.new( p, x, y, w, h, color )
 	obj.h = he.proxy(h)
 	obj.color = he.proxy(color)
 	
-	-- obj.get = setmetatable( {}, {__index = function(t,k) return he.get(obj, k) end} )
-	
-	return setmetatable( obj, {__index = he.box} )
+	return setmetatable( obj, {__index = function(t,k)
+		return he.box[k] or he.get( obj, k )
+	end} )
 end
 
 function he.box:draw(parent)
 	self.parent = parent or self.parent
 	screen.rect( self:x(), self:y(), self:w(), self:h(), self:color() )
-	-- screen.rect( self.get.x, self.get.y, self.get.w, self.get.h, self.get.color )
-	-- screen.rect( self:get("x"), self:get("y"), self:get("w"), self:get("h"), self:get("color") )
 end
 
 setmetatable( he.box, {
@@ -190,12 +174,15 @@ function he.text.new( p, x, y, text, color )
 	obj.text = text
 	obj.color = he.proxy(color)
 	
-	return setmetatable( obj, {__index = he.text} )
+	return setmetatable( obj, {__index = function(t,k)
+		return he.get( obj, k ) or he.text[k]
+	end} )
 end
 
 function he.text:draw(parent)
 	self.parent = parent or self.parent
 	screen.write( self.text, {x = self.x(), y = self.y(), color = self.color()} )
+	-- screen.write( self.text, {x = self:get("x"), y = self:get("y"), color = self:get("color")} )
 end
 
 setmetatable( he.text, {
@@ -227,7 +214,9 @@ function he.input.new( p, x, y, w, h, color, background )
 	obj.read.y = obj.y() + obj.padding
 	obj.input = ""
 	
-	return setmetatable( obj, {__index = he.input} )
+	return setmetatable( obj, {__index = function(t,k)
+		return he.get( obj, k ) or he.input[k]
+	end} )
 end
 
 function he.input:draw(parent)
@@ -289,7 +278,9 @@ function he.button.new( p, x, y, w, h, title, callback )
 	obj.title = title or "button"
 	obj.callback = callback
 	
-	return setmetatable( obj, {__index = he.button} )
+	return setmetatable( obj, {__index = function(t,k)
+		return he.get( obj, k ) or he.button[k]
+	end} )
 end
 
 function he.button:draw(parent)
