@@ -132,7 +132,7 @@ function he.box.new( p, x, y, w, h, color )
 	local obj = {}
 	
 	obj.parent = p
-	obj.styles = obj.parent.styles
+	obj.styles = obj.parent.styles -- TODO: default styles
 	obj.tags = {"box"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
