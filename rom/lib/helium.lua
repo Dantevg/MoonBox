@@ -109,10 +109,38 @@ end
 
 function he:get(field)
 	for k, tag in ipairs(self.tags) do
-		if self.styles[tag] then
+		if self.styles[tag] and self.styles[tag][field] then
 			return he.proxy( self.styles[tag][field] )
 		end
 	end
+end
+
+function he:hasTag(tag)
+	if not self.tags then error("no tags!", 2) end
+	for i, t in pairs(self.tags) do
+		if t == tag then
+			return i
+		end
+	end
+	return false
+end
+
+function he:addTag(tag)
+	if not self:hasTag(tag) then
+		table.insert( self.tags, 1, tag )
+	end
+end
+
+function he:removeTag(tag)
+	local pos = self:hasTag(tag)
+	if pos then
+		table.remove( self.tags, pos )
+	end
+	return pos
+end
+
+function he:toggleTag(tag)
+	if not self:removeTag(tag) then self:addTag(tag) end
 end
 
 function he.new( x, y, w, h )
@@ -133,7 +161,7 @@ function he.box.new( p, x, y, w, h, color )
 	
 	obj.parent = p
 	obj.styles = obj.parent.styles -- TODO: default styles
-	obj.tags = {"box"}
+	obj.tags = {"box", "*"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
 	obj.w = he.proxy(w)
@@ -164,7 +192,7 @@ function he.text.new( p, x, y, text, color )
 	
 	obj.parent = p
 	obj.styles = obj.parent.styles
-	obj.tags = {"text"}
+	obj.tags = {"text", "*"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
 	obj.w = function()
@@ -199,19 +227,16 @@ function he.input.new( p, x, y, w, h, color, background )
 	
 	obj.parent = p
 	obj.styles = obj.parent.styles
-	obj.tags = {"input"}
+	obj.tags = {"input", "*"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
 	obj.w = he.proxy(w)
 	obj.h = function()
-		return h + 2*obj.padding
+		return h + 2 * obj.padding()
 	end
-	obj.color = he.proxy( color or "white" )
-	obj.background = he.proxy( background or "black" )
-	obj.padding = 2
+	obj.color = he.proxy(color)
+	obj.background = he.proxy(background)
 	obj.read = read.new( nil, true )
-	obj.read.x = obj.x() + obj.padding
-	obj.read.y = obj.y() + obj.padding
 	obj.input = ""
 	
 	return setmetatable( obj, {__index = function(t,k)
@@ -221,21 +246,24 @@ end
 
 function he.input:draw(parent)
 	self.parent = parent or self.parent
-	screen.rect( self.x(), self.y(), self.w(), self.h(), self.background() )
+	screen.rect( self:x(), self:y(), self:w(), self:h(), self:background() )
 	if self.border then
-		screen.rect( self.x()-1, self.y()-1, self.w()+2, self.h()+2, self.border(), false )
+		screen.rect( self:x()-1, self:y()-1, self:w()+2, self:h()+2, self:border(), false )
 	end
 	
 	local prevBg, prevColor = screen.background, screen.color
-	screen.background = self.background()
-	screen.color = self.color()
+	screen.background = self:background()
+	screen.color = self:color()
 	self.read:draw()
 	screen.background = prevBg
 	screen.color = prevColor
 end
 
 function he.input:update( e, param )
-	if self.active == false then return end
+	self.read.x = self.x() + self.padding()
+	self.read.y = self.y() + self.padding()
+	if not self:hasTag("active") then return end
+	
 	self.read.length = #self.read.history[self.read.selected]
 	local result = self.read:update( e, param )
 	if result then
@@ -264,16 +292,16 @@ function he.button.new( p, x, y, w, h, title, callback )
 	
 	obj.parent = p
 	obj.styles = obj.parent.styles
-	obj.tags = {"button"}
+	obj.tags = {"button", "*"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
 	obj.w = he.proxy(w)
 	obj.h = he.proxy(h)
 	
-	obj.color = he.proxy("white")
-	obj.background = he.proxy("black")
-	obj.activeColor = he.proxy("white")
-	obj.activeBackground = he.proxy("gray-2")
+	-- obj.color
+	-- obj.background
+	-- obj.activeColor
+	-- obj.activeBackground
 	obj.padding = 3
 	obj.title = title or "button"
 	obj.callback = callback
@@ -286,21 +314,21 @@ end
 function he.button:draw(parent)
 	self.parent = parent or self.parent
 	
-	screen.rect( self.x(), self.y(), self.w(), self.h(),
-		self.active and self.activeBackground() or self.background() )
-	screen.write( self.title, {x = self.x() + self.padding, y = self.y() + self.padding,
-		color = self.active and self.activeColor() or self.color(),
-		background = self.active and self.activeBackground() or self.background()} )
+	screen.rect( self:x(), self:y(), self:w(), self:h(),
+		self:hasTag("active") and self:activeBackground() or self:background() )
+	screen.write( self.title, {x = self:x() + self.padding, y = self:y() + self.padding,
+		color = self:hasTag("active") and self:activeColor() or self:color(),
+		background = self:hasTag("active") and self:activeBackground() or self:background()} )
 end
 
 function he.button:mouse( x, y, btn )
 	if not self:within( x, y ) then return end
-	self.active = true
+	self:addTag("active")
 	if type(self.callback) == "function" then self:callback() end
 end
 
 function he.button:mouseUp( e, x, y, btn )
-	self.active = false
+	self:removeTag("active")
 end
 
 setmetatable( he.button, {
