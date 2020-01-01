@@ -136,9 +136,13 @@ gui.paint.obj = {}
 		Picker.obj.primary = Picker:box( 1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 15, function() return primary end )
 		Picker.obj.secondary = Picker:box( Picker.w()/2+1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 15, function() return secondary end )
 	
-		gui.paint.obj.toolbar = gui.paint:box( 1, nil, nil, 10, "black" )
-		gui.paint.obj.toolbar.y = function() return screen.height - 9 end
-		gui.paint.obj.toolbar.w = function() return screen.width end
+	gui.paint.obj.toolbar = gui.paint:box( 1, nil, nil, 10, "black" )
+	gui.paint.obj.toolbar.y = function() return screen.height - 9 end
+	gui.paint.obj.toolbar.w = function() return screen.width end
+	gui.paint.obj.toolbar.obj = {}
+	local Toolbar = gui.paint.obj.toolbar
+		
+		Toolbar.obj.zoom = Toolbar:text( 1, 1, function() return zoomInt end )
 
 gui.menu = he:box( 1, 1, nil, nil, "gray+2" )
 gui.menu:autosize( "wh", he )
@@ -261,6 +265,9 @@ end
 -- PROGRAM FUNCTIONS
 
 function draw(obj)
+	if not inMenu and image then
+		image:draw( gui.paint.obj.picker.w(), 1, zoomInt )
+	end
 	eachObj( obj, function(obj) obj:draw() end )
 end
 
