@@ -35,25 +35,25 @@ function decode(file)
 	
 end
 
+function open(path)
+	local foundPath = shell.find( path, "f" )
+
+	if foundPath then
+		path = foundPath
+		local file = disk.read(path)
+		name = disk.getFilename(path)
+		image = decode(file)
+	else
+		name = disk.getFilename(path)
+		path = shell.absolute(path)
+	end
+end
+
 function new()
 	image = screen.newCanvas( tonumber(prompt("Width: ")), tonumber(prompt("Height: ")) )
 	image:clear("black")
 	overlay = screen.newCanvas( image.w, image.h )
 end
-
---[[ function console()
-	while true do
-		local input = prompt("> ")
-		if input == "exit" then return end
-		local fn, result = load(input)
-		if fn then
-			setfenv( fn, getfenv(2) )
-			result = fn()
-		end
-		screen.rect( 1, screen.height-19, screen.width, 10, "black" )
-		screen.write( "< "..tostring(result), {x=1, y=screen.height-18, color=fn and "white" or "red+1"} )
-	end
-end ]]
 
 function prompt(name)
 	screen.rect( 1, screen.height-9, screen.width, 10, "black" )
@@ -238,7 +238,7 @@ function draw()
 	end
 	
 	-- Toolbar
-	GUI:draw()
+	-- GUI:draw()
 	screen.rect( 1, screen.height-9, screen.width, 10, "black" )
 	screen.write( name, {x=1, y=screen.height-8, color="gray-1", overflow="ellipsis", max=9} )
 	screen.write( "x"..zoomInt, {x=60, y=screen.height-8, color="gray+1"} )
@@ -275,24 +275,6 @@ end
 
 -- INIT
 
--- Open file
-local path = ...
-if not path then
-	error( "Expected path", 2 )
-end
-
-local foundPath = shell.find( path, "f" )
-
-if foundPath then
-	path = foundPath
-	local file = disk.read(path)
-	image = decode(file)
-	name = disk.getFilename(path)
-else
-	path = shell.absolute(path)
-	name = disk.getFilename(path)
-end
-
 -- Fill rainbow
 for name, color in pairs(screen.colors) do
 	table.insert( rainbow, name )
@@ -306,6 +288,12 @@ table.sort( rainbow, function(a,b)
 			or ({colors.hsl(a)})[2] < ({colors.hsl(b)})[2] ) -- Saturisation
 		or colors.hsl(a) < colors.hsl(b) -- Hue
 	end )
+
+local path = ...
+
+if path then
+	open(path)
+end
 
 
 
