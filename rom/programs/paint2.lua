@@ -56,6 +56,7 @@ function colourPicker.new( p, x, y, w, h )
 	
 	obj.parent = p
 	obj.styles = obj.parent.styles
+	obj.tags = {"colourPicker", "*"}
 	obj.x = helium.make.x(obj, x)
 	obj.y = helium.make.y(obj, y)
 	obj.w = helium.proxy( w * 7 )
@@ -92,31 +93,35 @@ setmetatable( colourPicker, {
 	__call = function( _, ... ) return colourPicker.new(...) end
 })
 
-he.styles.box = {}
-he.styles.box.color = "red"
-
-local function createInput( obj )
-	obj.padding = 1
-	obj.border = he.proxy("gray+1")
-	obj.background = function() return obj.active and "gray+1" or "gray+2" end
-	obj.y = function() return obj.parent.obj.title.y() + obj.parent.obj.title.h() + 5 end
-	obj.read.x = obj:x() + obj.padding
-	obj.read.y = obj:y() + obj.padding
-	obj.read.cursor = false
-	obj.active = false
-	obj.mouse = function( self, x, y, btn )
+he.styles.input = {
+	padding = 1,
+	border = "gray+1",
+	background = function(obj) return obj:hasTag("active") and "gray+1" or "gray+2" end,
+	mouse = function( self, x, y, btn )
 		if self:within( x, y ) then
 			self.read.timer = os.startTimer(0.5)
 			eachObj( gui.menu, function(obj)
-				if obj.active then
-					obj.active = false
+				if obj:hasTag("active") then
+					obj:removeTag("active")
 					obj.read.cursor = false
 				end
 			end )
-			self.active = true
+			self:addTag("active")
 			self.read.cursor = true
 		end
 	end
+}
+
+he.styles.button = {
+	color = "white",
+	background = "gray-1",
+	activeColor = "white",
+	activeBackground = "gray",
+}
+
+local function createInput(obj)
+	obj.y = function() return obj.parent.obj.title.y() + obj.parent.obj.title.h() + 5 end
+	obj.read.cursor = false
 end
 
 gui.paint = he:box( 1, 1, nil, nil, "gray-2" )
@@ -130,12 +135,16 @@ gui.paint.obj = {}
 
 		Picker.obj.primary = Picker:box( 1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 15, function() return primary end )
 		Picker.obj.secondary = Picker:box( Picker.w()/2+1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 15, function() return secondary end )
+	
+		gui.paint.obj.toolbar = gui.paint:box( 1, nil, nil, 10, "black" )
+		gui.paint.obj.toolbar.y = function() return screen.height - 9 end
+		gui.paint.obj.toolbar.w = function() return screen.width end
 
 gui.menu = he:box( 1, 1, nil, nil, "gray+2" )
 gui.menu:autosize( "wh", he )
 gui.menu.obj = {}
 
-	gui.menu.obj.open = gui.menu:box( margin, margin, nil, 20 )
+	gui.menu.obj.open = gui.menu:box( margin, margin, nil, 20, "gray+2" )
 	gui.menu.obj.open:autosize( "w", -margin, gui.menu )
 	gui.menu.obj.open.obj = {}
 	local Open = gui.menu.obj.open
@@ -146,7 +155,7 @@ gui.menu.obj = {}
 		createInput(Open.obj.input)
 		Open.obj.input.callback = function( self, input )
 			loadFile(input)
-			self.active = false
+			self:removeTag("active")
 		end
 	
 	Open:autosize( "h", 5, Open.obj.title, Open.obj.input )
@@ -166,7 +175,7 @@ gui.menu.obj = {}
 		createInput(Create.obj.width)
 		Create.obj.width.callback = function( self, input )
 			createImage(input)
-			self.active = false
+			self:removeTag("active")
 		end
 		
 		Create.obj.heightLabel = Create:text( nil, nil, "Height", "black" )
@@ -177,16 +186,12 @@ gui.menu.obj = {}
 		createInput(Create.obj.height)
 		Create.obj.height.callback = function( self, input )
 			createImage(input)
-			self.active = false
+			self:removeTag("active")
 		end
 		
 		Create.obj.submit = Create:button( nil, nil, 50, 11, "CREATE" )
 		Create.obj.submit.x = function() return Create.w() - Create.obj.submit.w() end
 		Create.obj.submit.y = function() return Create.obj.title.y() + Create.obj.title.h() + 4 end
-		Create.obj.submit.color = he.proxy("white")
-		Create.obj.submit.background = he.proxy("gray-1")
-		Create.obj.submit.activeColor = he.proxy("white")
-		Create.obj.submit.activeBackground = he.proxy("gray")
 		Create.obj.submit.callback = function(obj)
 			
 		end
@@ -224,8 +229,8 @@ end
 function events.mouse( x, y, btn )
 	-- gui.paint.obj.picker:mouse( x, y, btn )
 	eachObj( gui.menu, function(obj)
-		if obj.active then
-			obj.active = false
+		if obj:hasTag("active") then
+			obj:removeTag("active")
 			obj.read.cursor = false
 		end
 	end )
