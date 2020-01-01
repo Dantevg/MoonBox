@@ -8,11 +8,13 @@
 ]]--
 
 local he = {}
-he._VERSION = "0.2"
+he._VERSION = "0.3"
 
 
 
 -- HELIUM FRAMEWORK
+
+he.styles = {}
 
 he.make = {}
 function he.make.x( obj, x )
@@ -113,10 +115,14 @@ function he:get(field)
 			return he.proxy( self.styles[tag][field] )
 		end
 	end
+	for k, tag in ipairs(self.tags) do
+		if self.styles.defaults[tag] and self.styles.defaults[tag][field] then
+			return he.proxy( self.styles.defaults[tag][field] )
+		end
+	end
 end
 
 function he:hasTag(tag)
-	if not self.tags then error("no tags!", 2) end
 	for i, t in pairs(self.tags) do
 		if t == tag then
 			return i
@@ -146,7 +152,7 @@ end
 function he.new( x, y, w, h )
 	return setmetatable( {
 		x=he.proxy(x), y=he.proxy(y), w=he.proxy(w), h=he.proxy(h),
-		styles = {}
+		styles = {defaults = he.styles}
 	}, {__index = he} )
 end
 
@@ -160,7 +166,7 @@ function he.box.new( p, x, y, w, h, color )
 	local obj = {}
 	
 	obj.parent = p
-	obj.styles = obj.parent.styles -- TODO: default styles
+	obj.styles = obj.parent.styles
 	obj.tags = {"box", "*"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
@@ -183,6 +189,10 @@ setmetatable( he.box, {
 	__call = function( _, ... ) return he.box.new(...) end
 })
 
+he.styles.box = {
+	color = "white"
+}
+
 
 
 he.text = {}
@@ -196,10 +206,10 @@ function he.text.new( p, x, y, text, color )
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
 	obj.w = function()
-		return (screen.font.width+1) * #obj.text
+		return (screen.font.width+1) * #obj.text()
 	end
 	obj.h = he.proxy(screen.font.height)
-	obj.text = text
+	obj.text = he.proxy(text)
 	obj.color = he.proxy(color)
 	
 	return setmetatable( obj, {__index = function(t,k)
@@ -209,7 +219,7 @@ end
 
 function he.text:draw(parent)
 	self.parent = parent or self.parent
-	screen.write( self.text, {x = self.x(), y = self.y(), color = self.color()} )
+	screen.write( self.text(), {x = self.x(), y = self.y(), color = self.color()} )
 	-- screen.write( self.text, {x = self:get("x"), y = self:get("y"), color = self:get("color")} )
 end
 
@@ -217,6 +227,10 @@ setmetatable( he.text, {
 	__index = he,
 	__call = function( _, ... ) return he.text.new(...) end
 })
+
+he.styles.text = {
+	color = "white"
+}
 
 
 
@@ -283,6 +297,11 @@ setmetatable( he.input, {
 	__call = function( _, ... ) return he.input.new(...) end
 })
 
+he.styles.input = {
+	color = "white",
+	background = "black"
+}
+
 
 
 he.button = {}
@@ -298,12 +317,7 @@ function he.button.new( p, x, y, w, h, title, callback )
 	obj.w = he.proxy(w)
 	obj.h = he.proxy(h)
 	
-	-- obj.color
-	-- obj.background
-	-- obj.activeColor
-	-- obj.activeBackground
-	obj.padding = 3
-	obj.title = title or "button"
+	obj.title = he.proxy(title)
 	obj.callback = callback
 	
 	return setmetatable( obj, {__index = function(t,k)
@@ -316,7 +330,7 @@ function he.button:draw(parent)
 	
 	screen.rect( self:x(), self:y(), self:w(), self:h(),
 		self:hasTag("active") and self:activeBackground() or self:background() )
-	screen.write( self.title, {x = self:x() + self.padding, y = self:y() + self.padding,
+	screen.write( self.title(), {x = self:x() + self.padding(), y = self:y() + self.padding(),
 		color = self:hasTag("active") and self:activeColor() or self:color(),
 		background = self:hasTag("active") and self:activeBackground() or self:background()} )
 end
@@ -335,6 +349,15 @@ setmetatable( he.button, {
 	__index = he,
 	__call = function( _, ... ) return he.button.new(...) end
 })
+
+he.styles.button = {
+	color = "black",
+	background = "white",
+	activeColor = "white",
+	activeBackground = "black",
+	padding = 3,
+	title = "button"
+}
 
 
 
