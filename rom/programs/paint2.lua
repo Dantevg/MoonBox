@@ -119,11 +119,6 @@ he.styles.button = {
 	activeBackground = "gray",
 }
 
-local function createInput(obj)
-	obj.y = function() return obj.parent.obj.title.y() + obj.parent.obj.title.h() + 5 end
-	obj.read.cursor = false
-end
-
 gui.paint = he:box( 1, 1, nil, nil, "gray-2" )
 gui.paint:autosize( "wh", he )
 gui.paint.obj = {}
@@ -156,7 +151,7 @@ gui.menu.obj = {}
 		Open.obj.title = Open:text( 5, 5, "OPEN FILE", "black" )
 		Open.obj.input = Open:input( 5, nil, nil, screen.font.height, "black" )
 		Open.obj.input:autosize( "w", -5, Open )
-		createInput(Open.obj.input)
+		Open.obj.input.y = function() return Open.obj.input.parent.obj.title.y() + Open.obj.input.parent.obj.title.h() + 5 end
 		Open.obj.input.callback = function( self, input )
 			loadFile(input)
 			self:removeTag("active")
@@ -174,9 +169,14 @@ gui.menu.obj = {}
 		
 		Create.obj.widthLabel = Create:text( 5, nil, "Width", "black" )
 		Create.obj.widthLabel.y = function() return Create.obj.title.y() + Create.obj.title.h() + 6 end
-		Create.obj.width = Create:input( nil, nil, 50, screen.font.height, "black" )
+		Create.obj.width = Create:input( nil, nil, 50, screen.font.height-1, "black" )
 		Create.obj.width.x = function() return Create.obj.widthLabel.x() + Create.obj.widthLabel.w() + 5 end
-		createInput(Create.obj.width)
+		Create.obj.width.y = function() return Create.obj.width.parent.obj.title.y() + Create.obj.width.parent.obj.title.h() + 5 end
+		Create.obj.width.char = function( self, char )
+			if string.find( char, "%d" ) then
+				self:update( "char", char )
+			end
+		end
 		Create.obj.width.callback = function( self, input )
 			createImage(input)
 			self:removeTag("active")
@@ -185,9 +185,14 @@ gui.menu.obj = {}
 		Create.obj.heightLabel = Create:text( nil, nil, "Height", "black" )
 		Create.obj.heightLabel.x = function() return Create.obj.width.x() + Create.obj.width.w() + 20 end
 		Create.obj.heightLabel.y = Create.obj.widthLabel.y
-		Create.obj.height = Create:input( nil, nil, 50, screen.font.height, "black" )
+		Create.obj.height = Create:input( nil, nil, 50, screen.font.height-1, "black" )
 		Create.obj.height.x = function() return Create.obj.heightLabel.x() + Create.obj.heightLabel.w() + 5 end
-		createInput(Create.obj.height)
+		Create.obj.height.y = function() return Create.obj.height.parent.obj.title.y() + Create.obj.height.parent.obj.title.h() + 5 end
+		Create.obj.height.char = function( self, char )
+			if string.find( char, "%d" ) then
+				self:update( "char", char )
+			end
+		end
 		Create.obj.height.callback = function( self, input )
 			createImage(input)
 			self:removeTag("active")
