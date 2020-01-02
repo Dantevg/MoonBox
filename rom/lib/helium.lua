@@ -220,7 +220,6 @@ end
 function he.text:draw(parent)
 	self.parent = parent or self.parent
 	screen.write( self.text(), {x = self.x(), y = self.y(), color = self.color()} )
-	-- screen.write( self.text, {x = self:get("x"), y = self:get("y"), color = self:get("color")} )
 end
 
 setmetatable( he.text, {
@@ -340,11 +339,11 @@ end
 function he.button:mouse( x, y, btn )
 	if not self:within( x, y ) then return end
 	self:addTag("active")
-	if type(self.callback) == "function" then self:callback() end
 end
 
-function he.button:mouseUp( e, x, y, btn )
+function he.button:mouseUp( x, y, btn )
 	self:removeTag("active")
+	if self:within( x, y ) and type(self.callback) == "function" then self:callback() end
 end
 
 setmetatable( he.button, {
