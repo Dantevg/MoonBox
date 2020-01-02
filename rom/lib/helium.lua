@@ -251,6 +251,7 @@ function he.input.new( p, x, y, w, h, color, background )
 	obj.color = he.proxy(color)
 	obj.background = he.proxy(background)
 	obj.read = read.new( nil, true )
+	obj.read.cursor = false
 	obj.input = ""
 	
 	return setmetatable( obj, {__index = function(t,k)
@@ -260,10 +261,9 @@ end
 
 function he.input:draw(parent)
 	self.parent = parent or self.parent
+	self.read.x = self.x() + self.padding()
+	self.read.y = self.y() + self.padding()
 	screen.rect( self:x(), self:y(), self:w(), self:h(), self:background() )
-	if self.border then
-		screen.rect( self:x()-1, self:y()-1, self:w()+2, self:h()+2, self:border(), false )
-	end
 	
 	local prevBg, prevColor = screen.background, screen.color
 	screen.background = self:background()
@@ -271,11 +271,13 @@ function he.input:draw(parent)
 	self.read:draw()
 	screen.background = prevBg
 	screen.color = prevColor
+	
+	if self.border then
+		screen.rect( self:x()-1, self:y()-1, self:w()+2, self:h()+2, self:border(), false )
+	end
 end
 
 function he.input:update( e, param )
-	self.read.x = self.x() + self.padding()
-	self.read.y = self.y() + self.padding()
 	if not self:hasTag("active") then return end
 	
 	self.read.length = #self.read.history[self.read.selected]
