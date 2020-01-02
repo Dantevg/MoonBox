@@ -73,7 +73,7 @@ function read:key(key)
 		os.cancelTimer(self.timer)
 		local h = self.history
 		h[#h] = h[self.selected]
-		if h[#h] == "" or h[#h] == h[#h-1] then
+		if (h[#h] == "" or h[#h] == h[#h-1]) and #h > 1 then
 			return table.remove( h, #h )
 		else
 			return h[#h]
