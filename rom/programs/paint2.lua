@@ -26,8 +26,97 @@ local primary = "white"
 local secondary = "blue"
 local brush = "pencil" -- "pixel", "pencil", "line", "rect", "circle"
 
+local path
 local image
 local overlay
+
+
+
+-- BRUSHES
+
+brushes.pixel = {}
+function brushes.pixel.mouse( x, y, btn )
+	local xImg, yImg = getImageCoords( x, y )
+	if not xImg then return end
+	image:pixel( xImg, yImg, btn == 1 and primary or (btn == 2 and secondary) )
+end
+function brushes.pixel.drag( dx, dy, btn )
+	local xImg, yImg = getImageCoords( mouse.x, mouse.y )
+	if not xImg then return end
+	image:pixel( xImg, yImg, btn == 1 and primary or (btn == 2 and secondary) )
+end
+
+brushes.pencil = {}
+function brushes.pencil.drag( dx, dy, btn )
+	local xImg, yImg = getImageCoords( mouse.x, mouse.y )
+	if not xImg then return end
+	image:line( brushes.pencil.prevX or xImg, brushes.pencil.prevY or yImg, xImg, yImg, btn == 1 and primary or (btn == 2 and secondary) )
+	brushes.pencil.prevX, brushes.pencil.prevY = xImg, yImg
+end
+function brushes.pencil.mouseUp( x, y, btn )
+	brushes.pencil.prevX, brushes.pencil.prevY = nil, nil
+end
+
+brushes.line = {}
+function brushes.line.drag( dx, dy, btn )
+	local xImg, yImg = getImageCoords( mouse.drag.x, mouse.drag.y )
+	if not xImg then return end
+	brushes.line.startX, brushes.line.startY = xImg, yImg
+	
+	local x, y = getImageCoords( mouse.x, mouse.y )
+	if not x then return end
+	overlay:clear()
+	overlay:line( xImg, yImg, x, y, "gray" )
+end
+function brushes.line.mouseUp( x, y, btn )
+	local xImg, yImg = getImageCoords( mouse.x, mouse.y )
+	if not xImg then return end
+	image:line( brushes.line.startX, brushes.line.startY, xImg, yImg, btn == 1 and primary or (btn == 2 and secondary) )
+	overlay:clear()
+end
+
+brushes.rect = {}
+brushes.rect.options = {
+	fill = false
+}
+function brushes.rect.drag( dx, dy, btn )
+	local xImg, yImg = getImageCoords( mouse.drag.x, mouse.drag.y )
+	if not xImg then return end
+	brushes.rect.startX, brushes.rect.startY = xImg, yImg
+	
+	local x, y = getImageCoords( mouse.x, mouse.y )
+	overlay:clear()
+	overlay:rect( xImg, yImg, x-xImg+1, y-yImg+1, "gray", brushes.rect.options.fill )
+end
+function brushes.rect.mouseUp( x, y, btn )
+	local xImg, yImg = getImageCoords( mouse.x, mouse.y )
+	if not xImg then return end
+	local startX, startY = brushes.rect.startX, brushes.rect.startY
+	image:rect( startX, startY, xImg-startX+1, yImg-startY+1, btn == 1 and primary or (btn == 2 and secondary), brushes.rect.options.fill )
+	overlay:clear()
+end
+
+brushes.circle = {}
+brushes.circle.options = {
+	fill = false
+}
+function brushes.circle.drag( dx, dy, btn )
+	local xImg, yImg = getImageCoords( mouse.drag.x, mouse.drag.y )
+	if not xImg then return end
+	brushes.circle.startX, brushes.circle.startY = xImg, yImg
+	
+	local x, y = getImageCoords( mouse.x, mouse.y )
+	overlay:clear()
+	overlay:circle( xImg, yImg, math.sqrt( (x-xImg)^2 + (y-yImg)^2 ), "gray", brushes.circle.options.fill )
+end
+function brushes.circle.mouseUp( x, y, btn )
+	local xImg, yImg = getImageCoords( mouse.x, mouse.y )
+	if not xImg then return end
+	local startX, startY = brushes.circle.startX, brushes.circle.startY
+	local r = math.sqrt( (xImg-startX)^2 + (yImg-startY)^2 )
+	image:circle( startX, startY, r, btn == 1 and primary or (btn == 2 and secondary), brushes.circle.options.fill )
+	overlay:clear()
+end
 
 
 
@@ -137,7 +226,16 @@ gui.paint.obj = {}
 	gui.paint.obj.toolbar.obj = {}
 	local Toolbar = gui.paint.obj.toolbar
 		
-		Toolbar.obj.zoom = Toolbar:text( 1, 1, function() return zoomInt end )
+		Toolbar.obj.file = Toolbar:text( 1, nil, function() return path or "no file opened" end, function() return path and "gray" or "gray-2" end )
+		Toolbar.obj.file:center("y")
+		
+		Toolbar.obj.brush = Toolbar:text( nil, nil, function() return brush end, "gray" )
+		Toolbar.obj.brush.x = function() return Toolbar.obj.file.x() + Toolbar.obj.file.w() + 10 end
+		Toolbar.obj.brush:center("y")
+		
+		Toolbar.obj.zoom = Toolbar:text( nil, nil, function() return zoomInt end, "gray" )
+		Toolbar.obj.zoom.x = function() return Toolbar.obj.brush.x() + Toolbar.obj.brush.w() + 10 end
+		Toolbar.obj.zoom:center("y")
 
 gui.menu = he:box( 1, 1, nil, nil, "gray+2" )
 gui.menu:autosize( "wh", he )
@@ -150,12 +248,23 @@ gui.menu.obj = {}
 
 		Open.obj.title = Open:text( 5, 5, "OPEN FILE", "black" )
 		Open.obj.input = Open:input( 5, nil, nil, screen.font.height, "black" )
-		Open.obj.input:autosize( "w", -5, Open )
 		Open.obj.input.y = function() return Open.obj.input.parent.obj.title.y() + Open.obj.input.parent.obj.title.h() + 5 end
 		Open.obj.input.callback = function( self, input )
-			loadFile(input)
 			self:removeTag("active")
+			if disk.info(input).type == "file" then
+				path = input
+				loadFile(input)
+				inMenu = false
+			end
 		end
+		
+		Open.obj.submit = Open:button( nil, nil, 50, 11, "OPEN" )
+		Open.obj.submit.x = function() return Open.w() - Open.obj.submit.w() end
+		Open.obj.submit.y = function() return Open.obj.title.y() + Open.obj.title.h() + 4 end
+		Open.obj.submit.callback = function()
+			Open.obj.input.callback( Open.obj.input, Open.obj.input.read.history[Open.obj.input.read.selected] )
+		end
+		Open.obj.input.w = function() return Open.obj.submit.x() - Open.obj.input.x() - 10 end
 	
 	Open:autosize( "h", 5, Open.obj.title, Open.obj.input )
 
@@ -177,8 +286,16 @@ gui.menu.obj = {}
 				self:update( "char", char )
 			end
 		end
-		Create.obj.width.callback = function( self, input )
-			createImage(input)
+		Create.obj.width.key = function( self, key )
+			self:update( "key", key )
+			if key == "tab" then
+				self:removeTag("active")
+				Create.obj.height:addTag("active")
+				Create.obj.height.read.timer = os.startTimer(0.5)
+				Create.obj.height.read.cursor = true
+			end
+		end
+		Create.obj.width.callback = function(self)
 			self:removeTag("active")
 		end
 		
@@ -193,8 +310,7 @@ gui.menu.obj = {}
 				self:update( "char", char )
 			end
 		end
-		Create.obj.height.callback = function( self, input )
-			createImage(input)
+		Create.obj.height.callback = function(self)
 			self:removeTag("active")
 		end
 		
@@ -202,7 +318,11 @@ gui.menu.obj = {}
 		Create.obj.submit.x = function() return Create.w() - Create.obj.submit.w() end
 		Create.obj.submit.y = function() return Create.obj.title.y() + Create.obj.title.h() + 4 end
 		Create.obj.submit.callback = function(obj)
-			
+			local width = Create.obj.width.read.history[ Create.obj.width.read.selected ]
+			local height = Create.obj.height.read.history[ Create.obj.height.read.selected ]
+			if not tonumber(width) or tonumber(height) then return end
+			createImage( tonumber(width), tonumber(height) )
+			inMenu = false
 		end
 	
 	Create:autosize( "h", 5, Create.obj.title, Create.obj.width )
@@ -211,16 +331,32 @@ gui.menu.obj = {}
 
 -- HELPER FUNCTIONS
 
-function createImage()
-	
+function createImage( width, height )
+	image = screen.newCanvas( width, height )
+	image:clear("black")
+	overlay = screen.newCanvas( image.w, image.h )
 end
 
 function loadFile()
-	
+	local img = screen.loadImage(path)
+	image = screen.newCanvas( img:getDimensions() )
+	overlay = screen.newCanvas( image.w, image.h )
+	image:drawImage(img)
 end
 
 function saveFile()
-	
+	local img = image.canvas:newImageData():encode("png")
+	disk.write( path, img:getString() )
+end
+
+function getImageCoords( x, y )
+	if x > gui.paint.obj.picker.w() and y < screen.height-10 and image then -- Drawing area
+		local xImg = math.ceil( (x-gui.paint.obj.picker.w()) / zoomInt )
+		local yImg = math.ceil( y / zoomInt )
+		if xImg <= image.w and yImg <= image.h then
+			return xImg, yImg
+		end
+	end
 end
 
 local events = {}
@@ -232,13 +368,15 @@ function events.key(key)
 		screen.clear()
 		screen.pos = {x=1,y=1}
 		running = false
+	elseif key == "s" and event.keyDown("ctrl") then
+		saveFile()
 	end
 end
 
 function events.mouse( x, y, btn )
 	-- gui.paint.obj.picker:mouse( x, y, btn )
 	eachObj( gui.menu, function(obj)
-		if obj:hasTag("active") then
+		if obj:hasTag("input") and obj:hasTag("active") then
 			obj:removeTag("active")
 			obj.read.cursor = false
 		end
@@ -270,10 +408,10 @@ end
 -- PROGRAM FUNCTIONS
 
 function draw(obj)
+	eachObj( obj, function(obj) obj:draw() end )
 	if not inMenu and image then
 		image:draw( gui.paint.obj.picker.w(), 1, zoomInt )
 	end
-	eachObj( obj, function(obj) obj:draw() end )
 end
 
 
@@ -285,7 +423,10 @@ while running do
 	
 	local e = {event.wait()}
 	if events[ e[1] ] then
-		events[ e[1] ]( unpack(e,2) )
+		events[ e[1] ]( unpack(e, 2) )
+	end
+	if brushes[brush][ e[1] ] then
+		brushes[brush][ e[1] ]( unpack(e, 2) )
 	end
 	
 	propagateEvents( inMenu and gui.menu or gui.paint, unpack(e) )
