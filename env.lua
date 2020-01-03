@@ -72,6 +72,7 @@ function env.getfenv(level)
 end
 
 env.expect = expect
+env.print = env.screen.print
 
 
 

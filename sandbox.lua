@@ -43,8 +43,7 @@ function sandbox:createEnv( env, loadGeneral )
 		end
 	end
 	
-	-- Set shortcuts, _G and options
-	self.env.print = self.env.screen.print
+	-- Set _G and options
 	self.env._G = self.env
 	self.env.screen.colors = self.env.screen.colors64
 	self.env.shell.traceback = false
