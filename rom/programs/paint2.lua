@@ -395,8 +395,8 @@ end
 
 function getImageCoords( x, y )
 	if x > gui.paint.obj.picker.w() and y < screen.height-10 and image then -- Drawing area
-		local xImg = math.ceil( (x-gui.paint.obj.picker.w()) / zoomInt )
-		local yImg = math.ceil( y / zoomInt )
+		local xImg = math.ceil( (x-gui.paint.obj.picker.w()) / zoomInt - ox + 1 )
+		local yImg = math.ceil( y / zoomInt - oy + 1 )
 		if xImg <= image.w and yImg <= image.h then
 			return xImg, yImg
 		end
