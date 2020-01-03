@@ -470,9 +470,11 @@ end
 -- RUN
 
 local arg = {...}
-local p = shell.find( arg[1] )
-if loadFile(p) then
-	gui.menu.obj.path.obj.input.read.history[1] = p
+if #arg > 0 then
+	local p = shell.find( arg[1] )
+	if loadFile(p) then
+		gui.menu.obj.path.obj.input.read.history[1] = p
+	end
 end
 
 while running do
