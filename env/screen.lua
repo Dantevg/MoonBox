@@ -867,10 +867,10 @@ function screen.setFont(path)
 end
 
 function screen.newCanvas( w, h )
-	expect( w, {"number", "nil"} )
-	expect( h, {"number", "nil"} )
+	expect( w, "number" )
+	expect( h, "number" )
 	
-	w, h = w or 0, h or 0
+	w, h = math.max( 1, math.floor(w) ), math.max( 1, math.floor(w) )
 	local c = {
 		w = w,
 		h = h,
