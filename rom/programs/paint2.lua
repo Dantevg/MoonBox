@@ -25,7 +25,7 @@ local zoomInt = 1
 local ox, oy = 1, 1
 local primary = "white"
 local secondary = "blue"
-local brush = "pencil" -- "pixel", "pencil", "line", "rect", "circle"
+local brush = "pixel" -- "pixel", "pencil", "line", "rect", "circle"
 
 local path
 local image
@@ -78,7 +78,7 @@ end
 
 brushes.rect = {}
 brushes.rect.options = {
-	fill = false
+	fill = true
 }
 function brushes.rect.drag( dx, dy, btn )
 	local xImg, yImg = getImageCoords( mouse.drag.x, mouse.drag.y )
@@ -99,7 +99,7 @@ end
 
 brushes.circle = {}
 brushes.circle.options = {
-	fill = false
+	fill = true
 }
 function brushes.circle.drag( dx, dy, btn )
 	local xImg, yImg = getImageCoords( mouse.drag.x, mouse.drag.y )
@@ -178,6 +178,8 @@ function colourPicker:mouse( x, y, btn )
 	
 	local color = self.rainbow[ math.floor(y/self.hColour())+1 ]
 	local brightness = math.floor(x/self.wColour()) - 3
+	if not color or not brightness then return end
+	
 	if btn == 1 then
 		primary = colors.compose( color, brightness )
 	elseif btn == 2 then
@@ -225,9 +227,27 @@ gui.paint.obj = {}
 	gui.paint.obj.picker.obj = {}
 	local Picker = gui.paint.obj.picker
 
-		Picker.obj.primary = Picker:box( 1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 15, function() return primary end )
-		Picker.obj.secondary = Picker:box( Picker.w()/2+1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 15, function() return secondary end )
-	
+		Picker.obj.primary = Picker:box( 1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, Picker.w()/2 - 1, function() return primary end )
+		Picker.obj.secondary = Picker:box( Picker.w()/2+1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, Picker.w()/2 - 1, function() return secondary end )
+		
+		local xOff, yOff = 2, 1
+		for b in pairs(brushes) do
+			if b ~= "drag" then
+				local y = yOff
+				local img = screen.loadImage("/disk1/"..b.."16.png")
+				Picker.obj[b] = Picker:image( xOff, nil, img )
+				Picker.obj[b].y = function() return Picker.obj.primary.y() + Picker.obj.primary.h() + y end
+				Picker.obj[b].mouse = function( self, x, y, btn )
+					if self:within( x, y ) then brush = b end
+				end
+				xOff = xOff + img:getWidth() + 1
+				if xOff + img:getWidth() > Picker.w() then
+					xOff = 2
+					yOff = yOff + img:getHeight() + 1
+				end
+			end
+		end
+		
 	gui.paint.obj.toolbar = gui.paint:box( 1, nil, nil, 10, "black" )
 	gui.paint.obj.toolbar.y = function() return screen.height - 9 end
 	gui.paint.obj.toolbar.w = function() return screen.width end
@@ -426,7 +446,7 @@ function events.key(key)
 		screen.pos = {x=1,y=1}
 		running = false
 	elseif key == "s" and event.keyDown("ctrl") then
-		saveFile()
+		saveFile(path)
 	end
 end
 
@@ -474,8 +494,8 @@ function draw(obj)
 			image:draw( gui.paint.obj.picker.w(), 1, 0.2 )
 			if overlay then overlay:draw( gui.paint.obj.picker.w(), 1, 0.2 ) end
 		else
-			image:draw( gui.paint.obj.picker.w() + (ox-1)*zoomInt, (oy-1)*zoomInt, zoomInt )
-			if overlay then overlay:draw( gui.paint.obj.picker.w() + (ox-1)*zoomInt, (oy-1)*zoomInt, zoomInt ) end
+			image:draw( gui.paint.obj.picker.w() + (ox-1)*zoomInt + 1, (oy-1)*zoomInt + 1, zoomInt )
+			if overlay then overlay:draw( gui.paint.obj.picker.w() + (ox-1)*zoomInt + 1, (oy-1)*zoomInt + 1, zoomInt ) end
 		end
 	end
 	
@@ -502,7 +522,7 @@ while running do
 	if events[ e[1] ] then
 		events[ e[1] ]( unpack(e, 2) )
 	end
-	if not event.keyDown("m") then
+	if not event.keyDown("m") and not inMenu then
 		local b = event.keyDown("ctrl") and "drag" or brush
 		if brushes[b][ e[1] ] then
 			brushes[b][ e[1] ]( unpack(e, 2) )
