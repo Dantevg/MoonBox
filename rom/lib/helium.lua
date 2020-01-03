@@ -362,6 +362,42 @@ he.styles.button = {
 
 
 
+he.image = {}
+
+function he.image.new( p, x, y, image, scale )
+	local obj = {}
+	
+	obj.parent = p
+	obj.styles = obj.parent.styles
+	obj.tags = {"image", "*"}
+	obj.x = he.make.x(obj, x)
+	obj.y = he.make.y(obj, y)
+	obj.w = function() return image:getWidth() * obj.scale() end
+	obj.h = function() return image:getHeight() * obj.scale() end
+	obj.image = image
+	obj.scale = he.proxy(scale)
+	
+	return setmetatable( obj, {__index = function(t,k)
+		return he.image[k] or he.get( obj, k )
+	end} )
+end
+
+function he.image:draw(parent)
+	self.parent = parent or self.parent
+	screen.drawImage( self.image, self.x(), self.y(), self.scale() )
+end
+
+setmetatable( he.image, {
+	__index = he,
+	__call = function( _, ... ) return he.image.new(...) end
+})
+
+he.styles.image = {
+	scale = 1
+}
+
+
+
 -- RETURN
 
 return he
