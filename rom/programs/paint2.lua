@@ -185,10 +185,9 @@ setmetatable( colourPicker, {
 he.styles.input = {
 	padding = 1,
 	border = "gray+1",
-	background = function(obj) return obj:hasTag("active") and "gray+1" or "gray+2" end,
+	background = "white",
 	mouse = function( self, x, y, btn )
 		if self:within( x, y ) then
-			self.read.timer = os.startTimer(0.5)
 			eachObj( gui.menu, function(obj)
 				if obj:hasTag("active") then
 					obj:removeTag("active")
@@ -196,7 +195,9 @@ he.styles.input = {
 				end
 			end )
 			self:addTag("active")
+			self.read.timer = os.startTimer(0.5)
 			self.read.cursor = true
+			self.read.pos = #self.read.history[self.read.selected] + 1
 		end
 	end
 }
@@ -241,42 +242,73 @@ gui.menu = he:box( 1, 1, nil, nil, "gray+2" )
 gui.menu:autosize( "wh", he )
 gui.menu.obj = {}
 
-	gui.menu.obj.open = gui.menu:box( margin, margin, nil, 20, "gray+2" )
-	gui.menu.obj.open:autosize( "w", -margin, gui.menu )
-	gui.menu.obj.open.obj = {}
-	local Open = gui.menu.obj.open
+	gui.menu.obj.path = gui.menu:box( margin, margin, nil, 20, "gray+2" )
+	gui.menu.obj.path:autosize( "w", -margin, gui.menu )
+	gui.menu.obj.path.obj = {}
+	local Path = gui.menu.obj.path
 
-		Open.obj.title = Open:text( 5, 5, "OPEN FILE", "black" )
-		Open.obj.input = Open:input( 5, nil, nil, screen.font.height, "black" )
-		Open.obj.input.y = function() return Open.obj.input.parent.obj.title.y() + Open.obj.input.parent.obj.title.h() + 5 end
-		Open.obj.input.callback = function( self, input )
+		Path.obj.title = Path:text( 1, 1, "OPEN/SAVE", "black" )
+		
+		Path.obj.input = Path:input( 1, nil, nil, screen.font.height, "black" )
+		Path.obj.input.y = function() return Path.obj.title.y() + Path.obj.title.h() + 5 end
+		Path.obj.input:autosize( "w", Path )
+		Path.obj.input.border = function(obj)
+			if #obj.read.history[obj.read.selected] == 0 then
+				return "gray+1"
+			else
+				return disk.info( obj.read.history[obj.read.selected] ).type == "file" and "blue" or "orange"
+			end
+		end
+		Path.obj.input.background = function(obj)
+			if #obj.read.history[obj.read.selected] == 0 or not obj:hasTag("active") then
+				return "white"
+			else
+				return disk.info( obj.read.history[obj.read.selected] ).type == "file" and "blue+3" or "orange+3"
+			end
+		end
+		Path.obj.input.callback = function( self, input )
 			self:removeTag("active")
-			if disk.info(input).type == "file" then
-				path = input
-				loadFile(input)
+		end
+		
+		local buttonWidth = function() return (Path.w() - margin)/2
+		end
+		
+		Path.obj.open = Path:button( 1, nil, nil, 11, "OPEN" )
+		Path.obj.open.y = function() return Path.obj.input.y() + Path.obj.input.h() + 5 end
+		Path.obj.open.w = buttonWidth
+		Path.obj.open.callback = function()
+			local p = Path.obj.input.read.history[Path.obj.input.read.selected]
+			if disk.info(p).type == "file" then
+				path = p
+				loadFile(path)
 				inMenu = false
 			end
 		end
 		
-		Open.obj.submit = Open:button( nil, nil, 50, 11, "OPEN" )
-		Open.obj.submit.x = function() return Open.w() - Open.obj.submit.w() end
-		Open.obj.submit.y = function() return Open.obj.title.y() + Open.obj.title.h() + 4 end
-		Open.obj.submit.callback = function()
-			Open.obj.input.callback( Open.obj.input, Open.obj.input.read.history[Open.obj.input.read.selected] )
+		Path.obj.save = Path:button( nil, nil, nil, 11, "SAVE" )
+		Path.obj.save.x = function() return Path.x() + Path.w() - buttonWidth() end
+		Path.obj.save.y = function() return Path.obj.input.y() + Path.obj.input.h() + 5 end
+		Path.obj.save.w = buttonWidth
+		Path.obj.save.callback = function()
+			local p = Path.obj.input.read.history[Path.obj.input.read.selected]
+			if image and not disk.exists(p) or disk.info(p).type == "file" then
+				path = p
+				saveFile(path)
+				inMenu = false
+			end
 		end
-		Open.obj.input.w = function() return Open.obj.submit.x() - Open.obj.input.x() - 10 end
 	
-	Open:autosize( "h", 5, Open.obj.title, Open.obj.input )
+	Path:autosize( "h", 5, Path.obj.title, Path.obj.input, Path.obj.open, Path.obj.save )
 
 	gui.menu.obj.create = gui.menu:box( margin, nil, nil, 20, "gray+2" )
 	gui.menu.obj.create:autosize( "w", -margin, gui.menu )
-	gui.menu.obj.create.y = function() return Open.y() + Open.h() + margin end
+	gui.menu.obj.create.y = function() return Path.y() + Path.h() + margin end
 	gui.menu.obj.create.obj = {}
 	local Create = gui.menu.obj.create
 
-		Create.obj.title = Create:text( 5, 5, "NEW IMAGE", "black" )
+		Create.obj.title = Create:text( 1, 1, "NEW IMAGE", "black" )
 		
-		Create.obj.widthLabel = Create:text( 5, nil, "Width", "black" )
+		Create.obj.widthLabel = Create:text( 1, nil, "Width", "black" )
 		Create.obj.widthLabel.y = function() return Create.obj.title.y() + Create.obj.title.h() + 6 end
 		Create.obj.width = Create:input( nil, nil, 50, screen.font.height-1, "black" )
 		Create.obj.width.x = function() return Create.obj.widthLabel.x() + Create.obj.widthLabel.w() + 5 end
@@ -288,8 +320,9 @@ gui.menu.obj = {}
 		end
 		Create.obj.width.key = function( self, key )
 			self:update( "key", key )
-			if key == "tab" then
+			if key == "tab" and self:hasTag("active") then
 				self:removeTag("active")
+				self.read.cursor = false
 				Create.obj.height:addTag("active")
 				Create.obj.height.read.timer = os.startTimer(0.5)
 				Create.obj.height.read.cursor = true
@@ -315,12 +348,12 @@ gui.menu.obj = {}
 		end
 		
 		Create.obj.submit = Create:button( nil, nil, 50, 11, "CREATE" )
-		Create.obj.submit.x = function() return Create.w() - Create.obj.submit.w() end
+		Create.obj.submit.x = function() return Create.x() + Create.w() - Create.obj.submit.w() end
 		Create.obj.submit.y = function() return Create.obj.title.y() + Create.obj.title.h() + 4 end
 		Create.obj.submit.callback = function(obj)
 			local width = Create.obj.width.read.history[ Create.obj.width.read.selected ]
 			local height = Create.obj.height.read.history[ Create.obj.height.read.selected ]
-			if not tonumber(width) or tonumber(height) then return end
+			if not tonumber(width) or not tonumber(height) then return end
 			createImage( tonumber(width), tonumber(height) )
 			inMenu = false
 		end
