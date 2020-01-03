@@ -240,6 +240,19 @@ gui.paint.obj = {}
 		Toolbar.obj.brush = Toolbar:text( nil, nil, function() return brush end, "gray" )
 		Toolbar.obj.brush.x = function() return Toolbar.obj.file.x() + Toolbar.obj.file.w() + 10 end
 		Toolbar.obj.brush:center("y")
+		Toolbar.obj.brush.mouseUp = function( self, x, y, btn )
+			if not self:within( x, y ) then return end
+			local b = {}
+			for k in pairs(brushes) do
+				table.insert( b, k )
+			end
+			for i = 1, #b do
+				if b[i] == brush then
+					brush = b[ i % #b + 1 ]
+					return
+				end
+			end
+		end
 		
 		Toolbar.obj.zoom = Toolbar:text( nil, nil, function() return zoomInt.."x" end, "gray" )
 		Toolbar.obj.zoom.x = function() return Toolbar.obj.brush.x() + Toolbar.obj.brush.w() + 10 end
@@ -429,7 +442,6 @@ end
 
 function events.scroll( x, y, dir )
 	zoom = math.max( 1, zoom + dir/5 )
-	local prevZoomInt = zoomInt
 	zoomInt = math.floor(zoom)
 end
 
@@ -458,7 +470,13 @@ function draw(obj)
 	
 	-- Image
 	if not inMenu and image then
-		image:draw( gui.paint.obj.picker.w() + (ox-1)*zoomInt, (oy-1)*zoomInt, zoomInt )
+		if event.keyDown("m") then
+			image:draw( gui.paint.obj.picker.w(), 1, 0.2 )
+			if overlay then overlay:draw( gui.paint.obj.picker.w(), 1, 0.2 ) end
+		else
+			image:draw( gui.paint.obj.picker.w() + (ox-1)*zoomInt, (oy-1)*zoomInt, zoomInt )
+			if overlay then overlay:draw( gui.paint.obj.picker.w() + (ox-1)*zoomInt, (oy-1)*zoomInt, zoomInt ) end
+		end
 	end
 	
 	-- GUI
@@ -484,9 +502,11 @@ while running do
 	if events[ e[1] ] then
 		events[ e[1] ]( unpack(e, 2) )
 	end
-	local b = event.keyDown("ctrl") and "drag" or brush
-	if brushes[b][ e[1] ] then
-		brushes[b][ e[1] ]( unpack(e, 2) )
+	if not event.keyDown("m") then
+		local b = event.keyDown("ctrl") and "drag" or brush
+		if brushes[b][ e[1] ] then
+			brushes[b][ e[1] ]( unpack(e, 2) )
+		end
 	end
 	
 	propagateEvents( inMenu and gui.menu or gui.paint, unpack(e) )
