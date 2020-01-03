@@ -22,6 +22,7 @@ local running = true
 local inMenu = false
 local zoom = 1
 local zoomInt = 1
+local ox, oy = 1, 1
 local primary = "white"
 local secondary = "blue"
 local brush = "pencil" -- "pixel", "pencil", "line", "rect", "circle"
@@ -118,6 +119,12 @@ function brushes.circle.mouseUp( x, y, btn )
 	overlay:clear()
 end
 
+brushes.drag = {}
+function brushes.drag.drag( dx, dy, btn )
+	if mouse.x <= gui.paint.obj.picker.w() then return end
+	ox, oy = ox + dx/zoomInt, oy + dy/zoomInt
+end
+
 
 
 -- GUI
@@ -209,7 +216,7 @@ he.styles.button = {
 	activeBackground = "gray",
 }
 
-gui.paint = he:box( 1, 1, nil, nil, "gray-2" )
+gui.paint = he:box( 1, 1, nil, nil, "black (0)" )
 gui.paint:autosize( "wh", he )
 gui.paint.obj = {}
 
@@ -252,6 +259,7 @@ gui.menu.obj = {}
 		Path.obj.input = Path:input( 1, nil, nil, screen.font.height, "black" )
 		Path.obj.input.y = function() return Path.obj.title.y() + Path.obj.title.h() + 5 end
 		Path.obj.input:autosize( "w", Path )
+		Path.obj.input.read.history[1] = "/disk1/test/img/test.png" -- TODO: remove
 		Path.obj.input.border = function(obj)
 			if #obj.read.history[obj.read.selected] == 0 then
 				return "gray+1"
@@ -418,6 +426,7 @@ end
 
 function events.scroll( x, y, dir )
 	zoom = math.max( 1, zoom + dir/5 )
+	local prevZoomInt = zoomInt
 	zoomInt = math.floor(zoom)
 end
 
@@ -441,10 +450,16 @@ end
 -- PROGRAM FUNCTIONS
 
 function draw(obj)
-	eachObj( obj, function(obj) obj:draw() end )
+	-- Background
+	screen.clear("gray-2")
+	
+	-- Image
 	if not inMenu and image then
-		image:draw( gui.paint.obj.picker.w(), 1, zoomInt )
+		image:draw( gui.paint.obj.picker.w() + ox*zoomInt, oy*zoomInt, zoomInt )
 	end
+	
+	-- GUI
+	eachObj( obj, function(obj) obj:draw() end )
 end
 
 
@@ -458,8 +473,9 @@ while running do
 	if events[ e[1] ] then
 		events[ e[1] ]( unpack(e, 2) )
 	end
-	if brushes[brush][ e[1] ] then
-		brushes[brush][ e[1] ]( unpack(e, 2) )
+	local b = event.keyDown("ctrl") and "drag" or brush
+	if brushes[b][ e[1] ] then
+		brushes[b][ e[1] ]( unpack(e, 2) )
 	end
 	
 	propagateEvents( inMenu and gui.menu or gui.paint, unpack(e) )
