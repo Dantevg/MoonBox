@@ -241,7 +241,7 @@ gui.paint.obj = {}
 		Toolbar.obj.brush.x = function() return Toolbar.obj.file.x() + Toolbar.obj.file.w() + 10 end
 		Toolbar.obj.brush:center("y")
 		
-		Toolbar.obj.zoom = Toolbar:text( nil, nil, function() return zoomInt end, "gray" )
+		Toolbar.obj.zoom = Toolbar:text( nil, nil, function() return zoomInt.."x" end, "gray" )
 		Toolbar.obj.zoom.x = function() return Toolbar.obj.brush.x() + Toolbar.obj.brush.w() + 10 end
 		Toolbar.obj.zoom:center("y")
 
@@ -259,7 +259,6 @@ gui.menu.obj = {}
 		Path.obj.input = Path:input( 1, nil, nil, screen.font.height, "black" )
 		Path.obj.input.y = function() return Path.obj.title.y() + Path.obj.title.h() + 5 end
 		Path.obj.input:autosize( "w", Path )
-		Path.obj.input.read.history[1] = "/disk1/test/img/test.png" -- TODO: remove
 		Path.obj.input.border = function(obj)
 			if #obj.read.history[obj.read.selected] == 0 then
 				return "gray+1"
@@ -285,10 +284,7 @@ gui.menu.obj = {}
 		Path.obj.open.y = function() return Path.obj.input.y() + Path.obj.input.h() + 5 end
 		Path.obj.open.w = buttonWidth
 		Path.obj.open.callback = function()
-			local p = Path.obj.input.read.history[Path.obj.input.read.selected]
-			if disk.info(p).type == "file" then
-				path = p
-				loadFile(path)
+			if loadFile( Path.obj.input.read.history[Path.obj.input.read.selected] ) then
 				inMenu = false
 			end
 		end
@@ -298,10 +294,7 @@ gui.menu.obj = {}
 		Path.obj.save.y = function() return Path.obj.input.y() + Path.obj.input.h() + 5 end
 		Path.obj.save.w = buttonWidth
 		Path.obj.save.callback = function()
-			local p = Path.obj.input.read.history[Path.obj.input.read.selected]
-			if image and not disk.exists(p) or disk.info(p).type == "file" then
-				path = p
-				saveFile(path)
+			if saveFile( Path.obj.input.read.history[Path.obj.input.read.selected] ) then
 				inMenu = false
 			end
 		end
@@ -378,16 +371,26 @@ function createImage( width, height )
 	overlay = screen.newCanvas( image.w, image.h )
 end
 
-function loadFile()
+function loadFile(p)
+	if disk.info(p).type ~= "file" then return false end
+	path = p
+	
 	local img = screen.loadImage(path)
 	image = screen.newCanvas( img:getDimensions() )
 	overlay = screen.newCanvas( image.w, image.h )
 	image:drawImage(img)
+	
+	return true
 end
 
-function saveFile()
+function saveFile(p)
+	if not image or (disk.exists(p) and disk.info(p).type ~= "file") then return false end
+	path = p
+	
 	local img = image.canvas:newImageData():encode("png")
 	disk.write( path, img:getString() )
+	
+	return true
 end
 
 function getImageCoords( x, y )
@@ -455,7 +458,7 @@ function draw(obj)
 	
 	-- Image
 	if not inMenu and image then
-		image:draw( gui.paint.obj.picker.w() + ox*zoomInt, oy*zoomInt, zoomInt )
+		image:draw( gui.paint.obj.picker.w() + (ox-1)*zoomInt, (oy-1)*zoomInt, zoomInt )
 	end
 	
 	-- GUI
@@ -465,6 +468,12 @@ end
 
 
 -- RUN
+
+local arg = {...}
+local p = shell.find( arg[1] )
+if loadFile(p) then
+	gui.menu.obj.path.obj.input.read.history[1] = p
+end
 
 while running do
 	draw( inMenu and gui.menu or gui.paint )
