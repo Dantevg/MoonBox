@@ -84,7 +84,7 @@ function he:autosize( what, padding, ... )
 		self.w = function()
 			local w = 0
 			for i, obj in pairs(objects) do
-				w = math.max( w, obj.x() - self.x() + obj.w() + (padding or self.padding or 0) )
+				w = math.max( w, obj.x() - self.x() + obj.w() + (padding or self.padding and self.padding() or 0) )
 			end
 			return w
 		end
@@ -93,7 +93,7 @@ function he:autosize( what, padding, ... )
 		self.h = function()
 			local h = 0
 			for i, obj in pairs(objects) do
-				h = math.max( h, obj.y() - self.y() + obj.h() + (padding or self.padding or 0) )
+				h = math.max( h, obj.y() - self.y() + obj.h() + (padding or self.padding and self.padding() or 0) )
 			end
 			return h
 		end
