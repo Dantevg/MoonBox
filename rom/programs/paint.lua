@@ -240,10 +240,10 @@ gui.paint.obj = {}
 				Picker.obj[b].mouse = function( self, x, y, btn )
 					if self:within( x, y ) then brush = b end
 				end
-				xOff = xOff + img:getWidth() + 1
-				if xOff + img:getWidth() > Picker.w() then
+				xOff = xOff + img.w + 1
+				if xOff + img.w > Picker.w() then
 					xOff = 2
-					yOff = yOff + img:getHeight() + 1
+					yOff = yOff + img.h + 1
 				end
 			end
 		end

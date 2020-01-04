@@ -504,7 +504,7 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 end
 
 function screen.canvas.drawImage( canvas, image, x, y, scale )
-	expect( image, {"string", "userdata"}, 1, "screen.drawImage" )
+	expect( image, {"string", "table"}, 1, "screen.drawImage" )
 	expect( x, {"number", "nil"}, 2, "screen.drawImage" )
 	expect( y, {"number", "nil"}, 3, "screen.drawImage" )
 	expect( scale, {"number", "nil"}, 4, "screen.drawImage" )
@@ -512,6 +512,7 @@ function screen.canvas.drawImage( canvas, image, x, y, scale )
 	if type(image) == "string" then
 		image = screen.loadImage(image)
 	end
+	image = image.image
 	
 	x, y, scale = x or 1, y or 1, scale or 1
 	
@@ -717,22 +718,31 @@ function screen.canvas.getPixel( canvas, x, y )
 	return colors.color( r, g, b )
 end
 
-function screen.loadImage(path)
-	expect( path, "string" )
+function screen.loadImage( source, isData )
+	expect( source, "string" )
+	expect( isData, {"boolean", "nil"} )
 	
-	path = disk.absolute(path)
-	if not disk.exists(path) then
-		error( "No such file: "..path, 2 )
+	local imageData
+	if isData then
+		imageData = love.image.newImageData( love.data.newByteData(source) )
+	else
+		local path = disk.absolute(source)
+		if not disk.exists(path) then
+			error( "No such file: "..path, 2 )
+		end
+		imageData = love.image.newImageData(path)
 	end
-	
-	local imageData = love.image.newImageData(path)
 	
 	-- Convert colors
 	imageData:mapPixel(function( x, y, r, g, b, a )
 		return closestColor({r,g,b,a})
 	end)
 	
-	return imageData
+	return {
+		w = imageData:getWidth(),
+		h = imageData:getHeight(),
+		image = imageData
+	}
 end
 
 --[[ local function loadFont( path, data )
