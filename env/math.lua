@@ -46,6 +46,18 @@ function math.decompress( algorithm, data )
 	return love.data.decompress( "string", algorithm, data )
 end
 
+function math.encode64(data)
+	expect( data, "string" )
+	
+	return love.data.encode( "string", "base64", data )
+end
+
+function math.decode64(data)
+	expect( data, "string" )
+	
+	return love.data.decode( "string", "base64", data )
+end
+
 
 
 -- FUNCTIONS
