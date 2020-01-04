@@ -46,6 +46,7 @@ function brushes.pixel.drag( dx, dy, btn )
 	if not xImg then return end
 	image:pixel( xImg, yImg, btn == 1 and primary or (btn == 2 and secondary) )
 end
+brushes.pixel.image = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUpKSn///+UkWbiAAAAEUlEQVR4nGNgwADMBxAIAwAAR9YDDfFoq3wAAAAASUVORK5CYII="
 
 brushes.pencil = {}
 function brushes.pencil.drag( dx, dy, btn )
@@ -57,6 +58,7 @@ end
 function brushes.pencil.mouseUp( x, y, btn )
 	brushes.pencil.prevX, brushes.pencil.prevY = nil, nil
 end
+brushes.pencil.image = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUpKSn///+UkWbiAAAAI0lEQVR4nGNgYGCoYGBgYWBgAiNGGGJogCEHMDJgYOADigIAOiUCwm2RpdIAAAAASUVORK5CYII="
 
 brushes.line = {}
 function brushes.line.drag( dx, dy, btn )
@@ -75,6 +77,7 @@ function brushes.line.mouseUp( x, y, btn )
 	image:line( brushes.line.startX, brushes.line.startY, xImg, yImg, btn == 1 and primary or (btn == 2 and secondary) )
 	overlay:clear()
 end
+brushes.line.image = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUpKSn///+UkWbiAAAAK0lEQVR4nGNgYGBIYGAoYGCwYGCQYWDgY2BgZ2BgbmBgPMDA8ABVgg2oFgBqvgQ2wlA5YQAAAABJRU5ErkJggg=="
 
 brushes.rect = {}
 brushes.rect.options = {
@@ -96,6 +99,7 @@ function brushes.rect.mouseUp( x, y, btn )
 	image:rect( startX, startY, xImg-startX+1, yImg-startY+1, btn == 1 and primary or (btn == 2 and secondary), brushes.rect.options.fill )
 	overlay:clear()
 end
+brushes.rect.image = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAACVBMVEUpKSmrq6v/////1S+2AAAAHUlEQVR4nGNgAAFRMLFq1QIIwUU8EQIhgABMMAAAt+4X0BBAqu0AAAAASUVORK5CYII="
 
 brushes.circle = {}
 brushes.circle.options = {
@@ -118,6 +122,7 @@ function brushes.circle.mouseUp( x, y, btn )
 	image:circle( startX, startY, r, btn == 1 and primary or (btn == 2 and secondary), brushes.circle.options.fill )
 	overlay:clear()
 end
+brushes.circle.image = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUpKSn///+UkWbiAAAAJklEQVR4nGNgYGBgPsDA/4FB/geD/R8Qqv+HQBARoBRQAVAZAwMAiQAQk9vnA4wAAAAASUVORK5CYII="
 
 brushes.drag = {}
 function brushes.drag.drag( dx, dy, btn )
@@ -234,7 +239,7 @@ gui.paint.obj = {}
 		for b in pairs(brushes) do
 			if b ~= "drag" then
 				local y = yOff
-				local img = screen.loadImage("/disk1/"..b.."16.png")
+				local img = screen.loadImage( math.decode64(brushes[b].image), true )
 				Picker.obj[b] = Picker:image( xOff, nil, img )
 				Picker.obj[b].y = function() return Picker.obj.primary.y() + Picker.obj.primary.h() + y end
 				Picker.obj[b].mouse = function( self, x, y, btn )
