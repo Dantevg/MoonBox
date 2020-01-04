@@ -718,12 +718,11 @@ function screen.canvas.getPixel( canvas, x, y )
 	return colors.color( r, g, b )
 end
 
-function screen.loadImage( source, isData )
+function screen.loadImage(source)
 	expect( source, "string" )
-	expect( isData, {"boolean", "nil"} )
 	
 	local imageData
-	if isData then
+	if string.sub( source, 1, 8 ) == "\137PNG\r\n\26\n" then -- Detect PNG header
 		imageData = love.image.newImageData( love.data.newByteData(source) )
 	else
 		local path = disk.absolute(source)

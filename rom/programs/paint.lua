@@ -239,7 +239,7 @@ gui.paint.obj = {}
 		for b in pairs(brushes) do
 			if b ~= "drag" then
 				local y = yOff
-				local img = screen.loadImage( math.decode64(brushes[b].image), true )
+				local img = screen.loadImage( math.decode64(brushes[b].image) )
 				Picker.obj[b] = Picker:image( xOff, nil, img )
 				Picker.obj[b].y = function() return Picker.obj.primary.y() + Picker.obj.primary.h() + y end
 				Picker.obj[b].mouse = function( self, x, y, btn )
