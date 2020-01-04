@@ -32,7 +32,7 @@ while running do
 		if string.byte(char) >= 32 and string.byte(char) < 127 then
 			screen.write( char, xChar, yScreen )
 		else
-			screen.write( ".", {x = xChar, y = yScreen-2, color="gray-1"} )
+			screen.write( ".", {x = xChar, y = yScreen, color="gray-1"} )
 		end
 		
 		x = x+1
