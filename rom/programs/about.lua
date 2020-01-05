@@ -81,7 +81,7 @@ end
 screen.write( "Press any key to continue", {color="cyan-1", y = screen.height - 10} )
 screen.write( "(C) RedPolygon", {color="cyan-2", x = screen.width - 15*(screen.font.width+1), y = screen.height - 10} )
 
-event.wait("char")
+event.wait("key")
 os.sleep()
 screen.clear()
 screen.pos.x, screen.pos.y = 1, 1
