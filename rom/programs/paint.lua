@@ -47,6 +47,7 @@ function brushes.pixel.drag( dx, dy, btn )
 	if not xImg then return end
 	image:pixel( xImg, yImg, btn == 1 and primary or (btn == 2 and secondary) )
 end
+-- Images for brushes (16x16 png, base64 encoded)
 brushes.pixel.image = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUpKSn///+UkWbiAAAAEUlEQVR4nGNgwADMBxAIAwAAR9YDDfFoq3wAAAAASUVORK5CYII="
 
 brushes.pencil = {}
@@ -236,13 +237,18 @@ gui.paint.obj = {}
 		Picker.obj.primary = Picker:box( 1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, Picker.w()/2 - 1, function() return primary end )
 		Picker.obj.secondary = Picker:box( Picker.w()/2+1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, Picker.w()/2 - 1, function() return secondary end )
 		
+		Picker.obj.opacity = Picker:slider( 1, Picker.obj.primary.y() + Picker.obj.primary.h() + 1, Picker.w() - 1, 10 )
+		Picker.obj.opacity.callback = function( self, value )
+			-- primary = colors.compose( colors.getComponents(primary) )
+		end
+		
 		local xOff, yOff = 2, 1
 		for b in pairs(brushes) do
 			if b ~= "drag" then
 				local y = yOff
 				local img = screen.loadImage( math.decode64(brushes[b].image) )
 				Picker.obj[b] = Picker:image( xOff, nil, img )
-				Picker.obj[b].y = function() return Picker.obj.primary.y() + Picker.obj.primary.h() + y end
+				Picker.obj[b].y = function() return Picker.obj.opacity.y() + Picker.obj.opacity.h() + y end
 				Picker.obj[b].mouse = function( self, x, y, btn )
 					if self:within( x, y ) then brush = b end
 				end
