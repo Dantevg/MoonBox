@@ -13,6 +13,7 @@ local he = helium.new( 1, 1, screen.width, screen.height )
 local gui = {}
 local brushes = {}
 local margin = 10
+local bgScale = 10
 
 
 
@@ -492,11 +493,10 @@ end
 function draw(obj)
 	-- Background
 	screen.clear("gray-2")
-	local scale = 10
-	for x = 1, math.floor(screen.width/scale) do
-		for y = 1, math.floor(screen.height/scale) do
+	for x = 1, math.floor(screen.width/bgScale) do
+		for y = 1, math.floor(screen.height/bgScale) do
 			if (x+y) % 2 == 0 then
-				screen.rect( (x-1)*scale+1, (y-1)*scale+1, scale, scale, "gray-3" )
+				screen.rect( (x-1)*bgScale+1, (y-1)*bgScale+1, bgScale, bgScale, "gray-3" )
 			end
 		end
 	end
