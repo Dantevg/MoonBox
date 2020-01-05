@@ -398,6 +398,60 @@ he.styles.image = {
 
 
 
+he.slider = {}
+
+function he.slider.new( p, x, y, w, h, min, max, init )
+	local obj = {}
+	
+	obj.parent = p
+	obj.styles = obj.parent.styles
+	obj.tags = {"slider", "*"}
+	obj.x = he.make.x(obj, x)
+	obj.y = he.make.y(obj, y)
+	obj.w = he.proxy(w)
+	obj.h = he.proxy(h)
+	obj.min = min
+	obj.max = max
+	obj.value = init
+	
+	return setmetatable( obj, {__index = function(t,k)
+		return he.slider[k] or he.get( obj, k )
+	end} )
+end
+
+function he.slider:draw(parent)
+	self.parent = parent or self.parent
+	screen.rect( self.x(), self.y(), self.w(), self.h(), self.background() )
+	local x = math.map( self.value or 0, self.min or 0, self.max or 1, 0, self.w() )
+	screen.rect( self.x() + x - self.sliderWidth()/2, self.y(), self.sliderWidth(), self.h(), self.color() )
+end
+
+function he.slider:mouse( x, y, btn )
+	if not self:within( x, y ) then return end
+	x, y = self:toLocalCoords( x, y )
+	self.value = math.map( x, 1, self.w(), self.min or 0, self.max or 1 )
+	if self.callback then self:callback(self.value) end
+end
+function he.slider:drag( dx, dy, btn )
+	if not self:within( mouse.x, mouse.y ) then return end
+	x, y = self:toLocalCoords( mouse.x, mouse.y )
+	self.value = math.map( x, 1, self.w(), self.min or 0, self.max or 1 )
+	if self.callback then self:callback(self.value) end
+end
+
+setmetatable( he.slider, {
+	__index = he,
+	__call = function( _, ... ) return he.slider.new(...) end
+})
+
+he.styles.slider = {
+	background = "white",
+	color = "black",
+	sliderWidth = 5,
+}
+
+
+
 -- RETURN
 
 return he
