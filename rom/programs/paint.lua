@@ -414,7 +414,7 @@ function loadFile(p)
 	path = p
 	
 	local img = screen.loadImage(path)
-	image = screen.newCanvas( img:getDimensions() )
+	image = screen.newCanvas( img.w, img.h )
 	overlay = screen.newCanvas( image.w, image.h )
 	image:drawImage(img)
 	
@@ -492,6 +492,14 @@ end
 function draw(obj)
 	-- Background
 	screen.clear("gray-2")
+	local scale = 10
+	for x = 1, math.floor(screen.width/scale) do
+		for y = 1, math.floor(screen.height/scale) do
+			if (x+y) % 2 == 0 then
+				screen.rect( (x-1)*scale+1, (y-1)*scale+1, scale, scale, "gray-3" )
+			end
+		end
+	end
 	
 	-- Image
 	if not inMenu and image then
