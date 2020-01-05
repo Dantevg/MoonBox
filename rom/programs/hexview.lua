@@ -39,7 +39,7 @@ end
 local function redraw()
 	screen.clear()
 	local y = 1
-	for i = start, start+length, width do
+	for i = start, start + length - 1, width do
 		writeLine( i, y )
 		y = y+1
 	end
