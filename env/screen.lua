@@ -54,6 +54,16 @@ local function closestColor( r, g, b, a )
 		a
 end
 
+local function blendColors( fg, bg )
+	local a = fg[4] + bg[4] * (1-fg[4])
+	return {
+		(fg[1]*fg[4] + bg[1]*bg[4] * (1-fg[4])) / a,
+		(fg[2]*fg[4] + bg[2]*bg[4] * (1-fg[4])) / a,
+		(fg[3]*fg[4] + bg[3]*bg[4] * (1-fg[4])) / a,
+		a
+	}
+end
+
 
 
 -- VARIABLES
@@ -322,12 +332,7 @@ function screen.canvas.rect( canvas, x, y, w, h, color, filled )
 		-- Draw rectangle on image
 		for i = math.max( x, 1 ), math.min( x+w-1, screen.width ) do
 			for j = math.max( y, 1 ), math.min( y+h-1, screen.height ) do
-				local bg = { canvas.image:getPixel(i-0.5, j-0.5) }
-				local finalColor = {
-					rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
-					rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
-					rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
-				}
+				local finalColor = blendColors( rgb, {canvas.image:getPixel(i-0.5, j-0.5)} )
 				canvas.image:setPixel( i-0.5, j-0.5, closestColor(finalColor) )
 			end
 		end
@@ -362,12 +367,7 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	
 	local function point( x, y )
 		if rgb[4] ~= 1 then
-			local bg = { canvas.image:getPixel(x-0.5, y-0.5) }
-			local finalColor = {
-				rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
-				rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
-				rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
-			}
+			local finalColor = blendColors( rgba, {canvas.image:getPixel(x-0.5, y-0.5)} )
 			love.graphics.setColor(finalColor)
 		else
 			love.graphics.setColor(rgb)
@@ -456,12 +456,7 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	
 	local function pixel( x, y )
 		if rgb[4] ~= 1 then
-			local bg = { canvas.image:getPixel(x-0.5, y-0.5) }
-			local finalColor = {
-				rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
-				rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
-				rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
-			}
+			local finalColor = blendColors( rgba, {canvas.image:getPixel(x-0.5, y-0.5)} )
 			love.graphics.setColor(finalColor)
 		else
 			love.graphics.setColor(rgb)
@@ -545,12 +540,7 @@ function screen.canvas.drawImage( canvas, image, x, y, scale )
 				local screenX = x + ox*scale + (px-1) - 0.5
 				local screenY = y + oy*scale + (py-1) - 0.5
 				if screenX >= 0 and screenY >= 0 and screenX <= screen.width and screenY <= screen.height then
-					local bg = { canvas.image:getPixel(screenX, screenY) }
-					local finalColor = {
-						r * a + bg[1] * (1-a),
-						g * a + bg[2] * (1-a),
-						b * a + bg[3] * (1-a),
-					}
+					local finalColor = blendColors( {r,g,b,a}, {canvas.image:getPixel(screenX, screenY)} )
 					canvas.image:setPixel( screenX, screenY, closestColor(finalColor) )
 				end
 			end
@@ -609,12 +599,7 @@ end
 function screen.canvas.clear( canvas, color )
 	expect( color, {"string", "nil"} )
 	
-	color = getColor(color)
-	if color then
-		color[4] = 1 -- No transparency
-	else
-		color = {0,0,0,0}
-	end
+	color = getColor(color) or {0,0,0,0} -- Default to transparent black
 	
 	canvas.canvas:renderTo(function()
 		love.graphics.clear(color)
