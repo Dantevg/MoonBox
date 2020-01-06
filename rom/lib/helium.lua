@@ -422,22 +422,19 @@ end
 function he.slider:draw(parent)
 	self.parent = parent or self.parent
 	screen.rect( self.x(), self.y(), self.w(), self.h(), self.background() )
-	local x = math.map( self.value or 0, self.min or 0, self.max or 1, 0, self.w() )
-	screen.rect( self.x() + x - self.sliderWidth()/2, self.y(), self.sliderWidth(), self.h(), self.color() )
+	local x = math.map( self.value or 0, self.min or 0, self.max or 1, 0, self.w() - self.sliderWidth() )
+	screen.rect( self.x() + x, self.y(), self.sliderWidth(), self.h(), self.color() )
 end
 
-function he.slider:mouse( x, y, btn )
-	if not self:within( x, y ) then return end
-	x, y = self:toLocalCoords( x, y )
-	self.value = math.map( x, 1, self.w(), self.min or 0, self.max or 1 )
-	if self.callback then self:callback(self.value) end
-end
-function he.slider:drag( dx, dy, btn )
+function he.slider:drag()
 	if not self:within( mouse.x, mouse.y ) then return end
 	x, y = self:toLocalCoords( mouse.x, mouse.y )
-	self.value = math.map( x, 1, self.w(), self.min or 0, self.max or 1 )
+	self.value = math.map( x, self.sliderWidth()/2, self.w() - self.sliderWidth()/2, self.min or 0, self.max or 1 )
+	self.value = math.constrain( self.value, self.min or 0, self.max or 1 )
 	if self.callback then self:callback(self.value) end
 end
+
+he.slider.mouse = he.slider.drag
 
 setmetatable( he.slider, {
 	__index = he,
@@ -446,7 +443,7 @@ setmetatable( he.slider, {
 
 he.styles.slider = {
 	background = "white",
-	color = "black",
+	color = "gray",
 	sliderWidth = 5,
 }
 
