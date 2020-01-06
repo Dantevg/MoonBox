@@ -234,8 +234,8 @@ gui.paint.obj = {}
 	gui.paint.obj.picker.obj = {}
 	local Picker = gui.paint.obj.picker
 
-		Picker.obj.primary = Picker:box( 1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, Picker.w()/2 - 1, function() return primary end )
-		Picker.obj.secondary = Picker:box( Picker.w()/2+1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, Picker.w()/2 - 1, function() return secondary end )
+		Picker.obj.primary = Picker:box( 1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 10, function() return primary end )
+		Picker.obj.secondary = Picker:box( Picker.w()/2+1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 10, function() return secondary end )
 		
 		Picker.obj.opacity = Picker:slider( 1, Picker.obj.primary.y() + Picker.obj.primary.h() + 1, Picker.w() - 1, 10 )
 		Picker.obj.opacity.callback = function( self, value )
