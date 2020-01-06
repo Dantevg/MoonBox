@@ -71,7 +71,7 @@ function brushes.line.drag( dx, dy, btn )
 	local x, y = getImageCoords( mouse.x, mouse.y )
 	if not x then return end
 	overlay:clear()
-	overlay:line( xImg, yImg, x, y, "gray" )
+	overlay:line( xImg, yImg, x, y, "gray (0.5)" )
 end
 function brushes.line.mouseUp( x, y, btn )
 	local xImg, yImg = getImageCoords( mouse.x, mouse.y )
@@ -91,13 +91,18 @@ function brushes.rect.drag( dx, dy, btn )
 	brushes.rect.startX, brushes.rect.startY = xImg, yImg
 	
 	local x, y = getImageCoords( mouse.x, mouse.y )
+	if not x then return end
 	overlay:clear()
-	overlay:rect( xImg, yImg, x-xImg+1, y-yImg+1, "gray", brushes.rect.options.fill )
+	if x < xImg then x, xImg = xImg, x end
+	if y < yImg then y, yImg = yImg, y end
+	overlay:rect( xImg, yImg, x-xImg+1, y-yImg+1, "gray (0.5)", brushes.rect.options.fill )
 end
 function brushes.rect.mouseUp( x, y, btn )
 	local xImg, yImg = getImageCoords( mouse.x, mouse.y )
-	if not xImg then return end
 	local startX, startY = brushes.rect.startX, brushes.rect.startY
+	if not xImg or not startX then return end
+	if xImg < startX then startX, xImg = xImg, startX end
+	if yImg < startY then startY, yImg = yImg, startY end
 	image:rect( startX, startY, xImg-startX+1, yImg-startY+1, btn == 1 and primary or (btn == 2 and secondary), brushes.rect.options.fill )
 	overlay:clear()
 end
@@ -114,7 +119,7 @@ function brushes.circle.drag( dx, dy, btn )
 	
 	local x, y = getImageCoords( mouse.x, mouse.y )
 	overlay:clear()
-	overlay:circle( xImg, yImg, math.sqrt( (x-xImg)^2 + (y-yImg)^2 ), "gray", brushes.circle.options.fill )
+	overlay:circle( xImg, yImg, math.sqrt( (x-xImg)^2 + (y-yImg)^2 ), "gray (0.5)", brushes.circle.options.fill )
 end
 function brushes.circle.mouseUp( x, y, btn )
 	local xImg, yImg = getImageCoords( mouse.x, mouse.y )
@@ -188,9 +193,9 @@ function colourPicker:mouse( x, y, btn )
 	if not color or not brightness then return end
 	
 	if btn == 1 then
-		primary = colors.compose( color, brightness )
+		primary = colors.compose( color, brightness, gui.paint.obj.picker.obj.primaryOpacity.value )
 	elseif btn == 2 then
-		secondary = colors.compose( color, brightness )
+		secondary = colors.compose( color, brightness, gui.paint.obj.picker.obj.secondaryOpacity.value )
 	end
 end
 setmetatable( colourPicker, {
@@ -234,21 +239,28 @@ gui.paint.obj = {}
 	gui.paint.obj.picker.obj = {}
 	local Picker = gui.paint.obj.picker
 
-		Picker.obj.primary = Picker:box( 1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 10, function() return primary end )
-		Picker.obj.secondary = Picker:box( Picker.w()/2+1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 10, function() return secondary end )
+		Picker.obj.primary = Picker:box( 1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 10, function() return colors.compose( colors.getName(primary), colors.getBrightness(primary) ) end )
+		Picker.obj.secondary = Picker:box( Picker.w()/2+1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 10, function() return colors.compose( colors.getName(secondary), colors.getBrightness(secondary) ) end )
 		
-		Picker.obj.opacity = Picker:slider( 1, Picker.obj.primary.y() + Picker.obj.primary.h() + 1, Picker.w() - 1, 10 )
-		Picker.obj.opacity.callback = function( self, value )
-			-- primary = colors.compose( colors.getComponents(primary) )
+		Picker.obj.primaryOpacity = Picker:slider( 1, Picker.obj.primary.y() + Picker.obj.primary.h() + 1, Picker.w()/2 - 1, 10 )
+		Picker.obj.primaryOpacity.callback = function( self, value )
+			primary = colors.compose( colors.getName(primary), colors.getBrightness(primary), value )
 		end
+		Picker.obj.primaryOpacity.value = 1
+		
+		Picker.obj.secondaryOpacity = Picker:slider( Picker.w()/2+1, Picker.obj.primary.y() + Picker.obj.primary.h() + 1, Picker.w()/2 - 1, 10 )
+		Picker.obj.secondaryOpacity.callback = function( self, value )
+			secondary = colors.compose( colors.getName(secondary), colors.getBrightness(secondary), value )
+		end
+		Picker.obj.secondaryOpacity.value = 1
 		
 		local xOff, yOff = 2, 1
 		for b in pairs(brushes) do
-			if b ~= "drag" then
+			if brushes[b].image then
 				local y = yOff
 				local img = screen.loadImage( math.decode64(brushes[b].image) )
 				Picker.obj[b] = Picker:image( xOff, nil, img )
-				Picker.obj[b].y = function() return Picker.obj.opacity.y() + Picker.obj.opacity.h() + y end
+				Picker.obj[b].y = function() return Picker.obj.primaryOpacity.y() + Picker.obj.primaryOpacity.h() + y end
 				Picker.obj[b].mouse = function( self, x, y, btn )
 					if self:within( x, y ) then brush = b end
 				end
@@ -376,6 +388,7 @@ gui.menu.obj = {}
 		end
 		Create.obj.width.callback = function(self)
 			self:removeTag("active")
+			Create.obj.submit:callback()
 		end
 		
 		Create.obj.heightLabel = Create:text( nil, nil, "Height", "black" )
@@ -391,6 +404,7 @@ gui.menu.obj = {}
 		end
 		Create.obj.height.callback = function(self)
 			self:removeTag("active")
+			Create.obj.submit:callback()
 		end
 		
 		Create.obj.submit = Create:button( nil, nil, 50, 11, "CREATE" )
