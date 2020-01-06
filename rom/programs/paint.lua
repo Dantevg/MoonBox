@@ -536,15 +536,29 @@ function draw(obj)
 	eachObj( obj, function(obj) obj:draw() end )
 end
 
+function printUsage()
+	print("Usage:")
+	print("  paint <path>")
+	print("  paint --new <width> <height>")
+end
+
 
 
 -- RUN
 
 local arg = {...}
 if #arg > 0 then
-	local p = shell.find( arg[1] )
-	if loadFile(p) then
-		gui.menu.obj.path.obj.input.read.history[1] = p
+	if arg[1] == "--new" then
+		if #arg < 3 then
+			printUsage()
+			return
+		end
+		createImage( tonumber(arg[2]), tonumber(arg[3]) )
+	else
+		local p = shell.find( arg[1] )
+		if loadFile(p) then
+			gui.menu.obj.path.obj.input.read.history[1] = p
+		end
 	end
 end
 
