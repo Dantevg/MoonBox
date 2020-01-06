@@ -55,6 +55,9 @@ local function closestColor( r, g, b, a )
 end
 
 local function blendColors( fg, bg )
+	expect( fg, "table" )
+	expect( bg, "table" )
+	
 	local a = fg[4] + bg[4] * (1-fg[4])
 	return {
 		(fg[1]*fg[4] + bg[1]*bg[4] * (1-fg[4])) / a,
@@ -367,7 +370,7 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	
 	local function point( x, y )
 		if rgb[4] ~= 1 then
-			local finalColor = blendColors( rgba, {canvas.image:getPixel(x-0.5, y-0.5)} )
+			local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
 			love.graphics.setColor(finalColor)
 		else
 			love.graphics.setColor(rgb)
@@ -456,7 +459,7 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	
 	local function pixel( x, y )
 		if rgb[4] ~= 1 then
-			local finalColor = blendColors( rgba, {canvas.image:getPixel(x-0.5, y-0.5)} )
+			local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
 			love.graphics.setColor(finalColor)
 		else
 			love.graphics.setColor(rgb)
