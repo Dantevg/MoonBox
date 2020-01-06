@@ -540,6 +540,7 @@ function printUsage()
 	print("Usage:")
 	print("  paint <path>")
 	print("  paint --new <width> <height>")
+	running = false
 end
 
 
@@ -548,11 +549,10 @@ end
 
 local arg = {...}
 if #arg > 0 then
-	if arg[1] == "--new" then
-		if #arg < 3 then
-			printUsage()
-			return
-		end
+	if arg[1] == "-h" or arg[1] == "-?" then
+		printUsage()
+	elseif arg[1] == "--new" then
+		if #arg < 3 then printUsage() end
 		createImage( tonumber(arg[2]), tonumber(arg[3]) )
 	else
 		local p = shell.find( arg[1] )
