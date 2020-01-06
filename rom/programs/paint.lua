@@ -133,7 +133,7 @@ brushes.circle.image = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUp
 
 brushes.drag = {}
 function brushes.drag.drag( dx, dy, btn )
-	if mouse.x <= gui.paint.obj.picker.w() then return end
+	if mouse.x <= gui.paint.obj.sidebar.picker.w() then return end
 	ox, oy = ox + dx/zoomInt, oy + dy/zoomInt
 end
 
@@ -145,57 +145,39 @@ he.w = function() return screen.width end
 he.h = function() return screen.height end
 
 local colourPicker = {}
-function colourPicker.new( p, x, y, w, h )
+function colourPicker.new( p, x, y )
 	local obj = {}
 	
-	obj.rainbow = {}
-	for name, color in pairs(screen.colors) do
-		table.insert( obj.rainbow, name )
-	end
-	-- Sorts by hue, if same hue sorts by saturisation, if same saturisation sorts by lightness
-	-- Welcome to ternary hell ;)
-	table.sort( obj.rainbow, function(a,b)
-		return ({colors.hsl(a)})[1] == ({colors.hsl(b)})[1]
-			and ( ({colors.hsl(a)})[2] == ({colors.hsl(b)})[2]
-				and ({colors.hsl(a)})[3] > ({colors.hsl(b)})[3] -- Lightness
-				or ({colors.hsl(a)})[2] < ({colors.hsl(b)})[2] ) -- Saturisation
-			or colors.hsl(a) < colors.hsl(b) -- Hue
-		end )
+	obj.palette = screen.loadImage(math.decode64("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAxElEQVR4nBXMwWrCMBwH4F9IiyGjlMZOiXbLQQn8CVQheJJCJp58qj3Rjr6A57HjjruIXraCoIVRZp3nDz4GwEP6WAQZByX1zGBusd5wIoqv54eMX3L+M+anSV+UJrEm+od6/0kC1RD0DF3E4AKtjcqyfP940x7pHHIJuBSqaIDIOfeqRttUZrxnpAi/tMBwiuRe4aT/av/dTK9H4slA6kcBsK7rxv2XXAWZV4pWvgI52CdEjDHDvW4PptmFBr4m+6UR2hvzoS5T9lWhpgAAAABJRU5ErkJggg=="))
+	obj.clear = screen.loadImage(math.decode64("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEUAAADmISHI/hBgAAAAEElEQVR4nGPwZJjEoMIAJwEV/QLaT6caBgAAAABJRU5ErkJggg=="))
 	
 	obj.parent = p
 	obj.styles = obj.parent.styles
 	obj.tags = {"colourPicker", "*"}
 	obj.x = helium.make.x(obj, x)
 	obj.y = helium.make.y(obj, y)
-	obj.w = helium.proxy( w * 7 )
-	obj.h = helium.proxy( h * #obj.rainbow )
-	
-	obj.wColour = helium.proxy(w)
-	obj.hColour = helium.proxy(h)
+	obj.w = helium.proxy( obj.palette.w*8+1 )
+	obj.h = helium.proxy( obj.palette.h*8 )
 	
 	return setmetatable( obj, {__index = colourPicker} )
 end
 function colourPicker:draw(parent)
 	self.parent = parent or self.parent
 	screen.rect( self.x(), self.y(), self.w(), self.h(), "black" )
-	for i = 1, #self.rainbow do
-		for brightness = -3, 3 do
-			screen.rect( (brightness+3)*self.wColour(), (i-1)*self.hColour(), self.wColour(), self.hColour(), colors.compose(self.rainbow[i], brightness) )
-		end
-	end
+	screen.drawImage( self.palette, 1, 1, 8 )
+	screen.drawImage( self.clear, 1, 57 )
 end
 function colourPicker:mouse( x, y, btn )
 	if not self:within( x, y ) then return end
 	x, y = self:toLocalCoords( x, y )
 	
-	local color = self.rainbow[ math.floor(y/self.hColour())+1 ]
-	local brightness = math.floor(x/self.wColour()) - 3
-	if not color or not brightness then return end
+	local c = colors.color( self.palette.image:getPixel(x/8, y/8) )
+	local color, brightness = colors.getName(c), colors.getBrightness(c)
 	
 	if btn == 1 then
-		primary = colors.compose( color, brightness, gui.paint.obj.picker.obj.primaryOpacity.value )
+		primary = colors.compose( color, brightness, gui.paint.obj.sidebar.obj.picker.obj.primaryOpacity.value )
 	elseif btn == 2 then
-		secondary = colors.compose( color, brightness, gui.paint.obj.picker.obj.secondaryOpacity.value )
+		secondary = colors.compose( color, brightness, gui.paint.obj.sidebar.obj.picker.obj.secondaryOpacity.value )
 	end
 end
 setmetatable( colourPicker, {
@@ -233,14 +215,18 @@ he.styles.button = {
 gui.paint = he:box( 1, 1, nil, nil, "black (0)" )
 gui.paint:autosize( "wh", he )
 gui.paint.obj = {}
+	
+	gui.paint.obj.sidebar = gui.paint:box( 1, 1, 65, nil, "black" )
+	gui.paint.obj.sidebar.h = function() return gui.paint.h() - 10 end
+	gui.paint.obj.sidebar.obj = {}
 
-	gui.paint.obj.picker = colourPicker( gui.paint, 1, 1, 5, 10 )
-	gui.paint.obj.picker.h = function() return he.h() - 10 end
-	gui.paint.obj.picker.obj = {}
-	local Picker = gui.paint.obj.picker
+	gui.paint.obj.sidebar.obj.picker = colourPicker( gui.paint.obj.sidebar, 1, 1 )
+	-- gui.paint.obj.sidebar.obj.picker.h = function() return he.h() - 10 end
+	gui.paint.obj.sidebar.obj.picker.obj = {}
+	local Picker = gui.paint.obj.sidebar.obj.picker
 
-		Picker.obj.primary = Picker:box( 1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 10, function() return colors.compose( colors.getName(primary), colors.getBrightness(primary) ) end )
-		Picker.obj.secondary = Picker:box( Picker.w()/2+1, Picker.hColour() * #Picker.rainbow + 1, Picker.w()/2 - 1, 10, function() return colors.compose( colors.getName(secondary), colors.getBrightness(secondary) ) end )
+		Picker.obj.primary = Picker:box( 1, Picker.x() + Picker.h() + 1, Picker.w()/2 - 1, 10, function() return colors.compose( colors.getName(primary), colors.getBrightness(primary) ) end )
+		Picker.obj.secondary = Picker:box( Picker.w()/2+1, Picker.x() + Picker.h() + 1, Picker.w()/2 - 1, 10, function() return colors.compose( colors.getName(secondary), colors.getBrightness(secondary) ) end )
 		
 		Picker.obj.primaryOpacity = Picker:slider( 1, Picker.obj.primary.y() + Picker.obj.primary.h() + 1, Picker.w()/2 - 1, 10 )
 		Picker.obj.primaryOpacity.callback = function( self, value )
@@ -254,7 +240,7 @@ gui.paint.obj = {}
 		end
 		Picker.obj.secondaryOpacity.value = 1
 		
-		local xOff, yOff = 2, 1
+		local xOff, yOff = 1, 1
 		for b in pairs(brushes) do
 			if brushes[b].image then
 				local y = yOff
@@ -266,7 +252,7 @@ gui.paint.obj = {}
 				end
 				xOff = xOff + img.w + 1
 				if xOff + img.w > Picker.w() then
-					xOff = 2
+					xOff = 1
 					yOff = yOff + img.h + 1
 				end
 			end
@@ -453,8 +439,8 @@ function saveFile(p)
 end
 
 function getImageCoords( x, y )
-	if x > gui.paint.obj.picker.w() and y < screen.height-10 and image then -- Drawing area
-		local xImg = math.ceil( (x-gui.paint.obj.picker.w()) / zoomInt - ox + 1 )
+	if x > gui.paint.obj.sidebar.obj.picker.w() and y < screen.height-10 and image then -- Drawing area
+		local xImg = math.ceil( (x-gui.paint.obj.sidebar.obj.picker.w()) / zoomInt - ox + 1 )
 		local yImg = math.ceil( y / zoomInt - oy + 1 )
 		if xImg <= image.w and yImg <= image.h then
 			return xImg, yImg
@@ -477,7 +463,7 @@ function events.key(key)
 end
 
 function events.mouse( x, y, btn )
-	-- gui.paint.obj.picker:mouse( x, y, btn )
+	-- gui.paint.obj.sidebar.obj.picker:mouse( x, y, btn )
 	eachObj( gui.menu, function(obj)
 		if obj:hasTag("input") and obj:hasTag("active") then
 			obj:removeTag("active")
@@ -524,11 +510,11 @@ function draw(obj)
 	-- Image
 	if not inMenu and image then
 		if event.keyDown("m") then
-			image:draw( gui.paint.obj.picker.w(), 1, 0.2 )
-			if overlay then overlay:draw( gui.paint.obj.picker.w(), 1, 0.2 ) end
+			image:draw( gui.paint.obj.sidebar.obj.picker.w(), 1, 0.2 )
+			if overlay then overlay:draw( gui.paint.obj.sidebar.obj.picker.w(), 1, 0.2 ) end
 		else
-			image:draw( gui.paint.obj.picker.w() + (ox-1)*zoomInt + 1, (oy-1)*zoomInt + 1, zoomInt )
-			if overlay then overlay:draw( gui.paint.obj.picker.w() + (ox-1)*zoomInt + 1, (oy-1)*zoomInt + 1, zoomInt ) end
+			image:draw( gui.paint.obj.sidebar.obj.picker.w() + (ox-1)*zoomInt + 1, (oy-1)*zoomInt + 1, zoomInt )
+			if overlay then overlay:draw( gui.paint.obj.sidebar.obj.picker.w() + (ox-1)*zoomInt + 1, (oy-1)*zoomInt + 1, zoomInt ) end
 		end
 	end
 	
