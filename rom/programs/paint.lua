@@ -11,6 +11,7 @@
 
 local he = helium.new( 1, 1, screen.width, screen.height )
 local gui = {}
+local obj = {}
 local brushes = {}
 local margin = 10
 local bgScale = 10
@@ -148,7 +149,9 @@ local colourPicker = {}
 function colourPicker.new( p, x, y )
 	local obj = {}
 	
+	-- 8x8 Base64 encoded palette image (to be scaled up x8)
 	obj.palette = screen.loadImage(math.decode64("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAxElEQVR4nBXMwWrCMBwH4F9IiyGjlMZOiXbLQQn8CVQheJJCJp58qj3Rjr6A57HjjruIXraCoIVRZp3nDz4GwEP6WAQZByX1zGBusd5wIoqv54eMX3L+M+anSV+UJrEm+od6/0kC1RD0DF3E4AKtjcqyfP940x7pHHIJuBSqaIDIOfeqRttUZrxnpAi/tMBwiuRe4aT/av/dTK9H4slA6kcBsK7rxv2XXAWZV4pWvgI52CdEjDHDvW4PptmFBr4m+6UR2hvzoS5T9lWhpgAAAABJRU5ErkJggg=="))
+	-- 8x8 Base64 encoded clear image (not to be scaled)
 	obj.clear = screen.loadImage(math.decode64("iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEUAAADmISHI/hBgAAAAEElEQVR4nGPwZJjEoMIAJwEV/QLaT6caBgAAAABJRU5ErkJggg=="))
 	
 	obj.parent = p
