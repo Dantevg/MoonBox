@@ -560,10 +560,10 @@ function screen.canvas.drawImage( canvas, image, x, y, scale )
 	end)
 end
 
-function screen.canvas.tabulate( canvas, elements, nColumns, horizontal, fn )
+function screen.canvas.tabulate( canvas, elements, nColumns, vertical, fn )
 	expect( elements, "table", 1, "screen.tabulate" )
 	expect( nColumns, {"number", "nil"}, 2, "screen.tabulate" )
-	expect( horizontal, {"boolean", "nil"}, 3, "screen.tabulate" )
+	expect( vertical, {"boolean", "nil"}, 3, "screen.tabulate" )
 	expect( fn, {"function", "nil"}, 4, "screen.tabulate" )
 	
 	local columnWidth = 0
@@ -571,15 +571,15 @@ function screen.canvas.tabulate( canvas, elements, nColumns, horizontal, fn )
 		columnWidth = math.max( columnWidth, #v )
 	end
 	nColumns = nColumns or math.floor( screen.width / (screen.font.width+1) / (columnWidth+2) )
-	nRows = #elements / nColumns
+	nRows = math.ceil(#elements / nColumns)
 	
 	local x, y = screen.pos.x, screen.pos.y
 	for k, v in pairs(elements) do
-		if horizontal then
+		if not vertical then
 			screen.pos.x = x + (screen.font.width+1) * ((k-1) % nColumns) * (columnWidth+2)
 			screen.pos.y = y + (screen.font.height+1) * math.floor((k-1)/nColumns)
 		else
-			screen.pos.x = x + (screen.font.width+1) * (k-1) * (columnWidth+2)
+			screen.pos.x = x + (screen.font.width+1) * math.floor((k-1)/nRows) * (columnWidth+2)
 			screen.pos.y = y + (screen.font.height+1) * math.floor((k-1) % nRows)
 		end
 		while screen.pos.y + screen.font.height > screen.height do
@@ -594,7 +594,7 @@ function screen.canvas.tabulate( canvas, elements, nColumns, horizontal, fn )
 	end
 	
 	screen.canvas.print(canvas)
-	if not horizontal and nColumns > 1 and #elements > nColumns then
+	if vertical and nColumns > 1 and (#elements / nRows) % 1 ~= 0 then
 		screen.canvas.print(canvas)
 	end
 end
