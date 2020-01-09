@@ -575,12 +575,12 @@ function screen.canvas.tabulate( canvas, elements, nColumns, vertical, fn )
 	
 	local x, y = screen.pos.x, screen.pos.y
 	for k, v in pairs(elements) do
-		if not vertical then
-			screen.pos.x = x + (screen.font.width+1) * ((k-1) % nColumns) * (columnWidth+2)
-			screen.pos.y = y + (screen.font.height+1) * math.floor((k-1)/nColumns)
-		else
+		if vertical then
 			screen.pos.x = x + (screen.font.width+1) * math.floor((k-1)/nRows) * (columnWidth+2)
 			screen.pos.y = y + (screen.font.height+1) * math.floor((k-1) % nRows)
+		else
+			screen.pos.x = x + (screen.font.width+1) * ((k-1) % nColumns) * (columnWidth+2)
+			screen.pos.y = y + (screen.font.height+1) * math.floor((k-1)/nColumns)
 		end
 		while screen.pos.y + screen.font.height > screen.height do
 			screen.canvas.move( canvas, 0, -screen.font.height-1 )
