@@ -116,7 +116,7 @@ function colors.color( r, g, b, a )
 	expect( r, {"number", "table"}, 1, "colors.hsl" )
 	if type(a) == "number" then
 		expect( g, "number", 2, "colors.hsl" )
-		expect( g, "number", 2, "colors.hsl" )
+		expect( b, "number", 3, "colors.hsl" )
 		expect( a, "number", 4, "colors.hsl" )
 	end
 	
