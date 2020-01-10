@@ -44,6 +44,7 @@ function sandbox:createEnv( env, loadGeneral )
 	end
 	
 	-- Set shortcuts, _G and options
+	self.env.log = print
 	self.env.print = self.env.screen.print
 	self.env._G = self.env
 	self.env.screen.colors = self.env.screen.colors64
@@ -105,6 +106,29 @@ function sandbox:start(bootPath)
 		end
 	end
 	
+	function self.hook2(event, ...)
+		local info = event.." "
+	
+		local caller = debug.getinfo(2)
+	
+		if caller then
+			info = info .. caller.what.."\t"
+			if caller.what == "C" then
+				info = info .. "\t"..caller.namewhat.." "..(caller.name or "[no name]")
+			else
+				if string.sub( caller.source, 1, 1 ) == "@" then
+					info = info .. "./"..caller.short_src..":"..caller.currentline
+				else
+					info = info .. caller.short_src..":"..caller.currentline
+				end
+				info = info .. ": "..caller.namewhat.." "..(caller.name or "[no name]")
+				info = info .. " ("..caller.linedefined.." - "..caller.lastlinedefined..")"
+			end
+		end
+	
+		print(info)
+	end
+	
 	self:resume()
 end
 
@@ -116,6 +140,7 @@ function sandbox:resume(...)
 	end
 	
 	debug.sethook( self.co, self.hook, "", 1000 ) -- Activate infinite loop hook
+	-- debug.sethook( self.co, self.hook2, "crl", 0 ) -- Activate log hook
 	self.chunkTime = love.timer.getTime() -- Reset starting time
 	local ok, result = coroutine.resume( self.co, ... )
 	debug.sethook(self.co) -- Reset hook
