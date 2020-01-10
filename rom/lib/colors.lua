@@ -138,7 +138,7 @@ function colors.color( r, g, b, a )
 	local minName, minBrightness, minDist
 	for name, v in pairs(screen.colors) do
 		for brightness, color in ipairs(v) do
-			local dist = math.sqrt( (color[1]-r)^2 + (color[2]-g)^2 + (color[3]-b)^2 )
+			local dist = (color[1]-r)^2 + (color[2]-g)^2 + (color[3]-b)^2
 			if not minDist or dist < minDist then
 				minDist = dist
 				minName, minBrightness = name, brightness-4
