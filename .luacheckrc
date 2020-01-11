@@ -5,8 +5,9 @@ allow_defined_top = true
 globals = {
 	"disk", "event", "mouse", "net", "os", "screen",
 	"colors", "helium", "shell", "socket", "math",
-	"read", "expect", "table.serialize"
+	"read", "expect", "table.serialize", "log"
 }
 std = "+love"
 
 files["rom/*.lua"].globals = {"settings", "computer"}
+files["sandbox.lua"].globals = {"settings", "computer"}

@@ -51,6 +51,8 @@ function sandbox:createEnv( env, loadGeneral )
 	self.env.shell.traceback = false
 	
 	setmetatable( self.env, env and {__index = env} or nil )
+	
+	log( "Created sandbox env", 3 )
 end
 
 function sandbox.new( env, loadGeneral )
@@ -106,27 +108,30 @@ function sandbox:start(bootPath)
 		end
 	end
 	
-	function self.hook2(event, ...)
-		local info = event.." "
-	
+	function self.loghook(trigger)
+		local info = trigger.." "
 		local caller = debug.getinfo(2)
-	
-		if caller then
-			info = info .. caller.what.."\t"
-			if caller.what == "C" then
-				info = info .. "\t"..caller.namewhat.." "..(caller.name or "[no name]")
-			else
-				if string.sub( caller.source, 1, 1 ) == "@" then
-					info = info .. "./"..caller.short_src..":"..caller.currentline
-				else
-					info = info .. caller.short_src..":"..caller.currentline
-				end
-				info = info .. ": "..caller.namewhat.." "..(caller.name or "[no name]")
-				info = info .. " ("..caller.linedefined.." - "..caller.lastlinedefined..")"
+		if not caller then return end
+		if caller.source == "@main.lua" then -- Filter out expect function, as it will fill the log
+			if caller.name == "expect" or caller.name == "correct" or caller.name == "concat" or caller.name == "makeError" then
+				return
 			end
 		end
-	
-		print(info)
+		
+		info = info .. caller.what.."\t"
+		if caller.what == "C" then
+			info = info .. "\t"..caller.namewhat.." "..(caller.name or "[no name]")
+		else
+			if string.sub( caller.source, 1, 1 ) == "@" then -- File source
+				info = info .. caller.short_src..":"..caller.currentline
+			else -- Non-file source
+				info = info .. caller.short_src..":"..caller.currentline
+			end
+			info = info .. ": "..caller.namewhat.." "..(caller.name or "[no name]")
+			info = info .. " ("..caller.linedefined.." - "..caller.lastlinedefined..")"
+		end
+		
+		log( info, trigger=="line" and 0 or 1 )
 	end
 	
 	self:resume()
@@ -140,7 +145,11 @@ function sandbox:resume(...)
 	end
 	
 	debug.sethook( self.co, self.hook, "", 1000 ) -- Activate infinite loop hook
-	-- debug.sethook( self.co, self.hook2, "crl", 0 ) -- Activate log hook
+	if settings.logLevel == 1 then
+		debug.sethook( self.co, self.loghook, "cr", 0 ) -- Activate log hook without line
+	elseif settings.logLevel <= 0 then
+		debug.sethook( self.co, self.loghook, "crl", 0 ) -- Activate log hook
+	end
 	self.chunkTime = love.timer.getTime() -- Reset starting time
 	local ok, result = coroutine.resume( self.co, ... )
 	debug.sethook(self.co) -- Reset hook

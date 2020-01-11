@@ -18,7 +18,8 @@ settings = {
 	fullscreen = false,
 	border = 1,
 	screenshotScale = 4,
-	screenshotBorder = true
+	screenshotBorder = true,
+	logLevel = 3 -- 0 (all), 1 (no line hook), 2 (no debug), 3 (no events), 4 (only boot/resize/...)
 }
 
 
@@ -111,6 +112,12 @@ function table.serialize( t, level )
 	return s..string.rep("  ", level-1).."}"
 end
 
+function log( msg, level )
+	if level >= settings.logLevel then
+		print( string.rep("#",level).."\t"..msg )
+	end
+end
+
 function setWindow(s)
 	s = s or {}
 	local _, _, window = love.window.getMode()
@@ -125,6 +132,8 @@ function setWindow(s)
 			resizable = true,
 		}
 	)
+	
+	log( "Reload window", 3 )
 end
 
 function loadSettings()
@@ -148,15 +157,20 @@ function loadSettings()
 	for k, v in pairs(settings) do
 		settings[k] = user[k] or settings[k]
 	end
+	
+	log( "Loaded settings", 3 )
 end
 
 function love.load()
+	print()
+	log( "Booting MoonBox", 4 )
 	loadSettings()
 	setWindow()
 	
 	if not love.filesystem.getInfo("disk1") or love.filesystem.getInfo("disk1").type ~= "directory" then
 		firstBoot = true
 		love.filesystem.createDirectory("disk1")
+		log( "Created directory disk1", 3 )
 	end
 	
 	love.keyboard.setKeyRepeat(true)
@@ -214,6 +228,7 @@ function love.update(dt)
 	while #active.eventBuffer > 0 do
 		-- table.insert( active.events[#active.events], active.eventBuffer[1][1] ) -- For event debugging
 		if active.eventBuffer[1][1] == "reboot" then
+			log( "Reboot", 4 )
 			love.load()
 			return
 		elseif active.eventFilter == "elevateRequest" then
@@ -230,6 +245,7 @@ function love.update(dt)
 			elevated = nil
 			return
 		elseif active.eventFilter == nil or active.eventFilter == active.eventBuffer[1][1] or active.eventBuffer[1][1] == "terminate" then
+			log( "Return event\t"..table.concat(active.eventBuffer[1], "\t"), 2 )
 			active:resume( unpack(active.eventBuffer[1]) )
 		end
 		table.remove( active.eventBuffer, 1 )
@@ -440,4 +456,5 @@ function love.resize( w, h )
 	end
 	resize(computer)
 	resize(menu)
+	log( "Resized", 4 )
 end
