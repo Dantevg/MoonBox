@@ -261,6 +261,7 @@ function love.draw()
 		love.graphics.printf( "Error:", 50, math.floor( h/2-95 ), w-100, "center" )
 		love.graphics.printf( active.error, 50, math.floor( h/2-75 ), w-100, "center" )
 	else
+		love.graphics.setBackgroundColor( 0, 0, 0 )
 		local border = settings.border*settings.scale
 		love.graphics.setColor( 1,1,1,1 )
 		if active == menu then
