@@ -86,22 +86,21 @@ function colors.hsl( r, g, b, a )
 		r, g, b = screen.colors[name][brightness][1]/255, screen.colors[name][brightness][2]/255, screen.colors[name][brightness][3]/255
 	end
 	
-	-- https://github.com/EmmanuelOga/columns/blob/master/utils/color.lua
+	-- https://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
 	local max, min = math.max(r, g, b), math.min(r, g, b)
-	local h, s, l
-
-	l = (max + min) / 2
+	local h, s, l = nil, nil, (max + min) / 2
 
 	if max == min then
 		h, s = 0, 0 -- achromatic
 	else
 		local d = max - min
-		if l > 0.5 then s = d / (2 - max - min) else s = d / (max + min) end
+		s = (l > 0.5) and d / (2 - max - min) or d / (max + min)
 		if max == r then
-			h = (g - b) / d
-			if g < b then h = h + 6 end
-		elseif max == g then h = (b - r) / d + 2
-		elseif max == b then h = (r - g) / d + 4
+			h = (g - b) / d + (g<b and 6 or 0)
+		elseif max == g then
+			h = (b - r) / d + 2
+		elseif max == b then
+			h = (r - g) / d + 4
 		end
 		h = h / 6
 	end
