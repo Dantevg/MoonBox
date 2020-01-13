@@ -3,7 +3,7 @@
 	Read lib / hybrid function
 	Gets keyboard input from the user
 	
-	This lib acis like a function, so
+	This lib acts like a function, so
 		- read() just works like before, the traditional way. It halts the program until enter is pressed
 		- read( _, true ) returns a read object, which can be called in a loop, just like the original read function does
 	
