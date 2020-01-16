@@ -17,12 +17,8 @@ local love = args[2]
 local function getColor(color)
 	local c = colors.rgb(color)
 	if not c then return end
-	return {
-		c[1]/255,
-		c[2]/255,
-		c[3]/255,
-		c[4]
-	}
+	c.rgb = c.rgb / 255
+	return c
 end
 
 local function closestColor( r, g, b, a )
@@ -146,8 +142,8 @@ function screen.canvas.pixel( canvas, x, y, color )
 	
 	local rgb = getColor( color or screen.color )
 	if not rgb then error( "No such color", 2 ) end
-	if rgb[4] ~= 1 then -- Partially transparent, blend with background
-		color = colors.blend( color, rgb[4], screen.canvas.getPixel( canvas, x, y ) )
+	if rgb.a ~= 1 then -- Partially transparent, blend with background
+		color = colors.blend( color, rgb.a, screen.canvas.getPixel( canvas, x, y ) )
 		rgb = getColor(color)
 	end
 	
@@ -166,7 +162,7 @@ function screen.canvas.char( canvas, char, x, y, color )
 	x, y = x or screen.pos.x, y or screen.pos.y
 	local rgb = getColor(color) or getColor(screen.color)
 	
-	if rgb[4] ~= 1 then -- Partially transparent
+	if rgb.a ~= 1 then -- Partially transparent
 		-- Update the screen image
 		canvas.image = canvas.canvas:newImageData()
 		canvas.imageFrame = computer.currentFrame
@@ -309,7 +305,7 @@ function screen.canvas.rect( canvas, x, y, w, h, color, filled )
 	
 	local rgb = getColor(color) or getColor(screen.background)
 	
-	if rgb[4] == 1 then -- Not transparent, use simple faster method
+	if rgb.a == 1 then -- Not transparent, use simple faster method
 		canvas.canvas:renderTo(function()
 			love.graphics.setColor(rgb)
 			if filled ~= false then
@@ -318,7 +314,7 @@ function screen.canvas.rect( canvas, x, y, w, h, color, filled )
 				love.graphics.rectangle( "line", x-0.5, y-0.5, w-1, h-1 )
 			end
 		end)
-	elseif rgb[4] ~= 0 and filled ~= false then -- Partially transparent, use slow method
+	elseif rgb.a ~= 0 and filled ~= false then -- Partially transparent, use slow method
 		-- Update the screen image
 		canvas.image = canvas.canvas:newImageData()
 		canvas.imageFrame = computer.currentFrame
@@ -337,7 +333,7 @@ function screen.canvas.rect( canvas, x, y, w, h, color, filled )
 			love.graphics.setColor( 1, 1, 1, 1 )
 			love.graphics.draw(image)
 		end)
-	elseif rgb[4] ~= 0 and filled == false then
+	elseif rgb.a ~= 0 and filled == false then
 		screen.canvas.line( canvas, x+1, y, x+w-1, y, color )
 		screen.canvas.line( canvas, x+w-1, y+1, x+w-1, y+h-1, color )
 		screen.canvas.line( canvas, x, y+h-1, x+w-2, y+h-1, color )
@@ -354,13 +350,13 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	
 	local rgb = getColor(color) or getColor(screen.color)
 	
-	if rgb[4] ~= 1 then -- Partially transparent, update screen image
+	if rgb.a ~= 1 then -- Partially transparent, update screen image
 		canvas.image = canvas.canvas:newImageData()
 		canvas.imageFrame = computer.currentFrame
 	end
 	
 	local function point( x, y )
-		if rgb[4] ~= 1 then
+		if rgb.a ~= 1 then
 			local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
 			love.graphics.setColor(finalColor)
 		else
@@ -439,7 +435,7 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	xc, yc = xc or screen.pos.x, yc or screen.pos.y
 	local rgb = getColor(color) or getColor(screen.color)
 	
-	if rgb[4] ~= 1 and not filled then -- Partially transparent, update screen image
+	if rgb.a ~= 1 and not filled then -- Partially transparent, update screen image
 		canvas.image = canvas.canvas:newImageData()
 		canvas.imageFrame = computer.currentFrame
 	end
@@ -449,7 +445,7 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	local err = -r
 	
 	local function pixel( x, y )
-		if rgb[4] ~= 1 then
+		if rgb.a ~= 1 then
 			local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
 			love.graphics.setColor(finalColor)
 		else
@@ -516,13 +512,14 @@ function screen.canvas.drawImage( canvas, image, x, y, scale )
 		local h = math.floor( oldImage:getHeight()*scale )
 		image = love.image.newImageData( w, h )
 		image:mapPixel(function( ox, oy, r, g, b, a )
+			local colour = swizzle(r,g,b,a)
 			for i = 1, math.floor(1/scale) do
 				for j = 1, math.floor(1/scale) do
-					big = { oldImage:getPixel( (ox/scale)+i-1, (oy/scale)+j-1 ) }
-					r, g, b, a = r+big[1], g+big[2], b+big[3], a+big[4]
+					big = swizzle{ oldImage:getPixel( (ox/scale)+i-1, (oy/scale)+j-1 ) }
+					colour = colour + big
 				end
 			end
-			return r*scale^2, g*scale^2, b*scale^2, a*scale^2
+			return unpack( colour * scale^2 )
 		end)
 		scale = 1
 	end
