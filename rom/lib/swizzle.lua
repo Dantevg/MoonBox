@@ -1,10 +1,8 @@
 --[[
 	
-	Swizze masking lib
-	Provides swizzle masking functionality like in GLSL
-	(eg. colour[1] == colour.r, pos[2] == pos.y)
-	
-	* This lib only provides swizzle *masking*, not the swizzling itself (like pos1 = pos2.yx)
+	Swizzle lib
+	Provides swizzling functionality like in GLSL
+	(eg. colour[1] == colour.r, pos.xy = pos.yx)
 	
 	I tried to make this lib as adaptive as possible, combining all coding styles
 	to make everybody happy :)
@@ -21,16 +19,18 @@
 		swizzle.set( t, ... ), swizzle.set( t, {...} ),
 		t:set(...), t:set({...}), t:set{...},
 		t.set(...), t.set({...}), t.set{...}
+	- Attempts to replace parts of a swizzled table with a different number of values results in an error:
+		t.rgb = t.rgba --> Swizzle count mismatch
 	
 ]]--
 
 local swizzle = {}
 
-swizzle.map = {
+swizzle.mask = {
 	r = 1, g = 2, b = 3, a = 4, -- RGBA colour
 	h = 1, s = 2, l = 3, a = 4, -- HSLA colour
-	x = 1, y = 2, z = 3,				-- XYZ coordinates
-	w = 1, h = 2								-- W/H sizes
+	x = 1, y = 2, z = 3,        -- XYZ coordinates
+	w = 1, h = 2                -- W/H sizes
 }
 
 
@@ -65,17 +65,45 @@ swizzle.mt = {}
 swizzle.mt.swizzle = true
 
 function swizzle.mt.__index( t, k )
-	if swizzle.map[k] and t[ swizzle.map[k] ] then
-		return t[ swizzle.map[k] ]
-	end
 	if k == "set" then
 		return swizzle.set
+	end
+	
+	if type(k) ~= "string" then return nil end
+	
+	if #k == 1 then
+		local index = swizzle.mask[k]
+		if index then
+			return t[index]
+		end
+	else
+		local r = {}
+		for i = 1, #k do
+			local index = swizzle.mask[ string.sub(k,i,i) ]
+			if index then
+				r[i] = t[index]
+			else
+				error( "Invalid swizzle mask", 2 )
+			end
+		end
+		return setmetatable( r, swizzle.mt )
 	end
 end
 
 function swizzle.mt.__newindex( t, k, v )
-	if swizzle.map[k] then
-		t[ swizzle.map[k] ] = v
+	if #k == 1 then
+		local index = swizzle.mask[k]
+		if index then
+			t[index] = v
+		end
+	else
+		if type(v) ~= "table" or #k ~= #v then error( "Swizzle count mismatch", 2 ) end
+		for i = 1, #k do
+			local index = swizzle.mask[ string.sub(k,i,i) ]
+			if index then
+				t[index] = v[i]
+			end
+		end
 	end
 end
 
