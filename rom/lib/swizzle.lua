@@ -54,6 +54,7 @@ local function mtFn( a, b, fn )
 		end
 	end
 	
+	t.set = function(...) return swizzle.set(t,...) end
 	return setmetatable( t, swizzle.mt )
 end
 
@@ -65,10 +66,6 @@ swizzle.mt = {}
 swizzle.mt.swizzle = true
 
 function swizzle.mt.__index( t, k )
-	if k == "set" then
-		return swizzle.set
-	end
-	
 	if type(k) ~= "string" then return nil end
 	
 	if #k == 1 then
@@ -86,6 +83,7 @@ function swizzle.mt.__index( t, k )
 				error( "Invalid swizzle mask", 2 )
 			end
 		end
+		t.set = function(...) return swizzle.set(t,...) end
 		return setmetatable( r, swizzle.mt )
 	end
 end
@@ -157,7 +155,7 @@ function swizzle.new(...)
 		arg.set = function(...) return swizzle.set(arg,...) end
 		return setmetatable( arg, swizzle.mt )
 	else
-		arg[1].set = function(...) return swizzle.set(arg,...) end
+		arg[1].set = function(...) return swizzle.set(arg[1],...) end
 		return setmetatable( arg[1], swizzle.mt )
 	end
 end
@@ -169,8 +167,12 @@ function swizzle.set( t, ... )
 		data = arg
 	end
 	
+	if type(data[1]) == "table" then
+		t = table.remove( data, 1 )
+	end
+	
 	for i = 1, math.max( #data, #t ) do
-		t[i] = data[i]
+		rawset( t, i, data[i] )
 	end
 end
 
