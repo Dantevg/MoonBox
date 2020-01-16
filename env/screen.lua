@@ -71,16 +71,8 @@ end
 
 -- VARIABLES
 
-screen.pos = {
-	x = 1,
-	y = 1
-}
 screen.width = computer.screen.w
 screen.height = computer.screen.h
-screen.color = "white"
-screen.background = "black"
-
-screen.font = {}
 
 screen.colors64 = {
 	red    = { {51, 0,  10 }, {102,5,  18 }, {166,15, 23 }, {230,33, 33 }, {255,80, 64 }, {255,128,102}, {255,196,176} },
