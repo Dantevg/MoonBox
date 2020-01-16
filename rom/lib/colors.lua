@@ -10,12 +10,8 @@ local colors = {}
 local function getColor(color)
 	local c = colors.rgb(color)
 	if not c then return end
-	return {
-		c[1]/255,
-		c[2]/255,
-		c[3]/255,
-		c[4]
-	}
+	c.rgb = c.rgb / 255
+	return c
 end
 
 
@@ -47,7 +43,7 @@ function colors.rgb(color)
 		return nil
 	end
 	
-	return {
+	return swizzle{
 		screen.colors[name][brightness][1],
 		screen.colors[name][brightness][2],
 		screen.colors[name][brightness][3],
@@ -253,13 +249,9 @@ function colors.blend( fg, a, bg )
 		error( "No such color", 2 )
 	end
 	
-	local result = {
-		fg[1] * a + bg[1] * (1-a),
-		fg[2] * a + bg[2] * (1-a),
-		fg[3] * a + bg[3] * (1-a),
-	}
+	local result = fg * a + bg * (1-a)
 	
-	return colors.color( result[1]*255, result[2]*255, result[3]*255 )
+	return colors.color( result.rgb*255 )
 end
 
 
