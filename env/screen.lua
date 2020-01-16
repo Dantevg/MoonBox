@@ -279,8 +279,7 @@ function screen.canvas.write( canvas, text, a, b )
 			nextCharPos()
 		end
 	end
-	screen.pos.x = x
-	screen.pos.y = y
+	screen.pos.set(x,y)
 	
 	return scroll
 end
@@ -616,8 +615,7 @@ function screen.canvas.move( canvas, x, y )
 	
 	canvas.canvas = newCanvas
 	canvas.canvas:setFilter( "linear", "nearest" )
-	screen.pos.x = screen.pos.x + x
-	screen.pos.y = screen.pos.y + y
+	screen.pos = screen.pos + {x,y}
 end
 
 function screen.canvas.cursor( canvas, x, y, color )
@@ -636,7 +634,7 @@ function screen.setPixelPos( x, y )
 	expect( x, "number" )
 	expect( y, "number" )
 	
-	screen.pos.x, screen.pos.y = x, y
+	screen.pos.set(x,y)
 end
 
 function screen.getPixelPos( x, y )

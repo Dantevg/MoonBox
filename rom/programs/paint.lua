@@ -470,7 +470,7 @@ function events.key(key)
 		inMenu = not inMenu
 	elseif key == "q" and event.keyDown("ctrl") then
 		screen.clear()
-		screen.pos = {x=1,y=1}
+		screen.pos.set(1,1)
 		running = false
 	elseif key == "s" and event.keyDown("ctrl") then
 		saveFile(path)

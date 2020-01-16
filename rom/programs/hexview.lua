@@ -72,4 +72,4 @@ end
 -- Reset
 os.sleep()
 screen.clear()
-screen.pos = {x=1,y=1}
+screen.pos.set(1,1)

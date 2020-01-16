@@ -44,7 +44,7 @@ end
 
 -- DISPLAY INFO
 screen.clear("cyan-3")
-screen.pos.x, screen.pos.y = 1, 1
+screen.pos.set(1,1)
 
 print()
 screen.write( " "..string.upper(os.version).."\n", {color="orange+3"} )
@@ -84,4 +84,4 @@ screen.write( "(C) RedPolygon", {color="cyan-2", x = screen.width - 15*(screen.f
 event.wait("key")
 os.sleep()
 screen.clear()
-screen.pos.x, screen.pos.y = 1, 1
+screen.pos.set(1,1)

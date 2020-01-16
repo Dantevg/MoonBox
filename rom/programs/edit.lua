@@ -458,4 +458,4 @@ end
 
 -- Close
 screen.clear("black")
-screen.pos.x, screen.pos.y = 1, 1
+screen.pos.set(1,1)
