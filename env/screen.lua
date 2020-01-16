@@ -867,7 +867,7 @@ function screen.newCanvas( w, h )
 	expect( w, "number" )
 	expect( h, "number" )
 	
-	w, h = math.max( 1, math.floor(w) ), math.max( 1, math.floor(w) )
+	w, h = math.max( 1, math.floor(w) ), math.max( 1, math.floor(h) )
 	local c = {
 		w = w,
 		h = h,

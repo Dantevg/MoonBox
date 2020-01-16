@@ -29,7 +29,7 @@ end
 
 function os.time( h24, seconds )
 	expect( h24, {"boolean", "nil"}, 1, "os.time" )
-	expect( seconds, {"number", "nil"}, 2, "os.time" )
+	expect( seconds, {"boolean", "nil"}, 2, "os.time" )
 	
 	if h24 then
 		return osOld.date( "%H:%M"..(seconds and ":%S" or "") )
