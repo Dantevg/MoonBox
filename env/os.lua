@@ -98,9 +98,9 @@ function os.run( path, ... )
 		error( "No such file", 2 )
 	end
 	local file = disk.read(path)
-	local fn, err = load( file, "="..disk.getFilename(path) )
+	local fn, err = load( file, "@"..path )
 	if not fn then
-		shell.error(err)
+		shell.error( err, nil, true )
 		return
 	end
 	
@@ -108,7 +108,7 @@ function os.run( path, ... )
 	
 	local success, err = pcall( fn, ... )
 	if not success then
-		shell.error(err)
+		shell.error( err, nil, true )
 	end
 end
 

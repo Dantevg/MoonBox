@@ -30,6 +30,12 @@ function env.require(path)
 	local before = {"/", "/disk1/", "/disk1/lib/"}
 	local after = {"", ".lua"}
 	
+	-- Add source path of file to search path
+	local source = debug.getinfo(2).source
+	if source and string.sub(source,1,1) == "@" then
+		table.insert( before, 1, env.disk.getPath( string.sub(source,2) ) )
+	end
+	
 	for i = 1, #before do
 		for j = 1, #after do
 			

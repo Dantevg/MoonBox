@@ -93,16 +93,27 @@ function shell.autocomplete(input)
 	end
 end
 
+function shell.getRunningProgram()
+	local info = debug.getinfo(2)
+	return info and info.short_src
+end
+
 
 
 -- OTHER FUNCTIONS
 
-function shell.error( msg, level )
+function shell.error( msg, level, file )
 	expect( msg, {"string", "nil"}, 1, "shell.error" )
 	expect( level, {"number", "nil"}, 2, "shell.error" )
+	expect( file, {"boolean", "nil"}, 3, "shell.error" )
 	msg = msg or ""
+	level = level or 1
 	
-	screen.write( (shell.traceback and debug.traceback(msg, level) or msg) .. "\n",
+	if file then
+		msg = string.gsub( msg, "^([^:]+)", disk.getFilename ) -- Only display filename, don't display full path
+	end
+	
+	screen.write( (shell.traceback and debug.traceback(msg, level+1) or msg) .. "\n",
 		{color = "red+1", background = screen.background} )
 	screen.pos.x = 1
 end
