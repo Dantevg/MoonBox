@@ -396,7 +396,7 @@ end
 
 function love.mousepressed( x, y, btn )
 	x, y = getCoordinates( x, y )
-	if x >= 1 and x <= active.screen.w and y >= 1 and y <= active.screen.h then
+	if x >= 1 and x <= active.screen.width and y >= 1 and y <= active.screen.height then
 		table.insert( active.eventBuffer, { "mouse", x, y, btn } )
 	end
 end
@@ -424,27 +424,24 @@ function love.mousemoved( x, y )
 			if not active.mouse.drag then active.mouse.drag = {x=x, y=y} end
 		end
 	end
-	active.mouse.x, active.mouse.y = math.min(math.max(x, 1), active.screen.w), math.min(math.max(y, 1), active.screen.h)
+	active.mouse.x, active.mouse.y = math.min(math.max(x, 1), active.screen.width), math.min(math.max(y, 1), active.screen.height)
 end
 
 function love.resize( w, h )
 	local function resize(which)
-		which.screen.w = math.floor( w / settings.scale ) - 2*settings.border
-		which.screen.h = math.floor( h / settings.scale ) - 2*settings.border
-		
-		which.env.screen.width = which.screen.w
-		which.env.screen.height = which.screen.h
+		which.screen.width = math.floor( w / settings.scale ) - 2*settings.border
+		which.screen.height = math.floor( h / settings.scale ) - 2*settings.border
 		
 		if which.env.screen.font then
-			which.env.screen.charWidth = math.floor( which.screen.w / (which.env.screen.font.width+1) )
-			which.env.screen.charHeight = math.floor( which.screen.h / (which.env.screen.font.height+1) )
+			which.env.screen.charWidth = math.floor( which.screen.width / (which.env.screen.font.width+1) )
+			which.env.screen.charHeight = math.floor( which.screen.height / (which.env.screen.font.height+1) )
 		end
 		
 		-- Save canvas to image
 		local image = love.graphics.newImage( which.screen.canvas:newImageData() )
 		
 		-- Copy image to canvas
-		local newCanvas = love.graphics.newCanvas( which.screen.w, which.screen.h )
+		local newCanvas = love.graphics.newCanvas( which.screen.width, which.screen.height )
 		newCanvas:renderTo(function()
 			love.graphics.setColor( 1, 1, 1, 1 )
 			love.graphics.draw( image, 0, 0 )
@@ -453,7 +450,7 @@ function love.resize( w, h )
 		which.screen.canvas = newCanvas
 		which.screen.canvas:setFilter( "linear", "nearest" )
 		
-		table.insert( which.eventBuffer, { "resize", which.screen.w, which.screen.h } )
+		table.insert( which.eventBuffer, { "resize", which.screen.width, which.screen.height } )
 	end
 	resize(computer)
 	resize(menu)

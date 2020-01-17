@@ -67,9 +67,6 @@ end
 
 -- VARIABLES
 
-screen.width = computer.screen.w
-screen.height = computer.screen.h
-
 screen.colors64 = {
 	red    = { {51, 0,  10 }, {102,5,  18 }, {166,15, 23 }, {230,33, 33 }, {255,80, 64 }, {255,128,102}, {255,196,176} },
 	orange = { {64, 13, 0  }, {128,36, 0  }, {189,64, 0  }, {230,94, 0  }, {255,135,36 }, {255,166,74 }, {255,212,153} },
@@ -125,7 +122,7 @@ setmetatable( screen, {
 				return screen.canvas[k]( computer.screen, ... )
 			end
 		else
-			return nil
+			return computer.screen[k]
 		end
 	end
 } )
@@ -136,7 +133,7 @@ function screen.canvas.pixel( canvas, x, y, color )
 	expect( color, {"string", "nil"}, 3, "screen.pixel" )
 	
 	x, y = x or screen.pos.x, y or screen.pos.y
-	if x <= 0 or y <= 0 or x > screen.width or y > screen.height then
+	if x <= 0 or y <= 0 or x > canvas.width or y > canvas.height then
 		return
 	end
 	
@@ -222,7 +219,7 @@ function screen.canvas.write( canvas, text, a, b )
 	end
 	x, y = options.x or screen.pos.x, options.y or screen.pos.y
 	options.max = options.max or math.floor(
-		(screen.width - x + 1) / (screen.font.width+1) )
+		(canvas.width - x + 1) / (screen.font.width+1) )
 	if options.overflow == nil then
 		options.overflow = "wrap" -- Set default overflow to wrap
 	end
@@ -239,7 +236,7 @@ function screen.canvas.write( canvas, text, a, b )
 	local function nextLine()
 		x = options.x or screen.pos.x
 		y = y + screen.font.height + 1
-		while y + screen.font.height > screen.height do
+		while y + screen.font.height > canvas.height do
 			screen.canvas.move( canvas, 0, -screen.font.height-1 )
 			y = y - screen.font.height-1
 			scroll = scroll+1
@@ -259,7 +256,7 @@ function screen.canvas.write( canvas, text, a, b )
 	end
 	
 	for i = 1, #text do
-		if (x >= screen.width or i+1 % options.max == 0) and options.overflow == "wrap" then
+		if (x >= canvas.width or i+1 % options.max == 0) and options.overflow == "wrap" then
 			nextLine()
 		end
 		if options.background then
@@ -286,7 +283,7 @@ function screen.canvas.print( canvas, text, color )
 	screen.canvas.write( canvas, text, {color = color} )
 	screen.pos.x = 1
 	screen.pos.y = screen.pos.y + (screen.font.height+1)
-	while screen.pos.y + screen.font.height > screen.height do
+	while screen.pos.y + screen.font.height > canvas.height do
 		screen.canvas.move( canvas, 0, -screen.font.height-1 )
 	end
 end
@@ -532,7 +529,7 @@ function screen.canvas.drawImage( canvas, image, x, y, scale )
 			for py = 1, math.max(1, scale) do
 				local screenX = x + ox*scale + (px-1) - 0.5
 				local screenY = y + oy*scale + (py-1) - 0.5
-				if screenX >= 0 and screenY >= 0 and screenX <= screen.width and screenY <= screen.height then
+				if screenX >= 0 and screenY >= 0 and screenX <= canvas.width and screenY <= canvas.height then
 					local finalColor = blendColors( {r,g,b,a}, {canvas.image:getPixel(screenX, screenY)} )
 					canvas.image:setPixel( screenX, screenY, closestColor(finalColor) )
 				end
@@ -560,7 +557,7 @@ function screen.canvas.tabulate( canvas, elements, nColumns, vertical, fn )
 	for k, v in pairs(elements) do
 		columnWidth = math.max( columnWidth, #v )
 	end
-	nColumns = nColumns or math.floor( screen.width / (screen.font.width+1) / (columnWidth+2) )
+	nColumns = nColumns or math.floor( canvas.width / (screen.font.width+1) / (columnWidth+2) )
 	nRows = math.ceil(#elements / nColumns)
 	
 	local x, y = screen.pos.x, screen.pos.y
@@ -572,7 +569,7 @@ function screen.canvas.tabulate( canvas, elements, nColumns, vertical, fn )
 			screen.pos.x = x + (screen.font.width+1) * ((k-1) % nColumns) * (columnWidth+2)
 			screen.pos.y = y + (screen.font.height+1) * math.floor((k-1)/nColumns)
 		end
-		while screen.pos.y + screen.font.height > screen.height do
+		while screen.pos.y + screen.font.height > canvas.height do
 			screen.canvas.move( canvas, 0, -screen.font.height-1 )
 			y = y - screen.font.height - 1
 		end
@@ -604,8 +601,8 @@ function screen.canvas.move( canvas, x, y )
 	expect( y, "number", 2, "screen.move" )
 	
 	local newCanvas = love.graphics.newCanvas(
-		screen.width,
-		screen.height)
+		canvas.width,
+		canvas.height)
 		
 	newCanvas:renderTo(function()
 		love.graphics.setColor( 1, 1, 1, 1 )
@@ -682,7 +679,7 @@ function screen.canvas.getPixel( canvas, x, y )
 	expect( x, "number" )
 	expect( y, "number" )
 	
-	if x <= 0 or y <= 0 or x > screen.width or y > screen.height then
+	if x <= 0 or y <= 0 or x > canvas.width or y > canvas.height then
 		return screen.background
 	end
 	if not canvas.image or canvas.imageFrame < computer.currentFrame then
@@ -844,8 +841,8 @@ function screen.setFont(path)
 	
 	if font then
 		screen.font = font
-		screen.charWidth = math.floor( screen.width / (font.width+1) )
-		screen.charHeight = math.floor( screen.height / (font.height+1) )
+		screen.charWidth = math.floor( computer.screen.width / (font.width+1) )
+		screen.charHeight = math.floor( computer.screen.height / (font.height+1) )
 		return true
 	else
 		return false
@@ -860,6 +857,8 @@ function screen.newCanvas( w, h )
 	local c = {
 		w = w,
 		h = h,
+		width = w,
+		height = h,
 		canvas = love.graphics.newCanvas( w, h )
 	}
 	c.canvas:setFilter( "linear", "nearest" )

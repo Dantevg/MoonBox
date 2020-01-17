@@ -78,10 +78,10 @@ function sandbox.new( env, loadGeneral )
 	computer.running = true
 	
 	computer.screen = {}
-	computer.screen.w = math.floor( love.graphics.getWidth() / settings.scale - 2*settings.border )
-	computer.screen.h = math.floor( love.graphics.getHeight() / settings.scale - 2*settings.border )
+	computer.screen.width = math.floor( love.graphics.getWidth() / settings.scale - 2*settings.border )
+	computer.screen.height = math.floor( love.graphics.getHeight() / settings.scale - 2*settings.border )
 	computer.screen.scale = settings.scale
-	computer.screen.canvas = love.graphics.newCanvas( computer.screen.w, computer.screen.h )
+	computer.screen.canvas = love.graphics.newCanvas( computer.screen.width, computer.screen.height )
 	computer.screen.canvas:setFilter( "linear", "nearest" )
 	computer.screen.shader = nil
 	
