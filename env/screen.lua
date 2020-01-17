@@ -320,8 +320,8 @@ function screen.canvas.rect( canvas, x, y, w, h, color, filled )
 		canvas.imageFrame = computer.currentFrame
 		
 		-- Draw rectangle on image
-		for i = math.max( x, 1 ), math.min( x+w-1, screen.width ) do
-			for j = math.max( y, 1 ), math.min( y+h-1, screen.height ) do
+		for i = math.max( x, 1 ), math.min( x+w-1, canvas.w ) do
+			for j = math.max( y, 1 ), math.min( y+h-1, canvas.h ) do
 				local finalColor = blendColors( rgb, {canvas.image:getPixel(i-0.5, j-0.5)} )
 				canvas.image:setPixel( i-0.5, j-0.5, closestColor(finalColor) )
 			end
@@ -356,6 +356,7 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	end
 	
 	local function point( x, y )
+		if x < 1 or y < 1 or x > canvas.w or y > canvas.h then return end
 		if rgb.a ~= 1 then
 			local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
 			love.graphics.setColor(finalColor)
@@ -445,6 +446,7 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	local err = -r
 	
 	local function pixel( x, y )
+		if x < 1 or y < 1 or x > canvas.w or y > canvas.h then return end
 		if rgb.a ~= 1 then
 			local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
 			love.graphics.setColor(finalColor)

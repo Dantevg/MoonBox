@@ -79,6 +79,7 @@ function brushes.line.mouseUp( x, y, btn )
 	if not xImg then return end
 	image:line( brushes.line.startX, brushes.line.startY, xImg, yImg, btn == 1 and primary or (btn == 2 and secondary) )
 	overlay:clear()
+	brushes.line.startX, brushes.line.startY = nil, nil
 end
 brushes.line.image = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAACVBMVEUAAAApKSn///+ylTbtAAAAOklEQVR4nGNgAAHR0NAQBikwMRVIiC0FEqIrQUQWiIiaCiTClgKJ0JUgIgtERE0BEmFLQHqXQAwAAQDAzhH0sxfzqAAAAABJRU5ErkJggg=="
 
@@ -106,6 +107,7 @@ function brushes.rect.mouseUp( x, y, btn )
 	if yImg < startY then startY, yImg = yImg, startY end
 	image:rect( startX, startY, xImg-startX+1, yImg-startY+1, btn == 1 and primary or (btn == 2 and secondary), brushes.rect.options.fill )
 	overlay:clear()
+	brushes.rect.startX, brushes.rect.startY = nil, nil
 end
 brushes.rect.image = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAADFBMVEUAAAApKSmrq6v///9JX/HgAAAAKUlEQVR4nGNgAAHR0NAQBqmpIGL//ysQQvw/fuLfEgghGhq2BGIACAAAHe0hIQEioPYAAAAASUVORK5CYII="
 
@@ -129,6 +131,7 @@ function brushes.circle.mouseUp( x, y, btn )
 	local r = math.sqrt( (xImg-startX)^2 + (yImg-startY)^2 )
 	image:circle( startX, startY, r, btn == 1 and primary or (btn == 2 and secondary), brushes.circle.options.fill )
 	overlay:clear()
+	brushes.circle.startX, brushes.circle.startY = nil, nil
 end
 brushes.circle.image = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAACVBMVEUAAAApKSn///+ylTbtAAAAL0lEQVR4nGNgAAHR0NAQBtGopUBi1aoQBrFVq6ZACKlVq5agEwhZsGKINpABIAAA00sYscPN9ocAAAAASUVORK5CYII="
 
@@ -457,9 +460,7 @@ function getImageCoords( x, y )
 	if x > gui.picker.w() and y < screen.height-10 and image then -- Drawing area
 		local xImg = math.ceil( (x-gui.picker.w()) / zoomInt - ox + 1 )
 		local yImg = math.ceil( y / zoomInt - oy + 1 )
-		if xImg <= image.w and yImg <= image.h then
-			return xImg, yImg
-		end
+		return xImg, yImg
 	end
 end
 
