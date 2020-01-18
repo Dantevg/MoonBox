@@ -84,8 +84,24 @@ function sandbox.new( env, loadGeneral )
 	computer.screen.canvas = love.graphics.newCanvas( computer.screen.width, computer.screen.height )
 	computer.screen.canvas:setFilter( "linear", "nearest" )
 	computer.screen.shader = nil
+	computer.screen.paletteShader = love.graphics.newShader("/rom/shaders/palette.glsl")
+	computer.screen.paletteDrawShader = love.graphics.newShader("/rom/shaders/paletteDraw.glsl")
 	
 	computer:createEnv( env, loadGeneral )
+	
+	local c = computer.env.colors.all(true)
+	for i = 1, #c do
+		c[i] = computer.env.colors.rgb( c[i] )
+		c[i] = c[i] / 255
+		c[i][4] = 1
+	end
+	if computer.screen.paletteShader:hasUniform("palette") then
+		computer.screen.paletteShader:send( "palette", unpack(c) )
+	end
+	
+	if computer.screen.paletteDrawShader:hasUniform("palette") then
+		computer.screen.paletteDrawShader:send( "palette", unpack(c) )
+	end
 	
 	return computer
 end

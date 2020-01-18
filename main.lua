@@ -276,6 +276,8 @@ function love.draw()
 			if computer.screen.shader then
 				love.graphics.setShader(computer.screen.shader)
 			end
+			-- love.graphics.setBlendMode( "alpha", "alphamultiply" )
+			-- love.graphics.setShader(computer.screen.paletteShader)
 			love.graphics.draw( active.screen.canvas, border, border, 0, settings.scale )
 			love.graphics.setShader() -- Reset shader
 		end

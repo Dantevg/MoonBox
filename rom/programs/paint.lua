@@ -499,16 +499,17 @@ end
 function draw(obj)
 	-- Background
 	screen.clear("gray-2")
-	for x = 1, math.floor(screen.width/bgScale) do
-		for y = 1, math.floor(screen.height/bgScale) do
-			if (x+y) % 2 == 0 then
-				screen.rect( (x-1)*bgScale+1, (y-1)*bgScale+1, bgScale, bgScale, "gray-3" )
-			end
-		end
-	end
 	
 	-- Image
 	if not inMenu and image then
+		for x = 1, math.ceil(screen.width/bgScale) do
+			for y = 1, math.ceil(screen.height/bgScale) do
+				if (x+y) % 2 == 0 then
+					screen.rect( (x-1)*bgScale+1, (y-1)*bgScale+1, bgScale, bgScale, "gray-3" )
+				end
+			end
+		end
+		
 		if event.keyDown("m") then
 			image:draw( gui.picker.w(), 1, 0.2 )
 			if overlay then overlay:draw( gui.picker.w(), 1, 0.2 ) end

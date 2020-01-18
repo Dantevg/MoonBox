@@ -108,8 +108,13 @@ function screen.canvas:draw( x, y, scale )
 	expect( scale, {"number", "nil"}, 3, "(Canvas):draw" )
 	
 	computer.screen.canvas:renderTo(function()
+		local m, a = love.graphics.getBlendMode()
+		-- love.graphics.setBlendMode( "replace", "premultiplied" )
+		-- love.graphics.setShader(computer.screen.paletteDrawShader)
 		love.graphics.setColor( 1, 1, 1, 1 )
 		love.graphics.draw( self.canvas, x-1, y-1, nil, scale ) -- TODO: Check if -1 or -0.5
+		love.graphics.setBlendMode(m,a)
+		love.graphics.setShader()
 	end)
 end
 
@@ -159,13 +164,16 @@ function screen.canvas.char( canvas, char, x, y, color )
 	x, y = x or screen.pos.x, y or screen.pos.y
 	local rgb = getColor(color) or getColor(screen.color)
 	
-	if rgb.a ~= 1 then -- Partially transparent
-		-- Update the screen image
-		canvas.image = canvas.canvas:newImageData()
-		canvas.imageFrame = computer.currentFrame
-	end
+	-- if rgb.a ~= 1 then -- Partially transparent
+	-- 	-- Update the screen image
+	-- 	canvas.image = canvas.canvas:newImageData()
+	-- 	canvas.imageFrame = computer.currentFrame
+	-- end
 	
 	canvas.canvas:renderTo(function()
+		local m, a = love.graphics.getBlendMode() -- TODO: remove
+		love.graphics.setBlendMode( "replace", "premultiplied" )
+		love.graphics.setShader(computer.screen.paletteDrawShader)
 		love.graphics.setColor(rgb)
 		local data
 		if screen.font.chars[ string.byte(char) ] then
@@ -179,6 +187,9 @@ function screen.canvas.char( canvas, char, x, y, color )
 		local yOff = screen.font.height + screen.font.descender - data.oy - 1
 		
 		love.graphics.draw( screen.font.image, data.quad, math.floor(x)+xOff, math.floor(y)+yOff )
+		
+		love.graphics.setBlendMode(m,a)
+		love.graphics.setShader()
 		
 		-- for h in pairs(data) do
 		-- 	for w in pairs(data[h]) do
@@ -302,40 +313,44 @@ function screen.canvas.rect( canvas, x, y, w, h, color, filled )
 	
 	local rgb = getColor(color) or getColor(screen.background)
 	
-	if rgb.a == 1 then -- Not transparent, use simple faster method
-		canvas.canvas:renderTo(function()
-			love.graphics.setColor(rgb)
-			if filled ~= false then
-				love.graphics.rectangle( "fill", x-0.5, y-0.5, w, h )
-			else
-				love.graphics.rectangle( "line", x-0.5, y-0.5, w-1, h-1 )
-			end
-		end)
-	elseif rgb.a ~= 0 and filled ~= false then -- Partially transparent, use slow method
-		-- Update the screen image
-		canvas.image = canvas.canvas:newImageData()
-		canvas.imageFrame = computer.currentFrame
-		
-		-- Draw rectangle on image
-		for i = math.max( x, 1 ), math.min( x+w-1, canvas.w ) do
-			for j = math.max( y, 1 ), math.min( y+h-1, canvas.h ) do
-				local finalColor = blendColors( rgb, {canvas.image:getPixel(i-0.5, j-0.5)} )
-				canvas.image:setPixel( i-0.5, j-0.5, closestColor(finalColor) )
-			end
+	canvas.canvas:renderTo(function()
+		local m, a = love.graphics.getBlendMode() -- TODO: remove
+		love.graphics.setBlendMode( "replace", "premultiplied" )
+		love.graphics.setShader(computer.screen.paletteDrawShader)
+		love.graphics.setColor(rgb)
+		if filled ~= false then
+			love.graphics.rectangle( "fill", x-0.5, y-0.5, w, h )
+		else
+			love.graphics.rectangle( "line", x-0.5, y-0.5, w-1, h-1 )
 		end
+		love.graphics.setBlendMode(m,a)
+		love.graphics.setShader()
+	end)
+	-- elseif rgb.a ~= 0 and filled ~= false then -- Partially transparent, use slow method
+	-- 	-- Update the screen image
+	-- 	canvas.image = canvas.canvas:newImageData()
+	-- 	canvas.imageFrame = computer.currentFrame
 		
-		-- Draw image on canvas
-		canvas.canvas:renderTo(function()
-			local image = love.graphics.newImage(canvas.image)
-			love.graphics.setColor( 1, 1, 1, 1 )
-			love.graphics.draw(image)
-		end)
-	elseif rgb.a ~= 0 and filled == false then
-		screen.canvas.line( canvas, x+1, y, x+w-1, y, color )
-		screen.canvas.line( canvas, x+w-1, y+1, x+w-1, y+h-1, color )
-		screen.canvas.line( canvas, x, y+h-1, x+w-2, y+h-1, color )
-		screen.canvas.line( canvas, x, y, x, y+h-2, color )
-	end
+	-- 	-- Draw rectangle on image
+	-- 	for i = math.max( x, 1 ), math.min( x+w-1, canvas.width ) do
+	-- 		for j = math.max( y, 1 ), math.min( y+h-1, canvas.height ) do
+	-- 			local finalColor = blendColors( rgb, {canvas.image:getPixel(i-0.5, j-0.5)} )
+	-- 			canvas.image:setPixel( i-0.5, j-0.5, closestColor(finalColor) )
+	-- 		end
+	-- 	end
+		
+	-- 	-- Draw image on canvas
+	-- 	canvas.canvas:renderTo(function()
+	-- 		local image = love.graphics.newImage(canvas.image)
+	-- 		love.graphics.setColor( 1, 1, 1, 1 )
+	-- 		love.graphics.draw(image)
+	-- 	end)
+	-- elseif rgb.a ~= 0 and filled == false then
+	-- 	screen.canvas.line( canvas, x+1, y, x+w-1, y, color )
+	-- 	screen.canvas.line( canvas, x+w-1, y+1, x+w-1, y+h-1, color )
+	-- 	screen.canvas.line( canvas, x, y+h-1, x+w-2, y+h-1, color )
+	-- 	screen.canvas.line( canvas, x, y, x, y+h-2, color )
+	-- end
 end
 
 function screen.canvas.line( canvas, x1, y1, x2, y2, color )
@@ -347,20 +362,25 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	
 	local rgb = getColor(color) or getColor(screen.color)
 	
-	if rgb.a ~= 1 then -- Partially transparent, update screen image
-		canvas.image = canvas.canvas:newImageData()
-		canvas.imageFrame = computer.currentFrame
-	end
+	-- if rgb.a ~= 1 then -- Partially transparent, update screen image
+	-- 	canvas.image = canvas.canvas:newImageData()
+	-- 	canvas.imageFrame = computer.currentFrame
+	-- end
 	
 	local function point( x, y )
 		if x < 1 or y < 1 or x > canvas.w or y > canvas.h then return end
-		if rgb.a ~= 1 then
-			local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
-			love.graphics.setColor(finalColor)
-		else
-			love.graphics.setColor(rgb)
-		end
+		local m, a = love.graphics.getBlendMode() -- TODO: remove
+		love.graphics.setBlendMode( "replace", "premultiplied" )
+		love.graphics.setShader(computer.screen.paletteDrawShader)
+		-- if rgb.a ~= 1 then
+		-- 	local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
+		-- 	love.graphics.setColor(finalColor)
+		-- else
+		love.graphics.setColor(rgb)
+		-- end
 		love.graphics.points( x-0.5, y-0.5 )
+		love.graphics.setBlendMode(m,a)
+		love.graphics.setShader()
 	end
 	
 	local function low( x1, y1, x2, y2 )
@@ -433,10 +453,10 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	xc, yc = xc or screen.pos.x, yc or screen.pos.y
 	local rgb = getColor(color) or getColor(screen.color)
 	
-	if rgb.a ~= 1 and not filled then -- Partially transparent, update screen image
-		canvas.image = canvas.canvas:newImageData()
-		canvas.imageFrame = computer.currentFrame
-	end
+	-- if rgb.a ~= 1 and not filled then -- Partially transparent, update screen image
+	-- 	canvas.image = canvas.canvas:newImageData()
+	-- 	canvas.imageFrame = computer.currentFrame
+	-- end
 	
 	local x = r
 	local y = 0
@@ -444,14 +464,19 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	
 	local function pixel( x, y )
 		if x < 1 or y < 1 or x > canvas.w or y > canvas.h then return end
-		if rgb.a ~= 1 then
-			local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
-			love.graphics.setColor(finalColor)
-		else
-			love.graphics.setColor(rgb)
-		end
+		local m, a = love.graphics.getBlendMode() -- TODO: remove
+		love.graphics.setBlendMode( "replace", "premultiplied" )
+		love.graphics.setShader(computer.screen.paletteDrawShader)
+		-- if rgb.a ~= 1 then
+		-- 	local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
+		-- 	love.graphics.setColor(finalColor)
+		-- else
+		love.graphics.setColor(rgb)
+		-- end
 		
 		love.graphics.points( x-0.5, y-0.5 )
+		love.graphics.setBlendMode(m,a)
+		love.graphics.setShader()
 	end
 	
 	local function draw( x, y )
@@ -501,7 +526,7 @@ function screen.canvas.drawImage( canvas, image, x, y, scale )
 	x, y, scale = x or 1, y or 1, scale or 1
 	
 	-- Update the canvas image
-	canvas.image = canvas.canvas:newImageData()
+	--[[ canvas.image = canvas.canvas:newImageData()
 	canvas.imageFrame = computer.currentFrame
 	
 	-- Scale image down
@@ -544,6 +569,18 @@ function screen.canvas.drawImage( canvas, image, x, y, scale )
 		local image = love.graphics.newImage(canvas.image)
 		love.graphics.setColor( 1, 1, 1, 1 )
 		love.graphics.draw(image)
+	end) ]]--
+	
+	canvas.canvas:renderTo(function()
+		local m, a = love.graphics.getBlendMode() -- TODO: remove
+		love.graphics.setBlendMode( "replace", "premultiplied" )
+		love.graphics.setShader(computer.screen.paletteDrawShader)
+		local img = love.graphics.newImage(image)
+		img:setFilter( "nearest", "nearest" )
+		love.graphics.setColor( 1, 1, 1, 1 )
+		love.graphics.draw( img, x-0.5, y-0.5, 0, scale, scale )
+		love.graphics.setBlendMode(m,a)
+		love.graphics.setShader()
 	end)
 end
 
@@ -592,7 +629,12 @@ function screen.canvas.clear( canvas, color )
 	color = getColor(color) or {0,0,0,0} -- Default to transparent black
 	
 	canvas.canvas:renderTo(function()
+		local m, a = love.graphics.getBlendMode() -- TODO: remove
+		love.graphics.setBlendMode( "replace", "premultiplied" )
+		love.graphics.setShader(computer.screen.paletteDrawShader)
 		love.graphics.clear(color)
+		love.graphics.setBlendMode(m,a)
+		love.graphics.setShader()
 	end)
 end
 
