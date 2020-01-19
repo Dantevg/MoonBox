@@ -20,8 +20,8 @@ vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords
 	
 	colour = colour * pixel;
 	
-	result.rgb = pixel.rgb * (1 - colour.a) + colour.rgb * colour.a;
-	result.a = pixel.a * (1 - colour.a) + colour.a;
+	result.rgb = pixel.rgb * (1 - pixel.a) + colour.rgb * pixel.a;
+	result.a = colour.a * (1 - pixel.a) + pixel.a;
 	
 	// float a = result.a;
 	// result = closestColour(result);
