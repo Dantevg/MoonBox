@@ -24,6 +24,7 @@ local running = true
 local inMenu = false
 local zoom = 1
 local zoomInt = 1
+local slowZooming = false
 local ox, oy = 1, 1
 local primary = "white"
 local secondary = "blue"
@@ -423,6 +424,21 @@ table.insert( obj.menu, gui.menu )
 		table.insert( obj.menu, gui.submit )
 	
 	gui.create:autosize( "h", 5, gui.createTitle, gui.width )
+	
+	gui.settings = gui.menu:box( margin, nil, nil, 20, "gray+2" )
+	gui.settings.y = function() return gui.create.y() + gui.create.h() + margin end
+	gui.settings:autosize( "w", -margin, gui.menu )
+	table.insert( obj.menu, gui.settings )
+	
+		gui.slowZooming = gui.settings:checkbox( 1, 1, 10, 10, slowZooming )
+		gui.slowZooming.callback = function( obj, value )
+			slowZooming = value
+		end
+		table.insert( obj.menu, gui.slowZooming )
+		
+		gui.slowZoomingText = gui.settings:text( 1, 3, "Slow zooming", "black" )
+		gui.slowZoomingText.x = function() return gui.slowZooming.x() + gui.slowZooming.w() + 5 end
+		table.insert( obj.menu, gui.slowZoomingText )
 
 
 
@@ -488,7 +504,7 @@ function events.mouse( x, y, btn )
 end
 
 function events.scroll( x, y, dir )
-	zoom = math.max( 1, zoom + dir/5 )
+	zoom = math.max( 1, zoom + (slowZooming and dir/5 or dir) )
 	zoomInt = math.floor(zoom)
 end
 
