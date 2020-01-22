@@ -449,6 +449,59 @@ he.styles.slider = {
 
 
 
+he.checkbox = {}
+
+function he.checkbox.new( p, x, y, w, h, init )
+	local obj = {}
+	
+	obj.parent = p
+	obj.styles = obj.parent.styles
+	obj.tags = {"checkbox", "*"}
+	obj.x = he.make.x(obj, x)
+	obj.y = he.make.y(obj, y)
+	obj.w = he.proxy(w)
+	obj.h = he.proxy(h)
+	obj.value = init and true or false
+	
+	return setmetatable( obj, {__index = function(t,k)
+		return he.checkbox[k] or he.get( obj, k )
+	end} )
+end
+
+function he.checkbox:draw(parent)
+	self.parent = parent or self.parent
+	screen.rect( self.x(), self.y(), self.w(), self.h(), self.background() )
+	if self.border then
+		screen.rect( self.x(), self.y(), self.w(), self.h(), self.border(), false )
+	end
+	if self.value then
+		screen.rect( self.x() + 2, self.y() + 2, self.w() - 4, self.h() - 4, self.color() )
+	end
+end
+
+function he.checkbox:mouse()
+	if not self:within( mouse.x, mouse.y ) then return end
+	x, y = self:toLocalCoords( mouse.x, mouse.y )
+	self.value = not self.value
+	
+	if type(self.callback) == "function" then
+		self.callback( self, self.value )
+	end
+end
+
+setmetatable( he.checkbox, {
+	__index = he,
+	__call = function( _, ... ) return he.checkbox.new(...) end
+})
+
+he.styles.checkbox = {
+	background = "white",
+	color = "gray-1",
+	border = "gray+1"
+}
+
+
+
 -- RETURN
 
 return he
