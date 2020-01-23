@@ -144,9 +144,22 @@ function screen.canvas.pixel( canvas, x, y, color )
 		rgb = getColor(color)
 	end
 	
-	canvas.canvas:renderTo(function()
+	local q = love.graphics.newQuad( x-0.5, y-0.5, 1, 1, canvas.width, canvas.height )
+	
+	canvas.temp:renderTo(function()
+		love.graphics.setColor(1,1,1,1)
+		love.graphics.draw( canvas.canvas, q, x-0.5, y-0.5 )
 		love.graphics.setColor(rgb)
 		love.graphics.points( x-0.5, y-0.5 )
+	end)
+	
+	canvas.canvas:renderTo(function()
+		love.graphics.setShader(computer.screen.paletteShader)
+		love.graphics.setBlendMode( "replace", "premultiplied" )
+		love.graphics.setColor(1,1,1,1)
+		love.graphics.draw( canvas.temp, q, x-0.5, y-0.5 )
+		love.graphics.setBlendMode( "alpha", "alphamultiply" )
+		love.graphics.setShader()
 	end)
 end
 
@@ -156,48 +169,38 @@ function screen.canvas.char( canvas, char, x, y, color )
 	expect( y, {"number", "nil"}, 3, "screen.char" )
 	expect( color, {"string", "nil"}, 4, "screen.char" )
 	
-	x, y = x or screen.pos.x, y or screen.pos.y
+	x, y = math.ceil(x or screen.pos.x), math.ceil(y or screen.pos.y)
 	local rgb = getColor(color) or getColor(screen.color)
 	
-	if rgb.a ~= 1 then -- Partially transparent
-		-- Update the screen image
-		canvas.image = canvas.canvas:newImageData()
-		canvas.imageFrame = computer.currentFrame
+	local data
+	if screen.font.chars[ string.byte(char) ] then
+		data = screen.font.chars[ string.byte(char) ]
+	else
+		data = screen.font.chars[63]
 	end
 	
-	canvas.canvas:renderTo(function()
+	local height = screen.font.height + screen.font.descender
+	local xOff = (screen.font.monospace and math.floor( (screen.font.width-data.w) / 2 ) or 0) - 1
+	local yOff = screen.font.height + screen.font.descender - data.oy - 1
+	
+	local _, _, w, h = data.quad:getViewport()
+	local q = love.graphics.newQuad( x-0.5, y-0.5, w+xOff+1, h+yOff+1, canvas.width, canvas.height )
+	
+	canvas.temp:renderTo(function()
+		love.graphics.setColor(1,1,1,1)
+		love.graphics.draw( canvas.canvas, q, x-0.5, y-0.5 )
 		love.graphics.setColor(rgb)
-		local data
-		if screen.font.chars[ string.byte(char) ] then
-			data = screen.font.chars[ string.byte(char) ]
-		else
-			data = screen.font.chars[63]
-		end
-		
-		local height = screen.font.height + screen.font.descender
-		local xOff = (screen.font.monospace and math.floor( (screen.font.width-data.w) / 2 ) or 0) - 1
-		local yOff = screen.font.height + screen.font.descender - data.oy - 1
 		
 		love.graphics.draw( screen.font.image, data.quad, math.floor(x)+xOff, math.floor(y)+yOff )
-		
-		-- for h in pairs(data) do
-		-- 	for w in pairs(data[h]) do
-		-- 		if data[h][w] == 1 then
-		-- 			if rgb[4] ~= 1 then -- Partially transparent
-		-- 				local bg = { canvas.image:getPixel( x+w-1.5, y+screen.font.height-h-1.5 ) }
-		-- 				local finalColor = {
-		-- 					rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
-		-- 					rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
-		-- 					rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
-		-- 				}
-		-- 				love.graphics.setColor(finalColor)
-		-- 			else
-		-- 				love.graphics.setColor(rgb)
-		-- 			end
-		-- 			love.graphics.points( x + w - 1.5, y + screen.font.height - h - 1.5 )
-		-- 		end
-		-- 	end
-		-- end
+	end)
+	
+	canvas.canvas:renderTo(function()
+		love.graphics.setShader(computer.screen.paletteShader)
+		love.graphics.setBlendMode( "replace", "premultiplied" )
+		love.graphics.setColor(1,1,1,1)
+		love.graphics.draw( canvas.temp, q, x-0.5, y-0.5 )
+		love.graphics.setBlendMode( "alpha", "alphamultiply" )
+		love.graphics.setShader()
 	end)
 end
 
@@ -311,6 +314,27 @@ function screen.canvas.rect( canvas, x, y, w, h, color, filled )
 				love.graphics.rectangle( "line", x-0.5, y-0.5, w-1, h-1 )
 			end
 		end)
+	elseif rgb.a ~= 0 and filled ~= false then
+		local q = love.graphics.newQuad(x-0.5,y-0.5,w,h,canvas.width,canvas.height)
+		canvas.temp:renderTo(function()
+			love.graphics.setColor(1,1,1,1)
+			love.graphics.draw( canvas.canvas, q, x-0.5, y-0.5 )
+			love.graphics.setColor(rgb)
+			if filled ~= false then
+				love.graphics.rectangle( "fill", x-0.5, y-0.5, w, h )
+			else
+				love.graphics.rectangle( "line", x-0.5, y-0.5, w-1, h-1 )
+			end
+		end)
+		
+		canvas.canvas:renderTo(function()
+			love.graphics.setShader(computer.screen.paletteShader)
+			love.graphics.setBlendMode( "replace", "premultiplied" )
+			love.graphics.setColor(1,1,1,1)
+			love.graphics.draw( canvas.temp, q, x-0.5, y-0.5 )
+			love.graphics.setBlendMode( "alpha", "alphamultiply" )
+			love.graphics.setShader()
+		end)
 	elseif rgb.a ~= 0 and filled ~= false then -- Partially transparent, use slow method
 		-- Update the screen image
 		canvas.image = canvas.canvas:newImageData()
@@ -353,7 +377,7 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	end
 	
 	local function point( x, y )
-		if x < 1 or y < 1 or x > canvas.w or y > canvas.h then return end
+		if x < 1 or y < 1 or x > canvas.width or y > canvas.height then return end
 		if rgb.a ~= 1 then
 			local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
 			love.graphics.setColor(finalColor)
@@ -859,7 +883,8 @@ function screen.newCanvas( w, h )
 		h = h,
 		width = w,
 		height = h,
-		canvas = love.graphics.newCanvas( w, h )
+		canvas = love.graphics.newCanvas( w, h ),
+		temp = love.graphics.newCanvas( w, h )
 	}
 	c.canvas:setFilter( "linear", "nearest" )
 	return setmetatable( c, {__index = screen.canvas} )

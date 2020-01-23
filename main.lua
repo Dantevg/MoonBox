@@ -446,9 +446,15 @@ function love.resize( w, h )
 			love.graphics.setColor( 1, 1, 1, 1 )
 			love.graphics.draw( image, 0, 0 )
 		end)
+		local tempCanvas = love.graphics.newCanvas( which.screen.width, which.screen.height )
+		tempCanvas:renderTo(function()
+			love.graphics.draw( image, 0, 0 )
+		end)
 		
 		which.screen.canvas = newCanvas
 		which.screen.canvas:setFilter( "linear", "nearest" )
+		which.screen.temp = tempCanvas
+		which.screen.temp:setFilter( "linear", "nearest" )
 		
 		table.insert( which.eventBuffer, { "resize", which.screen.width, which.screen.height } )
 	end
