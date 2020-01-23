@@ -150,11 +150,13 @@ function screen.canvas.pixel( canvas, x, y, color )
 	end)
 end
 
-function screen.canvas.char( canvas, char, x, y, color )
+function screen.canvas.char( canvas, char, x, y, color, scale )
 	expect( char, "string", 1, "screen.char" )
 	expect( x, {"number", "nil"}, 2, "screen.char" )
 	expect( y, {"number", "nil"}, 3, "screen.char" )
 	expect( color, {"string", "nil"}, 4, "screen.char" )
+	expect( scale, {"number", "nil"}, 5, "screen.char" )
+	scale = scale or 1
 	
 	x, y = x or screen.pos.x, y or screen.pos.y
 	local rgb = getColor(color) or getColor(screen.color)
@@ -175,10 +177,10 @@ function screen.canvas.char( canvas, char, x, y, color )
 		end
 		
 		local height = screen.font.height + screen.font.descender
-		local xOff = (screen.font.monospace and math.floor( (screen.font.width-data.w) / 2 ) or 0) - 1
-		local yOff = screen.font.height + screen.font.descender - data.oy - 1
+		local xOff = (screen.font.monospace and math.floor( (screen.font.width-data.w) / 2 ) or 0) * scale - 1
+		local yOff = (screen.font.height + screen.font.descender - data.oy) * scale - 1
 		
-		love.graphics.draw( screen.font.image, data.quad, math.floor(x)+xOff, math.floor(y)+yOff )
+		love.graphics.draw( screen.font.image, data.quad, math.floor(x)+xOff, math.floor(y)+yOff, 0, scale )
 		
 		-- for h in pairs(data) do
 		-- 	for w in pairs(data[h]) do
@@ -223,22 +225,24 @@ function screen.canvas.write( canvas, text, a, b )
 	if options.overflow == nil then
 		options.overflow = "wrap" -- Set default overflow to wrap
 	end
+	options.scale = options.scale or 1
 	local scroll = 0
 	
 	local function nextCharPos()
 		if options.monospace == false then
-			x = x + screen.font.charWidth[ string.sub(text,i,i) ]
+			x = x + screen.font.charWidth[ string.sub(text,i,i) ] * options.scale
 		else
-			x = x + screen.font.width + 1
+			x = x + (screen.font.width+1)*options.scale
 		end
 	end
 	
 	local function nextLine()
+		local incr = (screen.font.height+1) * options.scale
 		x = options.x or screen.pos.x
-		y = y + screen.font.height + 1
-		while y + screen.font.height > canvas.height do
-			screen.canvas.move( canvas, 0, -screen.font.height-1 )
-			y = y - screen.font.height-1
+		y = y + incr
+		while y + incr > canvas.height do
+			screen.canvas.move( canvas, 0, -incr )
+			y = y - incr
 			scroll = scroll+1
 		end
 	end
@@ -260,7 +264,7 @@ function screen.canvas.write( canvas, text, a, b )
 			nextLine()
 		end
 		if options.background then
-			screen.canvas.rect( canvas, x, y, screen.font.width+1, screen.font.height, options.background )
+			screen.canvas.rect( canvas, x, y, (screen.font.width+1)*options.scale, screen.font.height*options.scale, options.background )
 		end
 		if string.sub(text,i,i) == "\n" then
 			nextLine()
@@ -268,7 +272,7 @@ function screen.canvas.write( canvas, text, a, b )
 			nextCharPos()
 			nextCharPos()
 		else
-			screen.canvas.char( canvas, string.sub(text,i,i), x, y, options.color )
+			screen.canvas.char( canvas, string.sub(text,i,i), x, y, options.color, options.scale )
 			nextCharPos()
 		end
 	end
@@ -785,6 +789,7 @@ local function loadFont( path, data )
 	if not image then error( "Could not load font resource: "..disk.absolute(data.file), 2 ) end
 	
 	font.image = love.graphics.newImage(image)
+	font.image:setFilter( "linear", "nearest" )
 	
 	-- Get font width
 	for i = 1, #data.chars do
