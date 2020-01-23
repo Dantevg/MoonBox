@@ -80,7 +80,7 @@ function swizzle.mt.__index( t, k )
 			if index then
 				r[i] = t[index]
 			else
-				error( "Invalid swizzle mask", 2 )
+				return nil
 			end
 		end
 		t.set = function(...) return swizzle.set(t,...) end
