@@ -335,25 +335,6 @@ function screen.canvas.rect( canvas, x, y, w, h, color, filled )
 			love.graphics.setBlendMode( "alpha", "alphamultiply" )
 			love.graphics.setShader()
 		end)
-	elseif rgb.a ~= 0 and filled ~= false then -- Partially transparent, use slow method
-		-- Update the screen image
-		canvas.image = canvas.canvas:newImageData()
-		canvas.imageFrame = computer.currentFrame
-		
-		-- Draw rectangle on image
-		for i = math.max( x, 1 ), math.min( x+w-1, canvas.w ) do
-			for j = math.max( y, 1 ), math.min( y+h-1, canvas.h ) do
-				local finalColor = blendColors( rgb, {canvas.image:getPixel(i-0.5, j-0.5)} )
-				canvas.image:setPixel( i-0.5, j-0.5, closestColor(finalColor) )
-			end
-		end
-		
-		-- Draw image on canvas
-		canvas.canvas:renderTo(function()
-			local image = love.graphics.newImage(canvas.image)
-			love.graphics.setColor( 1, 1, 1, 1 )
-			love.graphics.draw(image)
-		end)
 	elseif rgb.a ~= 0 and filled == false then
 		screen.canvas.line( canvas, x+1, y, x+w-1, y, color )
 		screen.canvas.line( canvas, x+w-1, y+1, x+w-1, y+h-1, color )
@@ -371,19 +352,14 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	
 	local rgb = getColor(color) or getColor(screen.color)
 	
-	if rgb.a ~= 1 then -- Partially transparent, update screen image
-		canvas.image = canvas.canvas:newImageData()
-		canvas.imageFrame = computer.currentFrame
-	end
-	
 	local function point( x, y )
 		if x < 1 or y < 1 or x > canvas.width or y > canvas.height then return end
-		if rgb.a ~= 1 then
-			local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
-			love.graphics.setColor(finalColor)
-		else
+		-- if rgb.a ~= 1 then
+		-- 	local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
+		-- 	love.graphics.setColor(finalColor)
+		-- else
 			love.graphics.setColor(rgb)
-		end
+		-- end
 		love.graphics.points( x-0.5, y-0.5 )
 	end
 	
@@ -397,7 +373,11 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 		end
 		local D = 2*dy - dx
 		local y = y1
-		canvas.canvas:renderTo(function()
+		
+		local q = love.graphics.newQuad(x1-0.5,y1-0.5,x2-x1,y2-y1,canvas.width,canvas.height)
+		canvas.temp:renderTo(function()
+			love.graphics.setColor(1,1,1,1)
+			love.graphics.draw( canvas.canvas, q, x-0.5, y-0.5 )
 			for x = x1, x2 do
 				point( x, y )
 				if D > 0 then
@@ -419,7 +399,11 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 		end
 		local D = 2*dx - dy
 		local x = x1
-		canvas.canvas:renderTo(function()
+		
+		local q = love.graphics.newQuad(x1-0.5,y1-0.5,x2-x1,y2-y1,canvas.width,canvas.height)
+		canvas.temp:renderTo(function()
+			love.graphics.setColor(1,1,1,1)
+			love.graphics.draw( canvas.canvas, q, x-0.5, y-0.5 )
 			for y = y1, y2 do
 				point( x, y )
 				if D > 0 then
@@ -444,6 +428,15 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 			high( x1, y1, x2, y2 )
 		end
 	end
+	
+	canvas.canvas:renderTo(function()
+		love.graphics.setShader(computer.screen.paletteShader)
+		love.graphics.setBlendMode( "replace", "premultiplied" )
+		love.graphics.setColor(1,1,1,1)
+		love.graphics.draw( canvas.temp, q, x-0.5, y-0.5 )
+		love.graphics.setBlendMode( "alpha", "alphamultiply" )
+		love.graphics.setShader()
+	end)
 end
 
 -- Default filled
