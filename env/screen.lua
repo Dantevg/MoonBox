@@ -219,7 +219,7 @@ function screen.canvas.write( canvas, text, a, b )
 	elseif type(a) == "table" then
 		options = a
 	end
-	x, y = options.x or screen.pos.x, options.y or screen.pos.y
+	local x, y = options.x or screen.pos.x, options.y or screen.pos.y
 	options.max = options.max or math.floor(
 		(canvas.width - x + 1) / (screen.font.width+1) )
 	if options.overflow == nil then
@@ -321,8 +321,8 @@ function screen.canvas.rect( canvas, x, y, w, h, color, filled )
 		canvas.imageFrame = computer.currentFrame
 		
 		-- Draw rectangle on image
-		for i = math.max( x, 1 ), math.min( x+w-1, canvas.w ) do
-			for j = math.max( y, 1 ), math.min( y+h-1, canvas.h ) do
+		for i = math.max( x, 1 ), math.min( x+w-1, canvas.width ) do
+			for j = math.max( y, 1 ), math.min( y+h-1, canvas.height ) do
 				local finalColor = blendColors( rgb, {canvas.image:getPixel(i-0.5, j-0.5)} )
 				canvas.image:setPixel( i-0.5, j-0.5, closestColor(finalColor) )
 			end
@@ -357,7 +357,7 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	end
 	
 	local function point( x, y )
-		if x < 1 or y < 1 or x > canvas.w or y > canvas.h then return end
+		if x < 1 or y < 1 or x > canvas.width or y > canvas.height then return end
 		if rgb.a ~= 1 then
 			local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
 			love.graphics.setColor(finalColor)
@@ -447,7 +447,7 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	local err = -r
 	
 	local function pixel( x, y )
-		if x < 1 or y < 1 or x > canvas.w or y > canvas.h then return end
+		if x < 1 or y < 1 or x > canvas.width or y > canvas.height then return end
 		if rgb.a ~= 1 then
 			local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
 			love.graphics.setColor(finalColor)
@@ -716,8 +716,8 @@ function screen.loadImage(source)
 	end)
 	
 	return {
-		w = imageData:getWidth(),
-		h = imageData:getHeight(),
+		width = imageData:getWidth(),
+		height = imageData:getHeight(),
 		image = imageData
 	}
 end
