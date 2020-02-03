@@ -4,7 +4,7 @@ ignore = {"611"}
 allow_defined_top = true
 globals = {
 	"disk", "event", "mouse", "net", "os", "screen",
-	"colors", "helium", "shell", "socket", "math",
+	"colours", "helium", "shell", "socket", "math", "swizzle",
 	"read", "expect", "table.serialize", "log"
 }
 std = "+love"
