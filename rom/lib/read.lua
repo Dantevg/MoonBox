@@ -34,9 +34,9 @@ function read:draw(autocomplete)
 		local words = self:getWords("(%S*)(%s*)")
 		self.completion = #words[#words-1].data > 0 and self.autocomplete( words[#words-1].data ) or ""
 		if self.cursor and self.pos > #input then
-			screen.write( string.sub( self.completion, 2, -1 ), {color="gray-1", overflow = false} )
+			screen.write( string.sub( self.completion, 2, -1 ), {colour="gray-1", overflow = false} )
 		else
-			screen.write( self.completion, {color="gray-1", overflow = false} )
+			screen.write( self.completion, {colour="gray-1", overflow = false} )
 		end
 	end
 end

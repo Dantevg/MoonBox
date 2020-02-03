@@ -1,6 +1,6 @@
 -- Boot
 screen.pos = swizzle(1,1)
-screen.color = "white"
+screen.colour = "white"
 screen.background = "black"
 screen.setFont("/rom/fonts/5x5_pxl_round.lua")
 

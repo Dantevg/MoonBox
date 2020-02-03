@@ -178,13 +178,13 @@ function colourPicker:mouse( x, y, btn )
 	if not self:within( x, y ) then return end
 	x, y = self:toLocalCoords( x, y )
 	
-	local c = colors.color( self.palette.image:getPixel(x/8, y/8) )
-	local color, brightness = colors.getName(c), colors.getBrightness(c)
+	local c = colours.colour( self.palette.image:getPixel(x/8, y/8) )
+	local colour, brightness = colours.getName(c), colours.getBrightness(c)
 	
 	if btn == 1 then
-		primary = colors.compose( color, brightness, gui.primaryOpacity.value )
+		primary = colours.compose( colour, brightness, gui.primaryOpacity.value )
 	elseif btn == 2 then
-		secondary = colors.compose( color, brightness, gui.secondaryOpacity.value )
+		secondary = colours.compose( colour, brightness, gui.secondaryOpacity.value )
 	end
 end
 setmetatable( colourPicker, {
@@ -213,9 +213,9 @@ he.styles.input = {
 }
 
 he.styles.button = {
-	color = "white",
+	colour = "white",
 	background = "gray-1",
-	activeColor = "white",
+	activeColour = "white",
 	activeBackground = "gray",
 }
 
@@ -230,21 +230,21 @@ table.insert( obj.paint, gui.paint )
 	gui.picker = colourPicker( gui.sidebar, 1, 1 )
 	table.insert( obj.paint, gui.picker )
 
-		gui.primary = gui.picker:box( 1, gui.picker.x() + gui.picker.h() + 1, gui.picker.w()/2 - 1, 10, function() return colors.compose( colors.getName(primary), colors.getBrightness(primary) ) end )
+		gui.primary = gui.picker:box( 1, gui.picker.x() + gui.picker.h() + 1, gui.picker.w()/2 - 1, 10, function() return colours.compose( colours.getName(primary), colours.getBrightness(primary) ) end )
 		table.insert( obj.paint, gui.primary )
-		gui.secondary = gui.picker:box( gui.picker.w()/2+1, gui.picker.x() + gui.picker.h() + 1, gui.picker.w()/2 - 1, 10, function() return colors.compose( colors.getName(secondary), colors.getBrightness(secondary) ) end )
+		gui.secondary = gui.picker:box( gui.picker.w()/2+1, gui.picker.x() + gui.picker.h() + 1, gui.picker.w()/2 - 1, 10, function() return colours.compose( colours.getName(secondary), colours.getBrightness(secondary) ) end )
 		table.insert( obj.paint, gui.secondary )
 		
 		gui.primaryOpacity = gui.picker:slider( 1, gui.primary.y() + gui.primary.h() + 1, gui.picker.w()/2 - 1, 10 )
 		gui.primaryOpacity.callback = function( self, value )
-			primary = colors.compose( colors.getName(primary), colors.getBrightness(primary), value )
+			primary = colours.compose( colours.getName(primary), colours.getBrightness(primary), value )
 		end
 		gui.primaryOpacity.value = 1
 		table.insert( obj.paint, gui.primaryOpacity )
 		
 		gui.secondaryOpacity = gui.picker:slider( gui.picker.w()/2+1, gui.primary.y() + gui.primary.h() + 1, gui.picker.w()/2 - 1, 10 )
 		gui.secondaryOpacity.callback = function( self, value )
-			secondary = colors.compose( colors.getName(secondary), colors.getBrightness(secondary), value )
+			secondary = coluors.compose( colours.getName(secondary), colours.getBrightness(secondary), value )
 		end
 		gui.secondaryOpacity.value = 1
 		table.insert( obj.paint, gui.secondaryOpacity )

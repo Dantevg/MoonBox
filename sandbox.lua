@@ -47,7 +47,7 @@ function sandbox:createEnv( env, loadGeneral )
 	self.env.log = print
 	self.env.print = self.env.screen.print
 	self.env._G = self.env
-	self.env.screen.colors = self.env.screen.colors64
+	self.env.screen.colours = self.env.screen.colours64
 	self.env.shell.traceback = false
 	
 	setmetatable( self.env, env and {__index = env} or nil )

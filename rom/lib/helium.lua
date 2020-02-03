@@ -162,7 +162,7 @@ end
 
 he.box = {}
 
-function he.box.new( p, x, y, w, h, color )
+function he.box.new( p, x, y, w, h, colour )
 	local obj = {}
 	
 	obj.parent = p
@@ -172,7 +172,7 @@ function he.box.new( p, x, y, w, h, color )
 	obj.y = he.make.y(obj, y)
 	obj.w = he.proxy(w)
 	obj.h = he.proxy(h)
-	obj.color = he.proxy(color)
+	obj.colour = he.proxy(colour)
 	
 	return setmetatable( obj, {__index = function(t,k)
 		return he.box[k] or he.get( obj, k )
@@ -181,7 +181,7 @@ end
 
 function he.box:draw(parent)
 	self.parent = parent or self.parent
-	screen.rect( self:x(), self:y(), self:w(), self:h(), self:color() )
+	screen.rect( self:x(), self:y(), self:w(), self:h(), self:colour() )
 end
 
 setmetatable( he.box, {
@@ -190,14 +190,14 @@ setmetatable( he.box, {
 })
 
 he.styles.box = {
-	color = "white"
+	colour = "white"
 }
 
 
 
 he.text = {}
 
-function he.text.new( p, x, y, text, color )
+function he.text.new( p, x, y, text, colour )
 	local obj = {}
 	
 	obj.parent = p
@@ -210,7 +210,7 @@ function he.text.new( p, x, y, text, color )
 	end
 	obj.h = he.proxy(screen.font.height)
 	obj.text = he.proxy(text)
-	obj.color = he.proxy(color)
+	obj.colour = he.proxy(colour)
 	
 	return setmetatable( obj, {__index = function(t,k)
 		return he.get( obj, k ) or he.text[k]
@@ -219,7 +219,7 @@ end
 
 function he.text:draw(parent)
 	self.parent = parent or self.parent
-	screen.write( self.text(), {x = self.x(), y = self.y(), color = self.color()} )
+	screen.write( self.text(), {x = self.x(), y = self.y(), colour = self.colour()} )
 end
 
 setmetatable( he.text, {
@@ -228,14 +228,14 @@ setmetatable( he.text, {
 })
 
 he.styles.text = {
-	color = "white"
+	colour = "white"
 }
 
 
 
 he.input = {}
 
-function he.input.new( p, x, y, w, h, color, background )
+function he.input.new( p, x, y, w, h, colour, background )
 	local obj = {}
 	
 	obj.parent = p
@@ -247,7 +247,7 @@ function he.input.new( p, x, y, w, h, color, background )
 	obj.h = function()
 		return h + 2 * obj.padding()
 	end
-	obj.color = he.proxy(color)
+	obj.colour = he.proxy(colour)
 	obj.background = he.proxy(background)
 	obj.read = read.new( nil, true )
 	obj.read.cursor = false
@@ -264,12 +264,12 @@ function he.input:draw(parent)
 	self.read.y = self.y() + self.padding()
 	screen.rect( self:x(), self:y(), self:w(), self:h(), self:background() )
 	
-	local prevBg, prevColor = screen.background, screen.color
+	local prevBg, prevColour = screen.background, screen.colour
 	screen.background = self:background()
-	screen.color = self:color()
+	screen.colour = self:colour()
 	self.read:draw()
 	screen.background = prevBg
-	screen.color = prevColor
+	screen.colour = prevColour
 	
 	if self.border then
 		screen.rect( self:x()-1, self:y()-1, self:w()+2, self:h()+2, self:border(), false )
@@ -299,7 +299,7 @@ setmetatable( he.input, {
 })
 
 he.styles.input = {
-	color = "white",
+	colour = "white",
 	background = "black"
 }
 
@@ -332,7 +332,7 @@ function he.button:draw(parent)
 	screen.rect( self:x(), self:y(), self:w(), self:h(),
 		self:hasTag("active") and self:activeBackground() or self:background() )
 	screen.write( self.title(), {x = self:x() + self.padding(), y = self:y() + self.padding(),
-		color = self:hasTag("active") and self:activeColor() or self:color(),
+		colour = self:hasTag("active") and self:activeColour() or self:colour(),
 		background = self:hasTag("active") and self:activeBackground() or self:background()} )
 end
 
@@ -352,9 +352,9 @@ setmetatable( he.button, {
 })
 
 he.styles.button = {
-	color = "black",
+	colour = "black",
 	background = "white",
-	activeColor = "white",
+	activeColour = "white",
 	activeBackground = "black",
 	padding = 3,
 	title = "button"
@@ -423,7 +423,7 @@ function he.slider:draw(parent)
 	self.parent = parent or self.parent
 	screen.rect( self.x(), self.y(), self.w(), self.h(), self.background() )
 	local x = math.map( self.value or 0, self.min or 0, self.max or 1, 0, self.w() - self.sliderWidth() )
-	screen.rect( self.x() + x, self.y(), self.sliderWidth(), self.h(), self.color() )
+	screen.rect( self.x() + x, self.y(), self.sliderWidth(), self.h(), self.colour() )
 end
 
 function he.slider:drag()
@@ -443,7 +443,7 @@ setmetatable( he.slider, {
 
 he.styles.slider = {
 	background = "white",
-	color = "gray",
+	colour = "gray",
 	sliderWidth = 5,
 }
 
@@ -475,7 +475,7 @@ function he.checkbox:draw(parent)
 		screen.rect( self.x(), self.y(), self.w(), self.h(), self.border(), false )
 	end
 	if self.value then
-		screen.rect( self.x() + 2, self.y() + 2, self.w() - 4, self.h() - 4, self.color() )
+		screen.rect( self.x() + 2, self.y() + 2, self.w() - 4, self.h() - 4, self.colour() )
 	end
 end
 
@@ -496,7 +496,7 @@ setmetatable( he.checkbox, {
 
 he.styles.checkbox = {
 	background = "white",
-	color = "gray-1",
+	colour = "gray-1",
 	border = "gray+1"
 }
 

@@ -114,7 +114,7 @@ function shell.error( msg, level, file )
 	end
 	
 	screen.write( (shell.traceback and debug.traceback(msg, level+1) or msg) .. "\n",
-		{color = "red+1", background = screen.background} )
+		{colour = "red+1", background = screen.background} )
 	screen.pos.x = 1
 end
 

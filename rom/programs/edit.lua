@@ -206,7 +206,7 @@ function drawLine( row, start )
 	local line = file[row+yScroll]
 	local suggestion = #line>0 and y == row and x == #line+1 and autocomplete(line) or ""
 	screen.setCharPos( 1, row )
-	screen.setColor(theme.linenumbers)
+	screen.setColour(theme.linenumbers)
 	screen.write(row + yScroll)
 	screen.setCharPos( start+1, row )
 	
@@ -218,7 +218,7 @@ function drawLine( row, start )
 		for i = 1, #patterns do
 			local match = string.match( line, patterns[i][1] )
 			if match then
-				screen.setColor( type(patterns[i][2]) == "string" and patterns[i][2] or patterns[i][2](match) )
+				screen.setColour( type(patterns[i][2]) == "string" and patterns[i][2] or patterns[i][2](match) )
 				local bg = theme.background
 				if selection then
 					if row > selection[1][2] and row < selection[2][2]
@@ -236,7 +236,7 @@ function drawLine( row, start )
 	end
 	
 	-- Suggestion
-	screen.write( string.sub( suggestion, 1, screen.charWidth-start+xScroll-col ), {color="gray"} )
+	screen.write( string.sub( suggestion, 1, screen.charWidth-start+xScroll-col ), {colour="gray"} )
 end
 
 function draw()
@@ -254,14 +254,14 @@ function draw()
 		screen.setCharPos( x-xScroll + lineStart, y-yScroll )
 		local x, y = screen.getPixelPos()
 		screen.rect( x, y, screen.font.width, screen.font.height, theme.background )
-		screen.setColor(theme.text)
+		screen.setColour(theme.text)
 		screen.cursor( x, y+1 )
 	end
 	
 	-- File info
 	local h = screen.height - screen.font.height + 1
 	screen.rect( 1, screen.height - screen.font.height, screen.width, screen.font.height+1, theme.toolbarbg )
-	screen.setColor(theme.toolbartext)
+	screen.setColour(theme.toolbartext)
 	screen.write( disk.getFilename(path), 1, h )
 	screen.setCharPos( screen.charWidth-#(x..":"..y) + 1, screen.charHeight )
 	screen.write( x..":"..y, screen.width-(screen.font.width+1) * #(x..":"..y) + 1, h )

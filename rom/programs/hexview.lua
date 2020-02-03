@@ -30,7 +30,7 @@ local function writeLine( start, y )
 		if string.byte(char) >= 32 and string.byte(char) < 127 then
 			screen.write( char, xChar, yScreen )
 		else
-			screen.write( ".", {x = xChar, y = yScreen, color="gray-1"} )
+			screen.write( ".", {x = xChar, y = yScreen, colour="gray-1"} )
 		end
 		x = x+1
 	end

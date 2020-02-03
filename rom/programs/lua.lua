@@ -81,7 +81,7 @@ print( "Call exit() to exit", "yellow+1" )
 
 while running do
 	-- Draw
-	screen.setColor("white")
+	screen.setColour("white")
 	screen.write("lua> ")
 	
 	-- Get input and save history

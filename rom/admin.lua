@@ -1,6 +1,6 @@
 -- Boot
 screen.pos = swizzle(1,1)
-screen.color = "white"
+screen.colour = "white"
 screen.background = "black"
 screen.setFont("/rom/fonts/5x5_pxl_round.lua")
 
@@ -112,14 +112,14 @@ end
 -- Program functions
 function clearScreen()
 	screen.background = "black"
-	screen.color = "white"
+	screen.colour = "white"
 	screen.clear()
 	screen.setPixelPos( 1, 1 )
 end
 
 function draw()
 	screen.background = "white"
-	screen.color = "gray-1"
+	screen.colour = "gray-1"
 	screen.clear("white")
 	max = 0
 	for i = 1, #currentMenu do
@@ -143,7 +143,7 @@ function draw()
 		end
 		if string.find( currentMenu[i].type, "input", 1, true ) then
 			screen.setCharPos( x + max + 1, y )
-			screen.write( tostring(currentMenu[i].data), {color="blue"} )
+			screen.write( tostring(currentMenu[i].data), {colour="blue"} )
 		end
 		y = y+1
 	end

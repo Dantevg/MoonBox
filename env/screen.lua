@@ -14,14 +14,14 @@ local love = args[2]
 
 -- HELPER FUNCTIONS
 
-local function getColor(color)
-	local c = colors.rgb(color)
+local function getColour(colour)
+	local c = colours.rgb(colour)
 	if not c then return end
 	c.rgb = c.rgb / 255
 	return c
 end
 
-local function closestColor( r, g, b, a )
+local function closestColour( r, g, b, a )
 	expect( r, {"number", "table"} )
 	if type(r) == "number" then
 		expect( g, {"number", "nil"} )
@@ -34,9 +34,9 @@ local function closestColor( r, g, b, a )
 	end
 	
 	local minName, minBrightness, minDist
-	for name, v in pairs(screen.colors) do
-		for brightness, color in ipairs(v) do
-			local dist = (color[1]-r)^2 + (color[2]-g)^2 + (color[3]-b)^2
+	for name, v in pairs(screen.colours) do
+		for brightness, colour in ipairs(v) do
+			local dist = (colour[1]-r)^2 + (colour[2]-g)^2 + (colour[3]-b)^2
 			if not minDist or dist < minDist then
 				minDist = dist
 				minName, minBrightness = name, brightness
@@ -44,13 +44,13 @@ local function closestColor( r, g, b, a )
 		end
 	end
 	
-	return screen.colors[minName][minBrightness][1]/255,
-		screen.colors[minName][minBrightness][2]/255,
-		screen.colors[minName][minBrightness][3]/255,
+	return screen.colours[minName][minBrightness][1]/255,
+		screen.colours[minName][minBrightness][2]/255,
+		screen.colours[minName][minBrightness][3]/255,
 		a
 end
 
-local function blendColors( fg, bg )
+local function blendColours( fg, bg )
 	expect( fg, "table" )
 	expect( bg, "table" )
 	
@@ -67,7 +67,7 @@ end
 
 -- VARIABLES
 
-screen.colors64 = {
+screen.colours64 = {
 	red    = { {51, 0,  10 }, {102,5,  18 }, {166,15, 23 }, {230,33, 33 }, {255,80, 64 }, {255,128,102}, {255,196,176} },
 	orange = { {64, 13, 0  }, {128,36, 0  }, {189,64, 0  }, {230,94, 0  }, {255,135,36 }, {255,166,74 }, {255,212,153} },
 	yellow = { {77, 33, 0  }, {153,87, 0  }, {204,135,0  }, {240,194,0  }, {255,237,51 }, {255,255,102}, {245,255,153} },
@@ -81,7 +81,7 @@ screen.colors64 = {
 	white  = { {255,255,255}, {255,255,255}, {255,255,255}, {255,255,255}, {255,255,255}, {255,255,255}, {255,255,255} },
 }
 
-screen.colors32 = {
+screen.colours32 = {
   red    = {{170,0,  0  }, {255,68, 68 }, {255,119,119}},
   pink   = {{187,51, 170}, {255,85, 253}, {255,153,255}},
   purple = {{102,17, 153}, {187,102,238}, {204,153,255}},
@@ -127,21 +127,21 @@ setmetatable( screen, {
 	end
 } )
 
-function screen.canvas.pixel( canvas, x, y, color )
+function screen.canvas.pixel( canvas, x, y, colour )
 	expect( x, "number", 1, "screen.pixel" )
 	expect( y, "number", 2, "screen.pixel" )
-	expect( color, {"string", "nil"}, 3, "screen.pixel" )
+	expect( colour, {"string", "nil"}, 3, "screen.pixel" )
 	
 	x, y = x or screen.pos.x, y or screen.pos.y
 	if x <= 0 or y <= 0 or x > canvas.width or y > canvas.height then
 		return
 	end
 	
-	local rgb = getColor( color or screen.color )
-	if not rgb then error( "No such color", 2 ) end
+	local rgb = getColour( colour or screen.colour )
+	if not rgb then error( "No such colour", 2 ) end
 	if rgb.a ~= 1 then -- Partially transparent, blend with background
-		color = colors.blend( color, rgb.a, screen.canvas.getPixel( canvas, x, y ) )
-		rgb = getColor(color)
+		colour = colours.blend( colour, rgb.a, screen.canvas.getPixel( canvas, x, y ) )
+		rgb = getColour(colour)
 	end
 	
 	canvas.canvas:renderTo(function()
@@ -150,16 +150,16 @@ function screen.canvas.pixel( canvas, x, y, color )
 	end)
 end
 
-function screen.canvas.char( canvas, char, x, y, color, scale )
+function screen.canvas.char( canvas, char, x, y, colour, scale )
 	expect( char, "string", 1, "screen.char" )
 	expect( x, {"number", "nil"}, 2, "screen.char" )
 	expect( y, {"number", "nil"}, 3, "screen.char" )
-	expect( color, {"string", "nil"}, 4, "screen.char" )
+	expect( colour, {"string", "nil"}, 4, "screen.char" )
 	expect( scale, {"number", "nil"}, 5, "screen.char" )
 	scale = scale or 1
 	
 	x, y = x or screen.pos.x, y or screen.pos.y
-	local rgb = getColor(color) or getColor(screen.color)
+	local rgb = getColour(colour) or getColour(screen.colour)
 	
 	if rgb.a ~= 1 then -- Partially transparent
 		-- Update the screen image
@@ -187,14 +187,14 @@ function screen.canvas.char( canvas, char, x, y, color, scale )
 		-- 		if data[h][w] == 1 then
 		-- 			if rgb[4] ~= 1 then -- Partially transparent
 		-- 				local bg = { canvas.image:getPixel( x+w-1.5, y+screen.font.height-h-1.5 ) }
-		-- 				local finalColor = {
+		-- 				local finalColour = {
 		-- 					rgb[1] * rgb[4] + bg[1] * (1-rgb[4]),
 		-- 					rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
 		-- 					rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
 		-- 				}
-		-- 				love.graphics.setColor(finalColor)
+		-- 				love.graphics.setColour(finalColour)
 		-- 			else
-		-- 				love.graphics.setColor(rgb)
+		-- 				love.graphics.setColour(rgb)
 		-- 			end
 		-- 			love.graphics.points( x + w - 1.5, y + screen.font.height - h - 1.5 )
 		-- 		end
@@ -205,7 +205,7 @@ end
 
 -- screen.write( text, options )
 -- screen.write( text, x, y )
--- Options: x (number), y (number), color (string), background (string),
+-- Options: x (number), y (number), colour (string), background (string),
 -- 	max (number), overflow: (string/boolean) ["wrap", "ellipsis", "scroll", false], monospace (boolean)
 function screen.canvas.write( canvas, text, a, b )
 	expect( a, {"number", "table", "nil"}, 2, "screen.write" )
@@ -272,7 +272,7 @@ function screen.canvas.write( canvas, text, a, b )
 			nextCharPos()
 			nextCharPos()
 		else
-			screen.canvas.char( canvas, string.sub(text,i,i), x, y, options.color, options.scale )
+			screen.canvas.char( canvas, string.sub(text,i,i), x, y, options.colour, options.scale )
 			nextCharPos()
 		end
 	end
@@ -281,10 +281,10 @@ function screen.canvas.write( canvas, text, a, b )
 	return scroll
 end
 
-function screen.canvas.print( canvas, text, color )
-	expect( color, {"string", "nil"}, 2, "screen.print" )
+function screen.canvas.print( canvas, text, colour )
+	expect( colour, {"string", "nil"}, 2, "screen.print" )
 	
-	screen.canvas.write( canvas, text, {color = color} )
+	screen.canvas.write( canvas, text, {colour = colour} )
 	screen.pos.x = 1
 	screen.pos.y = screen.pos.y + (screen.font.height+1)
 	while screen.pos.y + screen.font.height > canvas.height do
@@ -293,22 +293,22 @@ function screen.canvas.print( canvas, text, color )
 end
 
 -- Default filled
-function screen.canvas.rect( canvas, x, y, w, h, color, filled )
+function screen.canvas.rect( canvas, x, y, w, h, colour, filled )
 	expect( x, {"number", "nil"}, 1, "screen.rect" )
 	expect( y, {"number", "nil"}, 2, "screen.rect" )
 	expect( w, {"number", "nil"}, 3, "screen.rect" )
 	expect( h, {"number", "nil"}, 4, "screen.rect" )
-	expect( color, {"string", "nil"}, 5, "screen.rect" )
+	expect( colour, {"string", "nil"}, 5, "screen.rect" )
 	expect( filled, {"boolean", "nil"}, 6, "screen.rect" )
 	
 	x, y = x or screen.pos.x, y or screen.pos.y
 	w, h = (w or 0), (h or 0)
 	
-	local rgb = getColor(color) or getColor(screen.background)
+	local rgb = getColour(colour) or getColour(screen.background)
 	
 	if rgb.a == 1 then -- Not transparent, use simple faster method
 		canvas.canvas:renderTo(function()
-			love.graphics.setColor(rgb)
+			love.graphics.setColour(rgb)
 			if filled ~= false then
 				love.graphics.rectangle( "fill", x-0.5, y-0.5, w, h )
 			else
@@ -323,8 +323,8 @@ function screen.canvas.rect( canvas, x, y, w, h, color, filled )
 		-- Draw rectangle on image
 		for i = math.max( x, 1 ), math.min( x+w-1, canvas.width ) do
 			for j = math.max( y, 1 ), math.min( y+h-1, canvas.height ) do
-				local finalColor = blendColors( rgb, {canvas.image:getPixel(i-0.5, j-0.5)} )
-				canvas.image:setPixel( i-0.5, j-0.5, closestColor(finalColor) )
+				local finalColour = blendColours( rgb, {canvas.image:getPixel(i-0.5, j-0.5)} )
+				canvas.image:setPixel( i-0.5, j-0.5, closestColour(finalColour) )
 			end
 		end
 		
@@ -335,21 +335,21 @@ function screen.canvas.rect( canvas, x, y, w, h, color, filled )
 			love.graphics.draw(image)
 		end)
 	elseif rgb.a ~= 0 and filled == false then
-		screen.canvas.line( canvas, x+1, y, x+w-1, y, color )
-		screen.canvas.line( canvas, x+w-1, y+1, x+w-1, y+h-1, color )
-		screen.canvas.line( canvas, x, y+h-1, x+w-2, y+h-1, color )
-		screen.canvas.line( canvas, x, y, x, y+h-2, color )
+		screen.canvas.line( canvas, x+1, y, x+w-1, y, colour )
+		screen.canvas.line( canvas, x+w-1, y+1, x+w-1, y+h-1, colour )
+		screen.canvas.line( canvas, x, y+h-1, x+w-2, y+h-1, colour )
+		screen.canvas.line( canvas, x, y, x, y+h-2, colour )
 	end
 end
 
-function screen.canvas.line( canvas, x1, y1, x2, y2, color )
+function screen.canvas.line( canvas, x1, y1, x2, y2, colour )
 	expect( x1, "number", 1, "screen.line" )
 	expect( y1, "number", 2, "screen.line" )
 	expect( x2, "number", 3, "screen.line" )
 	expect( y2, "number", 4, "screen.line" )
-	expect( color, {"string", "nil"}, 5, "screen.line" )
+	expect( colour, {"string", "nil"}, 5, "screen.line" )
 	
-	local rgb = getColor(color) or getColor(screen.color)
+	local rgb = getColour(colour) or getColour(screen.colour)
 	
 	if rgb.a ~= 1 then -- Partially transparent, update screen image
 		canvas.image = canvas.canvas:newImageData()
@@ -359,8 +359,8 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 	local function point( x, y )
 		if x < 1 or y < 1 or x > canvas.width or y > canvas.height then return end
 		if rgb.a ~= 1 then
-			local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
-			love.graphics.setColor(finalColor)
+			local finalColour = blendColours( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
+			love.graphics.setColor(finalColour)
 		else
 			love.graphics.setColor(rgb)
 		end
@@ -427,15 +427,15 @@ function screen.canvas.line( canvas, x1, y1, x2, y2, color )
 end
 
 -- Default filled
-function screen.canvas.circle( canvas, xc, yc, r, color, filled )
+function screen.canvas.circle( canvas, xc, yc, r, colour, filled )
 	expect( xc, {"number", "nil"}, 1, "screen.circle" )
 	expect( yc, {"number", "nil"}, 2, "screen.circle" )
 	expect( r, "number", 3, "screen.circle" )
-	expect( color, {"string", "nil"}, 4, "screen.circle" )
+	expect( colour, {"string", "nil"}, 4, "screen.circle" )
 	expect( filled, {"boolean", "nil"}, 5, "screen.circle" )
 	
 	xc, yc = xc or screen.pos.x, yc or screen.pos.y
-	local rgb = getColor(color) or getColor(screen.color)
+	local rgb = getColour(colour) or getColour(screen.colour)
 	
 	if rgb.a ~= 1 and not filled then -- Partially transparent, update screen image
 		canvas.image = canvas.canvas:newImageData()
@@ -449,8 +449,8 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	local function pixel( x, y )
 		if x < 1 or y < 1 or x > canvas.width or y > canvas.height then return end
 		if rgb.a ~= 1 then
-			local finalColor = blendColors( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
-			love.graphics.setColor(finalColor)
+			local finalColour = blendColours( rgb, {canvas.image:getPixel(x-0.5, y-0.5)} )
+			love.graphics.setColor(finalColour)
 		else
 			love.graphics.setColor(rgb)
 		end
@@ -461,10 +461,10 @@ function screen.canvas.circle( canvas, xc, yc, r, color, filled )
 	local function draw( x, y )
 		x, y = math.floor(x), math.floor(y)
 		if filled ~= false then
-			screen.canvas.line( canvas, xc-x, yc-y, xc+x, yc-y, color )
-			screen.canvas.line( canvas, xc-x, yc+y, xc+x, yc+y, color )
-			screen.canvas.line( canvas, xc-y, yc-x, xc+y, yc-x, color )
-			screen.canvas.line( canvas, xc-y, yc+x, xc+y, yc+x, color )
+			screen.canvas.line( canvas, xc-x, yc-y, xc+x, yc-y, colour )
+			screen.canvas.line( canvas, xc-x, yc+y, xc+x, yc+y, colour )
+			screen.canvas.line( canvas, xc-y, yc-x, xc+y, yc-x, colour )
+			screen.canvas.line( canvas, xc-y, yc+x, xc+y, yc+x, colour )
 		else
 			canvas.canvas:renderTo(function()
 				pixel( xc+x, yc+y )
@@ -534,13 +534,13 @@ function screen.canvas.drawImage( canvas, image, x, y, scale )
 				local screenX = x + ox*scale + (px-1) - 0.5
 				local screenY = y + oy*scale + (py-1) - 0.5
 				if screenX >= 0 and screenY >= 0 and screenX <= canvas.width and screenY <= canvas.height then
-					local finalColor = blendColors( {r,g,b,a}, {canvas.image:getPixel(screenX, screenY)} )
-					canvas.image:setPixel( screenX, screenY, closestColor(finalColor) )
+					local finalColour = blendColours( {r,g,b,a}, {canvas.image:getPixel(screenX, screenY)} )
+					canvas.image:setPixel( screenX, screenY, closestColour(finalColour) )
 				end
 			end
 		end
 		
-		return r, g, b, a -- mapPixel expects a return color, so return original color
+		return r, g, b, a -- mapPixel expects a return colour, so return original colour
 	end)
 	
 	-- Draw image on canvas
@@ -590,13 +590,13 @@ function screen.canvas.tabulate( canvas, elements, nColumns, vertical, fn )
 	end
 end
 
-function screen.canvas.clear( canvas, color )
-	expect( color, {"string", "nil"} )
+function screen.canvas.clear( canvas, colour )
+	expect( colour, {"string", "nil"} )
 	
-	color = getColor(color) or {0,0,0,0} -- Default to transparent black
+	colour = getColour(colour) or {0,0,0,0} -- Default to transparent black
 	
 	canvas.canvas:renderTo(function()
-		love.graphics.clear(color)
+		love.graphics.clear(colour)
 	end)
 end
 
@@ -618,12 +618,12 @@ function screen.canvas.move( canvas, x, y )
 	screen.pos = screen.pos + {x,y}
 end
 
-function screen.canvas.cursor( canvas, x, y, color )
+function screen.canvas.cursor( canvas, x, y, colour )
 	expect( x, {"number", "nil"}, 1, "screen.cursor" )
 	expect( y, {"number", "nil"}, 2, "screen.cursor" )
-	expect( color, {"string", "nil"}, 3, "screen.cursor" )
+	expect( colour, {"string", "nil"}, 3, "screen.cursor" )
 	
-	screen.canvas.char( canvas, "_", x, y, color )
+	screen.canvas.char( canvas, "_", x, y, colour )
 end
 
 
@@ -667,16 +667,16 @@ function screen.getCharPos( x, y )
 		math.floor( y / (screen.font.height+1) ) + 1
 end
 
-function screen.setColor(color)
-	expect( color, "string" )
+function screen.setColour(colour)
+	expect( colour, "string" )
 	
-	screen.color = color
+	screen.colour = colour
 end
 
-function screen.setBackground(color)
-	expect( color, "string" )
+function screen.setBackground(colour)
+	expect( colour, "string" )
 	
-	screen.background = color
+	screen.background = colour
 end
 
 function screen.canvas.getPixel( canvas, x, y )
@@ -693,7 +693,7 @@ function screen.canvas.getPixel( canvas, x, y )
 	end
 	local r, g, b = canvas.image:getPixel( x-1, y-1 )
 	
-	return colors.color( r, g, b )
+	return colours.colour( r, g, b )
 end
 
 function screen.loadImage(source)
@@ -710,9 +710,9 @@ function screen.loadImage(source)
 		imageData = love.image.newImageData(path)
 	end
 	
-	-- Convert colors
+	-- Convert colours
 	imageData:mapPixel(function( x, y, r, g, b, a )
-		return closestColor({r,g,b,a})
+		return closestColour({r,g,b,a})
 	end)
 	
 	return {

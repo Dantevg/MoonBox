@@ -27,7 +27,7 @@ for i = 1, #list do
 end
 
 if #folders >= 1 then
-	screen.setColor("green+1")
+	screen.setColour("green+1")
 	screen.tabulate(folders)
 end
 
@@ -35,9 +35,9 @@ if #files >= 1 then
 	screen.tabulate( files, nil, false, function(file)
 		local ext = disk.getExtension(file)
 		local name = string.sub( file, 1, -1-(ext and #ext or 0) )
-		screen.setColor("white")
+		screen.setColour("white")
 		screen.write(name)
-		screen.setColor("gray")
+		screen.setColour("gray")
 		screen.write(ext)
 	end )
 end
