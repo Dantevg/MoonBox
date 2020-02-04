@@ -192,9 +192,9 @@ function screen.canvas.char( canvas, char, x, y, colour, scale )
 		-- 					rgb[2] * rgb[4] + bg[2] * (1-rgb[4]),
 		-- 					rgb[3] * rgb[4] + bg[3] * (1-rgb[4]),
 		-- 				}
-		-- 				love.graphics.setColour(finalColour)
+		-- 				love.graphics.setColor(finalColour)
 		-- 			else
-		-- 				love.graphics.setColour(rgb)
+		-- 				love.graphics.setColor(rgb)
 		-- 			end
 		-- 			love.graphics.points( x + w - 1.5, y + screen.font.height - h - 1.5 )
 		-- 		end
@@ -308,7 +308,7 @@ function screen.canvas.rect( canvas, x, y, w, h, colour, filled )
 	
 	if rgb.a == 1 then -- Not transparent, use simple faster method
 		canvas.canvas:renderTo(function()
-			love.graphics.setColour(rgb)
+			love.graphics.setColor(rgb)
 			if filled ~= false then
 				love.graphics.rectangle( "fill", x-0.5, y-0.5, w, h )
 			else
