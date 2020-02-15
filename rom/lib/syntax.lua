@@ -14,12 +14,20 @@ local stringContent = "[^\n]-[^\\]"
 syntax.patterns.comment = {
 	"^%-%-[^\n]*",            -- Single-line comment
 	"^%-%-"..block,           -- Multiline comment
+	unfinished = {
+		"^%-%-%[(=*)%[.-%]\n$"  -- Unfinished multiline comment at end of chunk
+	}
 }
 
 syntax.patterns.string = {
-	'^"'..stringContent..'"', -- Single-line comment with double quotes("")
-	"^'"..stringContent.."'", -- Single-line comment with single quotes ('')
+	'^"'..stringContent..'"', -- Single-line string with double quotes ("")
+	"^'"..stringContent.."'", -- Single-line string with single quotes ('')
 	block,                    -- Multiline string
+	unfinished = {
+		'^".-\n$',              -- Unfinished single-line string with "" at end of chunk
+		"^'.-\n$",              -- Unfinished single-line string with '' at end of chunk
+		"%[(=*)%[.-$"						-- Unfinished multiline string at end of chunk
+	}
 }
 
 syntax.patterns.number = {"^%d+"}
@@ -47,14 +55,24 @@ syntax.patternsOrder = {
 	"whitespace",
 }
 
-function syntax.match( s, from )
+function syntax.matchPattern( s, from, patterns )
+	from = from or 1
+	for i, pattern in ipairs(patterns) do
+		local match = string.match( s, pattern, from )
+		if match then return match end
+	end
+end
+
+function syntax.match( s, from, unfinished )
 	from = from or 1
 	for _, type in ipairs(syntax.patternsOrder) do
-		local patterns = syntax.patterns[type]
-		for i, pattern in ipairs(patterns) do
-			local match = string.match( s, pattern, from )
-			if match then return match, type, from, from + #match end
+		local match = syntax.matchPattern( s, from, syntax.patterns[type] )
+		local complete = true
+		if not match and unfinished and syntax.patterns[type].unfinished then
+			complete = false
+			match = syntax.matchPattern( s, from, syntax.patterns[type].unfinished )
 		end
+		if match then return match, type, from, from + #match, complete end
 	end
 end
 
@@ -62,15 +80,17 @@ function syntax.matchAll( s, from )
 	from = from or 1
 	local matches = {}
 	for _, type in ipairs(syntax.patternsOrder) do
-		local patterns = syntax.patterns[type]
-		for i, pattern in ipairs(patterns) do
-			local match = string.match( s, pattern, from )
+		local match = syntax.matchPattern( s, from, syntax.patterns[type] )
+		if not match and syntax.patterns[type].unfinished then
+			match = syntax.matchPattern( s, from, syntax.patterns[type].unfinished )
+		end
+		if match then
 			table.insert( matches, {
-				data = match,
+				match = match,
 				type = type,
 				from = from,
 				to = from + #match
-			} )
+			})
 		end
 	end
 	return matches
