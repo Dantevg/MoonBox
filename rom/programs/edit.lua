@@ -59,18 +59,18 @@ else
 	path = shell.absolute(path)
 end
 
-local file = {""}
+local lines = {""}
 
 if disk.exists(path) and disk.info(path).type == "file" then
-	file = disk.readLines(path)
-	if not file then
+	lines = disk.readLines(path)
+	if not lines then
 		error( "Couldn't open file", 2 )
 	end
 end
 
 -- Convert tabs to spaces
-for y = 1, #file do
-	file[y] = string.gsub( file[y], "\t", "  " )
+for y = 1, #lines do
+	lines[y] = string.gsub( lines[y], "\t", "  " )
 end
 
 -- Variables
@@ -126,7 +126,7 @@ local patterns = {
 	{"^[^%w_]", theme.text}
 }
 
-local lineStart = math.floor( math.log10(#file) ) + 2 -- Width of line numbers
+local lineStart = math.floor( math.log10(#lines) ) + 2 -- Width of line numbers
 
 local running = true
 local timer = os.startTimer(0.5)
@@ -139,13 +139,13 @@ local selection
 -- Functions
 function save()
 	disk.write( path, "" )
-	for i = 1, #file do
-		disk.append( path, file[i].."\n" )
+	for i = 1, #lines do
+		disk.append( path, lines[i].."\n" )
 	end
 end
 
 function setIndent()
-	local _, _, s = string.find( file[y], "^(%s+)" )
+	local _, _, s = string.find( lines[y], "^(%s+)" )
 	if s then
 		indent = math.floor( #s / 2 )
 	else
@@ -156,7 +156,7 @@ end
 function getWords(line)
 	local words = {}
 	local length = 1
-	for word, separator in string.gmatch( file[line], "(%w*)(%W*)" ) do
+	for word, separator in string.gmatch( lines[line], "(%w*)(%W*)" ) do
 		table.insert( words, { type="word", data=word, s=length, e=length+#word-1 } )
 		table.insert( words, { type="separator", data=separator, s=length+#word, e=length+#word+#separator-1 } )
 		length = length + #word + #separator
@@ -203,7 +203,7 @@ function autocomplete(input)
 end
 
 function drawLine( row, start )
-	local line = file[row+yScroll]
+	local line = lines[row+yScroll]
 	local suggestion = #line>0 and y == row and x == #line+1 and autocomplete(line) or ""
 	screen.setCharPos( 1, row )
 	screen.setColour(theme.linenumbers)
@@ -244,7 +244,7 @@ function draw()
 	screen.clear(theme.background)
 	
 	-- File contents, line numbers
-	local maxY = math.min( screen.charHeight-1, #file - yScroll )
+	local maxY = math.min( screen.charHeight-1, #lines - yScroll )
 	for row = 1, maxY do
 		drawLine( row, lineStart )
 	end
@@ -270,12 +270,12 @@ end
 function setCursor( newX, newY )
 	if event.keyDown("shift") then
 		selection = selection or { {x,y} }
-		selection[2] = { math.min(newX, #file[y]+1), newY }
+		selection[2] = { math.min(newX, #lines[y]+1), newY }
 	else
 		selection = nil
 	end
 	
-	x, y = math.min(newX, #file[newY]+1), newY
+	x, y = math.min(newX, #lines[newY]+1), newY
 	local w = math.floor( screen.charWidth - 1 )
 	local h = math.floor( screen.charHeight + 1 )
 	
@@ -310,23 +310,23 @@ function keyPress(key)
 					break
 				end
 			end
-			file[y] = ""
+			lines[y] = ""
 			for i = 1, #words do
-				file[y] = file[y] .. words[i].data
+				lines[y] = lines[y] .. words[i].data
 			end
 		else
 			if x > 1 then
-				file[y] = string.sub( file[y], 1, x-2 )..string.sub( file[y], x )
+				lines[y] = string.sub( lines[y], 1, x-2 )..string.sub( lines[y], x )
 				setCursor( x-1, y )
 			elseif y > 1 then
-				setCursor( #file[y-1]+1, y-1 )
-				file[y] = file[y] .. file[y+1]
-				table.remove( file, y+1 )
+				setCursor( #lines[y-1]+1, y-1 )
+				lines[y] = lines[y] .. lines[y+1]
+				table.remove( lines, y+1 )
 			end
 		end
-		lineStart = math.floor( math.log10(#file) ) + 2 -- Recalculate line number width
+		lineStart = math.floor( math.log10(#lines) ) + 2 -- Recalculate line number width
 	elseif key == "delete" then
-		if event.keyDown("ctrl") and x < #file[y] then
+		if event.keyDown("ctrl") and x < #lines[y] then
 			local words = getWords(y)
 			for i = 1, #words do
 				if x > words[i].s and x <= words[i].e+1 then
@@ -334,51 +334,51 @@ function keyPress(key)
 					break
 				end
 			end
-			file[y] = ""
+			lines[y] = ""
 			for i = 1, #words do
-				file[y] = file[y] .. words[i].data
+				lines[y] = lines[y] .. words[i].data
 			end
 		else
-			if x <= #file[y] then
-				file[y] = string.sub( file[y], 1, x-1 )..string.sub( file[y], x+1 )
-			elseif y < #file then
-				file[y] = file[y] .. file[y+1]
-				table.remove( file, y+1 )
+			if x <= #lines[y] then
+				lines[y] = string.sub( lines[y], 1, x-1 )..string.sub( lines[y], x+1 )
+			elseif y < #lines then
+				lines[y] = lines[y] .. lines[y+1]
+				table.remove( lines, y+1 )
 			end
 		end
-		lineStart = math.floor( math.log10(#file) ) + 2 -- Recalculate line number width
+		lineStart = math.floor( math.log10(#lines) ) + 2 -- Recalculate line number width
 	elseif key == "enter" then
-		table.insert( file, y+1, "" )
+		table.insert( lines, y+1, "" )
 		setIndent()
-		file[y+1] = string.rep( "  ", indent ) .. string.sub( file[y], x, -1 )
-		file[y] = string.sub( file[y], 1, x-1 )
+		lines[y+1] = string.rep( "  ", indent ) .. string.sub( lines[y], x, -1 )
+		lines[y] = string.sub( lines[y], 1, x-1 )
 		setCursor( indent*2+1, y+1 )
-		lineStart = math.floor( math.log10(#file) ) + 2 -- Recalculate line number width
+		lineStart = math.floor( math.log10(#lines) ) + 2 -- Recalculate line number width
 	elseif key == "tab" then
 		if event.keyDown("shift") then -- Remove one level of indentation
-			if string.sub( file[y], 1, 2 ) == "  " then
-				file[y] = string.sub( file[y], 3 )
+			if string.sub( lines[y], 1, 2 ) == "  " then
+				lines[y] = string.sub( lines[y], 3 )
 				x = x-2
 			end
 		else
-			local completion = autocomplete( file[y] )
-			if #file[y] > 0 and x == #file[y]+1 and completion and completion ~= "" then -- Accept autocompletion
-				file[y] = file[y] .. completion
+			local completion = autocomplete( lines[y] )
+			if #lines[y] > 0 and x == #lines[y]+1 and completion and completion ~= "" then -- Accept autocompletion
+				lines[y] = lines[y] .. completion
 				setCursor( x + #completion, y )
 			else -- Insert tab
-				file[y] = string.sub( file[y], 1, x-1 ).."  "..string.sub( file[y], x, -1 )
+				lines[y] = string.sub( lines[y], 1, x-1 ).."  "..string.sub( lines[y], x, -1 )
 				x = x+2
 				setIndent()
 			end
 		end
 	elseif key == "up" then
 		if y > 1 then
-			setCursor( math.min( x, #file[y-1]+1 ), y-1 )
+			setCursor( math.min( x, #lines[y-1]+1 ), y-1 )
 		else
 			setCursor( 1, 1 )
 		end
 	elseif key == "right" then
-		if event.keyDown("ctrl") and x < #file[y] then
+		if event.keyDown("ctrl") and x < #lines[y] then
 			local words = getWords(y)
 			for i = 1, #words do
 				if x >= words[i].s and x <= words[i].e then
@@ -387,17 +387,17 @@ function keyPress(key)
 				end
 			end
 		else
-			if x < #file[y]+1 then
+			if x < #lines[y]+1 then
 				setCursor( x+1, y )
-			elseif y < #file then
+			elseif y < #lines then
 				setCursor( 1, y+1 )
 			end
 		end
 	elseif key == "down" then
-		if y < #file then
-			setCursor( math.min( x, #file[y+1]+1 ), y+1 )
+		if y < #lines then
+			setCursor( math.min( x, #lines[y+1]+1 ), y+1 )
 		else
-			setCursor( #file[y]+1, y )
+			setCursor( #lines[y]+1, y )
 		end
 	elseif key == "left" then
 		if event.keyDown("ctrl") and x > 1 then
@@ -412,17 +412,17 @@ function keyPress(key)
 			if x > 1 then
 				setCursor( x-1, y )
 			elseif y > 1 then
-				setCursor( #file[y-1]+1, y-1 )
+				setCursor( #lines[y-1]+1, y-1 )
 			end
 		end
 	elseif key == "pageup" then
 		yScroll = math.max( yScroll - screen.charHeight, 0 )
 		setCursor( x, math.max(y-screen.charHeight, 1) )
 	elseif key == "pagedown" then
-		yScroll = math.min( yScroll + screen.charHeight, math.max( 0, #file-screen.charHeight+1 ) )
-		setCursor( x, math.min(y+screen.charHeight, #file) )
+		yScroll = math.min( yScroll + screen.charHeight, math.max( 0, #lines-screen.charHeight+1 ) )
+		setCursor( x, math.min(y+screen.charHeight, #lines) )
 	elseif key == "end" then
-		setCursor( #file[y]+1, y )
+		setCursor( #lines[y]+1, y )
 	elseif key == "home" then
 		setCursor( 1, y )
 	elseif event.keyDown("ctrl") then
@@ -442,13 +442,13 @@ while running do
 	if e == "key" then
 		keyPress(p1)
 	elseif e == "char" then
-		file[y] = string.sub( file[y], 1, x-1 )..p1..string.sub( file[y], x )
+		lines[y] = string.sub( lines[y], 1, x-1 )..p1..string.sub( lines[y], x )
 		setCursor( x+1, y )
 	elseif e == "timer" and p1 == timer then
 		cursor = not cursor
 		timer = os.startTimer(0.5)
 	elseif e == "scroll" then
-		yScroll = math.max( 0, math.min( yScroll - p3, #file - screen.charHeight + 1 ) )
+		yScroll = math.max( 0, math.min( yScroll - p3, #lines - screen.charHeight + 1 ) )
 	elseif e == "mouse" then
 		local x = math.ceil( p1 / (screen.font.width+1) - lineStart + xScroll )
 		local y = math.ceil( p2 / (screen.font.height+1) + yScroll )
