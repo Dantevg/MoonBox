@@ -227,7 +227,7 @@ function drawLine( row, start )
 						bg = "blue+2"
 					end
 				end
-				screen.write( string.sub( match, math.max(min-col, 0), max-col ), {background=bg} )
+				screen.write( string.sub( match, math.max(min-col, 0), max-col ), {background=bg, overflow="none"} )
 				line = string.sub( line, #match+1 )
 				col = col + #match
 				break
