@@ -372,8 +372,8 @@ function he.image.new( p, x, y, image, scale )
 	obj.tags = {"image", "*"}
 	obj.x = he.make.x(obj, x)
 	obj.y = he.make.y(obj, y)
-	obj.w = function() return image.w * obj.scale() end
-	obj.h = function() return image.h * obj.scale() end
+	obj.w = function() return image.width * obj.scale() end
+	obj.h = function() return image.height * obj.scale() end
 	obj.image = image
 	obj.scale = he.proxy(scale)
 	

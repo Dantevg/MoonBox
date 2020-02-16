@@ -9,6 +9,7 @@
 
 -- CONSTANTS
 
+local helium = require "helium"
 local he = helium.new( 1, 1, screen.width, screen.height )
 local gui = {}
 local obj = { paint = {}, menu = {} }
@@ -163,8 +164,8 @@ function colourPicker.new( p, x, y )
 	obj.tags = {"colourPicker", "*"}
 	obj.x = helium.make.x(obj, x)
 	obj.y = helium.make.y(obj, y)
-	obj.w = helium.proxy( obj.palette.w*8+1 )
-	obj.h = helium.proxy( obj.palette.h*8 )
+	obj.w = helium.proxy( obj.palette.width*8+1 )
+	obj.h = helium.proxy( obj.palette.height*8 )
 	
 	return setmetatable( obj, {__index = colourPicker} )
 end
@@ -260,10 +261,10 @@ table.insert( obj.paint, gui.paint )
 					if self:within( x, y ) then brush = b end
 				end
 				table.insert( obj.paint, imgObj )
-				xOff = xOff + img.w
-				if xOff + img.w > gui.picker.w() then
+				xOff = xOff + img.width
+				if xOff + img.width > gui.picker.w() then
 					xOff = 1
-					yOff = yOff + img.h
+					yOff = yOff + img.height
 				end
 			end
 		end
@@ -447,7 +448,7 @@ table.insert( obj.menu, gui.menu )
 function createImage( width, height )
 	image = screen.newCanvas( width, height )
 	image:clear("black")
-	overlay = screen.newCanvas( image.w, image.h )
+	overlay = screen.newCanvas( image.width, image.height )
 end
 
 function loadFile(p)
@@ -455,8 +456,8 @@ function loadFile(p)
 	path = p
 	
 	local img = screen.loadImage(path)
-	image = screen.newCanvas( img.w, img.h )
-	overlay = screen.newCanvas( image.w, image.h )
+	image = screen.newCanvas( img.width, img.height )
+	overlay = screen.newCanvas( image.width, image.height )
 	image:drawImage(img)
 	
 	return true
