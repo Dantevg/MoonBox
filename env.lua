@@ -27,7 +27,7 @@ end
 function env.require(path)
 	expect( path, "string" )
 	
-	local before = {"/", "/disk1/", "/disk1/lib/"}
+	local before = {"/", "/disk1/", "/disk1/lib/", "/rom/lib"}
 	local after = {"", ".lua"}
 	
 	-- Add source path of file to search path
