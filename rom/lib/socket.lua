@@ -1,1 +1,1 @@
-return require "socket"
+return package.preload.socket()
