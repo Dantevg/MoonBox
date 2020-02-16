@@ -12,38 +12,38 @@ local block = "%[(=*)%[.-%]%1%]"
 local stringContent = "[^\n]-[^\\]"
 
 syntax.patterns.comment = {
-	"^%-%-[^\n]*",            -- Single-line comment
-	"^%-%-"..block,           -- Multiline comment
+	"%-%-[^\n]*",            -- Single-line comment
+	"%-%-"..block,           -- Multiline comment
 	unfinished = {
-		"^%-%-%[(=*)%[.-%]\n$"  -- Unfinished multiline comment at end of chunk
+		"%-%-%[(=*)%[.-%]\n$"  -- Unfinished multiline comment at end of chunk
 	}
 }
 
 syntax.patterns.string = {
-	'^"'..stringContent..'"', -- Single-line string with double quotes ("")
-	"^'"..stringContent.."'", -- Single-line string with single quotes ('')
+	'"'..stringContent..'"', -- Single-line string with double quotes ("")
+	"'"..stringContent.."'", -- Single-line string with single quotes ('')
 	block,                    -- Multiline string
 	unfinished = {
-		'^".-\n$',              -- Unfinished single-line string with "" at end of chunk
-		"^'.-\n$",              -- Unfinished single-line string with '' at end of chunk
-		"%[(=*)%[.-$"						-- Unfinished multiline string at end of chunk
+		'".-\n$',              -- Unfinished single-line string with "" at end of chunk
+		"'.-\n$",              -- Unfinished single-line string with '' at end of chunk
+		"%[(=*)%[.-$"          -- Unfinished multiline string at end of chunk
 	}
 }
 
-syntax.patterns.number = {"^%d+"}
+syntax.patterns.number = {"%d+"}
 
-syntax.patterns.punctuation = {"^%p+"}
+syntax.patterns.punctuation = {"%p+"}
 
 syntax.patterns.keyword = {
-	"^and", "^break", "^do", "^else", "^elseif",
-	"^end", "^false", "^for", "^function", "^if",
-	"^in", "^local", "^nil", "^not", "^or",
-	"^repeat", "^return", "^then", "^true", "^until", "^while"
+	"and", "break", "do", "else", "elseif",
+	"end", "false", "for", "function", "if",
+	"in", "local", "nil", "not", "or",
+	"repeat", "return", "then", "true", "until", "while"
 }
 
-syntax.patterns.word = {"^[%a_][%w_]*"}
+syntax.patterns.word = {"[%a_][%w_]*"}
 
-syntax.patterns.whitespace = {"^%s+"}
+syntax.patterns.whitespace = {"%s+"}
 
 syntax.patternsOrder = {
 	"comment",
@@ -58,7 +58,7 @@ syntax.patternsOrder = {
 function syntax.matchPattern( s, from, patterns )
 	from = from or 1
 	for i, pattern in ipairs(patterns) do
-		local match = string.match( s, pattern, from )
+		local match = string.match( s, "^"..pattern, from )
 		if match then return match end
 	end
 end
