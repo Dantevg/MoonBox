@@ -84,9 +84,10 @@ function shell.autocomplete(input)
 		return false
 	end
 	
+	search = string.lower(search)
 	local files = disk.list(path)
 	for k, file in ipairs(files) do
-		if string.sub( file, 1, #search ) == search then
+		if string.lower( string.sub( file, 1, #search ) ) == search then
 			local isFile = (disk.info( path.."/"..file ).type == "file")
 			return string.sub( isFile and file or file.."/", #search+1, -1 )
 		end
