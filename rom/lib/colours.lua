@@ -7,6 +7,12 @@
 
 local colours = {}
 
+local swizzle = require "swizzle"
+
+
+
+-- HELPER FUNCTIONS
+
 local function getColour(colour)
 	local c = colours.rgb(colour)
 	if not c then return end

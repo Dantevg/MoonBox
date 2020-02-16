@@ -11,7 +11,7 @@ function sandbox:createEnv( env, loadGeneral )
 	if not env then
 		-- Load standard env
 		local vars = {
-			"coroutine", "assert", "tostring", "tonumber", "rawget", "xpcall", "pcall", "bit", "getfenv", "rawset", "setmetatable", "package", "getmetatable", "type", "ipairs", "_VERSION", "debug", "table", "collectgarbage", "module", "next", "math", "setfenv", "select", "string", "unpack", "require", "rawequal", "pairs", "error"
+			"coroutine", "assert", "tostring", "tonumber", "rawget", "xpcall", "pcall", "bit", "getfenv", "rawset", "setmetatable", "package", "getmetatable", "type", "ipairs", "_VERSION", "table", "collectgarbage", "module", "next", "math", "setfenv", "select", "string", "unpack", "require", "rawequal", "pairs", "error"
 		}
 		for _, v in ipairs(vars) do
 			self.env[v] = _G[v]
@@ -19,19 +19,26 @@ function sandbox:createEnv( env, loadGeneral )
 	end
 	
 	-- Load MoonBox APIs and libraries
-	setmetatable( self.env, {__index = _G} )
 	local function load( path, ... )
+		local chunk, err = love.filesystem.load(path)
+		if not chunk then error( err, 0 ) end
+		setfenv( chunk, self.env )
+		self.env[ path:match("([^/]+)%.lua") ] = chunk(...)
+	end
+	
+	local function loadLibs( path, ... )
 		local files = love.filesystem.getDirectoryItems(path)
 		for _, name in pairs(files) do
-			local chunk, err = love.filesystem.load(path.."/"..name)
-			if not chunk then error( err, 0 ) end
-			setfenv( chunk, self.env )
-			self.env[ name:match("^(.+)%.lua") ] = chunk(...)
+			load( path.."/"..name, ... )
 		end
 	end
 	
-	load( "env", self, love ) -- Load APIs, pass computer and love
-	load("rom/lib") -- Load libraries (which don't need special access)
+	setmetatable( self.env, {__index = _G} )
+	loadLibs( "env", self, love ) -- Load APIs, pass computer and love
+	-- loadLibs("rom/lib") -- Load libraries (which don't need special access)
+	load("rom/lib/colours.lua")
+	load("rom/lib/shell.lua")
+	load("rom/lib/read.lua")
 	
 	-- Load general MoonBox env
 	if loadGeneral ~= false then
@@ -157,7 +164,7 @@ function sandbox:resume(...)
 	if ok then
 		self.eventFilter = result
 	else
-		self.error = self.env.shell.traceback and debug.traceback( self.co, result ) or result
+		self.error = self.env.shell and self.env.shell.traceback and debug.traceback( self.co, result ) or result
 	end
 end
 

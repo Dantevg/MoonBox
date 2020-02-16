@@ -167,6 +167,8 @@ function love.load()
 	loadSettings()
 	setWindow()
 	
+	package.path = "rom/lib/?.lua;"..package.path
+	
 	if not love.filesystem.getInfo("disk1") or love.filesystem.getInfo("disk1").type ~= "directory" then
 		firstBoot = true
 		love.filesystem.createDirectory("disk1")

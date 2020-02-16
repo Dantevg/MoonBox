@@ -10,6 +10,8 @@ local args = {...}
 local computer = args[1]
 local love = args[2]
 
+local swizzle = require "swizzle"
+
 
 
 -- HELPER FUNCTIONS
