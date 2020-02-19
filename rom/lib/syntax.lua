@@ -15,17 +15,17 @@ syntax.patterns.comment = {
 	"%-%-[^\n]*",            -- Single-line comment
 	"%-%-"..block,           -- Multiline comment
 	unfinished = {
-		"%-%-%[(=*)%[.-%]\n$"  -- Unfinished multiline comment at end of chunk
+		"%-%-%[(=*)%[.-%]$"    -- Unfinished multiline comment at end of chunk
 	}
 }
 
 syntax.patterns.string = {
 	'"'..stringContent..'"', -- Single-line string with double quotes ("")
 	"'"..stringContent.."'", -- Single-line string with single quotes ('')
-	block,                    -- Multiline string
+	block,                   -- Multiline string
 	unfinished = {
-		'".-\n$',              -- Unfinished single-line string with "" at end of chunk
-		"'.-\n$",              -- Unfinished single-line string with '' at end of chunk
+		'".-$',                -- Unfinished single-line string with "" at end of chunk
+		"'.-$",                -- Unfinished single-line string with '' at end of chunk
 		"%[(=*)%[.-$"          -- Unfinished multiline string at end of chunk
 	}
 }
@@ -57,7 +57,7 @@ syntax.patternsOrder = {
 
 function syntax.matchPattern( s, from, patterns )
 	from = from or 1
-	for i, pattern in ipairs(patterns) do
+	for _, pattern in ipairs(patterns) do
 		local match = string.match( s, "^"..pattern, from )
 		if match then return match end
 	end
@@ -81,25 +81,28 @@ function syntax.matchAll( s, from )
 	local matches = {}
 	for _, type in ipairs(syntax.patternsOrder) do
 		local match = syntax.matchPattern( s, from, syntax.patterns[type] )
+		local unfinished = false
 		if not match and syntax.patterns[type].unfinished then
 			match = syntax.matchPattern( s, from, syntax.patterns[type].unfinished )
+			unfinished = true
 		end
 		if match then
 			table.insert( matches, {
 				match = match,
 				type = type,
 				from = from,
-				to = from + #match
+				to = from + #match,
+				unfinished = unfinished,
 			})
 		end
 	end
 	return matches
 end
 
-function syntax.gmatch(s)
+function syntax.gmatch( s, unfinished )
 	local start = 1
 	return function()
-		local str, type, from, to = syntax.match( s, start )
+		local str, type, from, to = syntax.match( s, start, unfinished )
 		if not str then return end
 		start = start + to - from
 		return str, type, from, to
