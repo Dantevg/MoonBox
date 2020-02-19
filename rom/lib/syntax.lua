@@ -15,17 +15,17 @@ syntax.patterns.comment = {
 	"%-%-[^\n]*",            -- Single-line comment
 	"%-%-"..block,           -- Multiline comment
 	unfinished = {
-		"%-%-%[(=*)%[.-%]$"  -- Unfinished multiline comment at end of chunk
+		"%-%-%[(=*)%[.-%]$"    -- Unfinished multiline comment at end of chunk
 	}
 }
 
 syntax.patterns.string = {
 	'"'..stringContent..'"', -- Single-line string with double quotes ("")
 	"'"..stringContent.."'", -- Single-line string with single quotes ('')
-	block,                    -- Multiline string
+	block,                   -- Multiline string
 	unfinished = {
-		'".-$',              -- Unfinished single-line string with "" at end of chunk
-		"'.-$",              -- Unfinished single-line string with '' at end of chunk
+		'".-$',                -- Unfinished single-line string with "" at end of chunk
+		"'.-$",                -- Unfinished single-line string with '' at end of chunk
 		"%[(=*)%[.-$"          -- Unfinished multiline string at end of chunk
 	}
 }
@@ -57,7 +57,7 @@ syntax.patternsOrder = {
 
 function syntax.matchPattern( s, from, patterns )
 	from = from or 1
-	for i, pattern in ipairs(patterns) do
+	for _, pattern in ipairs(patterns) do
 		local match = string.match( s, "^"..pattern, from )
 		if match then return match end
 	end
