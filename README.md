@@ -25,17 +25,15 @@ MoonBox is yet another Lua sandbox, built with the [LÖVE][love2d] game engine.
 ### paint.lua  
 ![paint.lua](docs/res/paint.png)
 
-<img src="docs/res/about.png" width="49%">
-<img src="docs/res/charnoise.png" width="49%">
-<img src="docs/res/menu.png" width="49%">
-<img src="docs/res/settings.png" width="49%">
+<img src="docs/res/about.png" width="49%"> <img src="docs/res/charnoise.png" width="49%">
+<img src="docs/res/menu.png" width="49%"> <img src="docs/res/settings.png" width="49%">
 
 ## Installation
 I haven't created binaries yet. So for now, you will have to install it manually yourself.
 If you've ever worked with [LÖVE][love2d], you know what to do.
 
 ## Documentation
-For the documentation, refer to [docs/README.md](docs/readme.md)
+For the documentation, refer to [docs/README.md](docs/README.md)
 
 ## License
 ```
