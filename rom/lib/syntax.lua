@@ -20,17 +20,21 @@ syntax.patterns.comment = {
 }
 
 syntax.patterns.string = {
-	'"'..stringContent..'"', -- Single-line string with double quotes ("")
-	"'"..stringContent.."'", -- Single-line string with single quotes ('')
-	block,                   -- Multiline string
+	'"'..stringContent..'"',     -- Single-line string with double quotes ("")
+	"'"..stringContent.."'",     -- Single-line string with single quotes ('')
+	block,                       -- Multiline string
 	unfinished = {
-		'".-$',                -- Unfinished single-line string with "" at end of chunk
-		"'.-$",                -- Unfinished single-line string with '' at end of chunk
-		"%[(=*)%[.-$"          -- Unfinished multiline string at end of chunk
+		'".-$',                    -- Unfinished single-line string with "" at end of chunk
+		"'.-$",                    -- Unfinished single-line string with '' at end of chunk
+		"%[(=*)%[.-$"              -- Unfinished multiline string at end of chunk
 	}
 }
 
-syntax.patterns.number = {"%d+"}
+syntax.patterns.number = {
+	"0x%x+",                     -- Hexadecimal number
+	"%-?%d-.?%d+[Ee][%+%-]?%d+", -- Number with exponent
+	"%-?%d*%.?%d+",              -- Number with optional decimal point
+}
 
 syntax.patterns.punctuation = {"%p+"}
 
@@ -92,7 +96,7 @@ function syntax.matchAll( s, from )
 				type = type,
 				from = from,
 				to = from + #match,
-				unfinished = unfinished,
+				complete = not unfinished,
 			})
 		end
 	end
