@@ -12,10 +12,10 @@ local block = "%[(=*)%[.-%]%1%]"
 local stringContent = "[^\n]-[^\\]"
 
 syntax.patterns.comment = {
-	"%-%-[^\n]*",            -- Single-line comment
-	"%-%-"..block,           -- Multiline comment
+	"%-%-[^\n]*",                -- Single-line comment
+	"%-%-"..block,               -- Multiline comment
 	unfinished = {
-		"%-%-%[(=*)%[.-%]$"    -- Unfinished multiline comment at end of chunk
+		"%-%-%[(=*)%[.-%]$"        -- Unfinished multiline comment at end of chunk
 	}
 }
 
@@ -49,6 +49,8 @@ syntax.patterns.word = {"[%a_][%w_]*"}
 
 syntax.patterns.whitespace = {"%s+"}
 
+syntax.patterns.other = {"."}  -- Match any character, to avoid getting stuck
+
 syntax.patternsOrder = {
 	"comment",
 	"string",
@@ -57,6 +59,7 @@ syntax.patternsOrder = {
 	"keyword",
 	"word",
 	"whitespace",
+	"other",
 }
 
 function syntax.matchPattern( s, from, patterns )
