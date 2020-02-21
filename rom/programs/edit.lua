@@ -5,42 +5,42 @@ themes.dark = {
 	linenumbers = "gray+2",
 	toolbarbg = "gray-1",
 	toolbartext = "gray+1",
-	text = "white",
 	comment = "gray",
 	string = "green+1",
 	number = "red+1",
+	punctuation = "gray+1",
 	keyword = "yellow+1",
-	boolean = "orange+2",
-	["self"] = "blue+2",
-	punctuation = "gray+2"
+	word = "white",
+	whitespace = "white",
+	other = "white",
 }
 themes.light = {
 	background = "gray+3",
 	linenumbers = "gray+1",
 	toolbarbg = "blue",
 	toolbartext = "white",
-	text = "gray-2",
 	comment = "gray",
 	string = "green-1",
 	number = "red+1",
+	punctuation = "gray",
 	keyword = "blue",
-	boolean = "yellow",
-	["self"] = "purple",
-	punctuation = "gray"
+	word = "gray-2",
+	whitespace = "gray-2",
+	other = "gray-2",
 }
 themes.gray = {
 	background = "gray-1",
 	linenumbers = "gray+2",
 	toolbarbg = "gray",
 	toolbartext = "gray-1",
-	text = "gray+1",
 	comment = "gray-2",
-	string = "white",
-	number = "gray-2",
+	string = "black",
+	number = "black",
+	punctuation = "white",
 	keyword = "white",
-	boolean = "black",
-	["self"] = "gray+2",
-	punctuation = "white"
+	word = "gray+1",
+	whitespace = "gray+1",
+	other = "gray+1"
 }
 
 local theme = themes.dark
@@ -74,57 +74,8 @@ for y = 1, #lines do
 end
 
 -- Variables
-local keywords = {
-	["and"] = true,
-	["break"] = true,
-	["do"] = true,
-	["else"] = true,
-	["elseif"] = true,
-	["end"] = true,
-	["false"] = theme.boolean,
-	["for"] = true,
-	["function"] = true,
-	["if"] = true,
-	["in"] = true,
-	["local"] = true,
-	["nil"] = true,
-	["not"] = true,
-	["or"] = true,
-	["repeat"] = true,
-	["return"] = true,
-	["self"] = theme["self"],
-	["then"] = true,
-	["true"] = theme.boolean,
-	["until"]= true,
-	["while"] = true,
-}
 
-local patterns = {
-	-- Comments
-	{"^%-%-%[%[.-%]%]", theme.comment},
-	{"^%-%-.*", theme.comment},
-	-- Strings
-	{"^\"\"", theme.string},
-	{"^\".-[^\\]\"", theme.string},
-	{"^\'\'", theme.string},
-	{"^\'.-[^\\]\'", theme.string},
-	{"^%[%[.-%]%]", theme.string},
-	-- Numbers
-	{"^%d+", theme.number},
-	-- (Key)words
-	{"^[%w_]+", function(match)
-		if keywords[match] == true then
-			return theme.keyword
-		elseif keywords[match] then
-			return keywords[match]
-		else
-			return theme.text
-		end
-	end},
-	{"^%p", theme.punctuation},
-	-- Everything else
-	{"^[^%w_]", theme.text}
-}
+local syntax = require "syntax"
 
 local lineStart = math.floor( math.log10(#lines) ) + 2 -- Width of line numbers
 
@@ -215,24 +166,10 @@ function drawLine( row, start )
 	local col = 0
 	
 	while #line > 0 and col < max do
-		for i = 1, #patterns do
-			local match = string.match( line, patterns[i][1] )
-			if match then
-				screen.setColour( type(patterns[i][2]) == "string" and patterns[i][2] or patterns[i][2](match) )
-				local bg = theme.background
-				if selection then
-					if row > selection[1][2] and row < selection[2][2]
-						or row == selection[1][2] and col >= selection[1][1]
-						or row == selection[2][2] and col <= selection[2][1] then
-						bg = "blue+2"
-					end
-				end
-				screen.write( string.sub( match, math.max(min-col, 0), max-col ), {background=bg, overflow="none"} )
-				line = string.sub( line, #match+1 )
-				col = col + #match
-				break
-			end
-		end
+		local match, type = syntax.match( line, col+1 )
+		screen.setColour( theme[type] )
+		screen.write( string.sub( match, math.max(min-col, 0), max-col ), {overflow="none"} )
+		col = col + #match
 	end
 	
 	-- Suggestion
@@ -254,7 +191,7 @@ function draw()
 		screen.setCharPos( x-xScroll + lineStart, y-yScroll )
 		local x, y = screen.getPixelPos()
 		screen.rect( x, y, screen.font.width, screen.font.height, theme.background )
-		screen.setColour(theme.text)
+		screen.setColour(theme.word)
 		screen.cursor( x, y+1 )
 	end
 	
