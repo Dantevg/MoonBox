@@ -115,47 +115,9 @@ function getWords(line)
 	return words
 end
 
-function autocomplete(input)
-	local start = string.find( input, "[a-zA-Z0-9%.]+$" )
-	input = string.sub( input, start or 1 )
-	start = 1
-	
-	-- Traverse through environment tables to get to input destination
-	local t = _G
-	local dot = string.find( input, ".", start, true )
-	while dot do
-		local part = string.sub( input, start, dot-1 )
-		if type( t[part] ) == "table" then
-			t = t[part]
-			start = dot + 1
-			dot = string.find( input, ".", start, true )
-		else
-			return ""
-		end
-	end
-	
-	-- Find element in keywords
-	local part = string.sub( input, start )
-	if t == _G then
-		for k, v in pairs(keywords) do
-			if string.sub( k, 1, #part ) == part then
-				return string.sub( k, #part+1 )
-			end
-		end
-	end
-	
-	-- Find element in table
-	for k, v in pairs(t) do
-		if string.sub( k, 1, #part ) == part and type(k) == "string" then
-			local suffix = type(v) == "table" and "." or (type(v) == "function" and "(" or "")
-			return string.sub( k..suffix, #part+1 )
-		end
-	end
-end
-
 function drawLine( row, start )
 	local line = lines[row+yScroll]
-	local suggestion = #line>0 and y == row and x == #line+1 and autocomplete(line) or ""
+	local suggestion = #line>0 and y == row and x == #line+1 and syntax.autocomplete(line) or ""
 	screen.setCharPos( 1, row )
 	screen.setColour(theme.linenumbers)
 	screen.write(row + yScroll)
@@ -298,7 +260,7 @@ function keyPress(key)
 				x = x-2
 			end
 		else
-			local completion = autocomplete( lines[y] )
+			local completion = syntax.autocomplete( lines[y] )
 			if #lines[y] > 0 and x == #lines[y]+1 and completion and completion ~= "" then -- Accept autocompletion
 				lines[y] = lines[y] .. completion
 				setCursor( x + #completion, y )
