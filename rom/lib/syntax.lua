@@ -9,7 +9,7 @@ local syntax = {}
 syntax.patterns = {}
 
 local block = "%[(=*)%[.-%]%1%]"
-local stringContent = "[^\n]-[^\\]"
+local stringContent = "[^\n]-[^\\\n]"
 
 syntax.patterns.comment = {
 	"%-%-[^\n]*",                -- Single-line comment
@@ -22,6 +22,8 @@ syntax.patterns.comment = {
 syntax.patterns.string = {
 	'"'..stringContent..'"',     -- Single-line string with double quotes ("")
 	"'"..stringContent.."'",     -- Single-line string with single quotes ('')
+	'""',                        -- Empty single-line string with double quotes ("")
+	"''",                        -- Empty single-line string with single quites ('')
 	block,                       -- Multiline string
 	unfinished = {
 		'".-$',                    -- Unfinished single-line string with "" at end of chunk
