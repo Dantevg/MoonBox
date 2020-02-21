@@ -118,4 +118,50 @@ function syntax.gmatch( s, unfinished )
 	end
 end
 
+function syntax.autocomplete(input)
+	local path = {}
+	
+	-- Get path
+	local str = input:match("%.$") or input:match("%.[%a_][%w_]*$")
+	while str do
+		table.insert( path, 1, str:sub(2) )
+		input = string.sub( input, 1, -#str-1 )
+		str = input:match("%.[%a_][%w_]*$") -- Match ".word"
+	end
+	local str = input:match("[%a_][%w_]*$") -- Match "word"
+	if not str then return end
+	table.insert( path, 1, str )
+	
+	-- Get variable
+	local t = _G
+	for i = 1, #path-1 do
+		if type(t) == "table" and t[ path[i] ] then
+			t = t[ path[i] ]
+		else
+			return ""
+		end
+	end
+	
+	local name = path[#path]
+	
+	-- Find keyword
+	if #path == 1 then
+		for _, keyword in ipairs(syntax.patterns.keyword) do
+			if keyword:sub( 1, #name )  == name then
+				return keyword:sub( #name + 1 )
+			end
+		end
+	end
+	
+	-- Find autocompletion
+	for k, v in pairs(t) do
+		if type(k) == "string" and k:sub( 1, #name ) == name then
+			local after = (type(v) == "table" and "." or (type(v) == "function" and "(" or ""))
+			return k:sub( #name + 1 )..after
+		end
+	end
+	
+	return ""
+end
+
 return syntax
