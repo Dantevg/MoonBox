@@ -9,26 +9,25 @@ local syntax = {}
 syntax.patterns = {}
 
 local block = "%[(=*)%[.-%]%1%]"
-local stringContent = "[^\n]-[^\\\n]"
 
 syntax.patterns.comment = {
 	"%-%-[^\n]*",                -- Single-line comment
 	"%-%-"..block,               -- Multiline comment
 	unfinished = {
-		"%-%-%[(=*)%[.-%]$"        -- Unfinished multiline comment at end of chunk
+		"%-%-%[(=*)%[.-%]$",       -- Unfinished multiline comment at end of chunk
 	}
 }
 
 syntax.patterns.string = {
-	'"'..stringContent..'"',     -- Single-line string with double quotes ("")
-	"'"..stringContent.."'",     -- Single-line string with single quotes ('')
+	'"[^\n"]-[^\\\n]"',          -- Single-line string with double quotes ("")
+	"'[^\n']-[^\\\n]'",          -- Single-line string with single quotes ('')
 	'""',                        -- Empty single-line string with double quotes ("")
 	"''",                        -- Empty single-line string with single quites ('')
 	block,                       -- Multiline string
 	unfinished = {
 		'".-$',                    -- Unfinished single-line string with "" at end of chunk
 		"'.-$",                    -- Unfinished single-line string with '' at end of chunk
-		"%[(=*)%[.-$"              -- Unfinished multiline string at end of chunk
+		"%[(=*)%[.-$",             -- Unfinished multiline string at end of chunk
 	}
 }
 
@@ -38,13 +37,14 @@ syntax.patterns.number = {
 	"%-?%d*%.?%d+",              -- Number with optional decimal point
 }
 
-syntax.patterns.punctuation = {"%p+"}
+syntax.patterns.punctuation = {"%p"}
 
 syntax.patterns.keyword = {
 	"and", "break", "do", "else", "elseif",
 	"end", "false", "for", "function", "if",
 	"in", "local", "nil", "not", "or",
-	"repeat", "return", "then", "true", "until", "while"
+	"repeat", "return", "then", "true", "until", "while",
+	after = "%f[^%w_]",
 }
 
 syntax.patterns.word = {"[%a_][%w_]*"}
@@ -67,7 +67,7 @@ syntax.patternsOrder = {
 function syntax.matchPattern( s, from, patterns )
 	from = from or 1
 	for _, pattern in ipairs(patterns) do
-		local match = string.match( s, "^"..pattern, from )
+		local match = string.match( s, "^"..pattern..(patterns.after or ""), from )
 		if match then return match end
 	end
 end
