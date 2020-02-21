@@ -32,7 +32,7 @@ syntax.patterns.string = {
 
 syntax.patterns.number = {
 	"0x%x+",                     -- Hexadecimal number
-	"%-?%d-.?%d+[Ee][%+%-]?%d+", -- Number with exponent
+	"%-?%d-%.?%d+[Ee][%+%-]?%d+",-- Number with exponent
 	"%-?%d*%.?%d+",              -- Number with optional decimal point
 }
 
