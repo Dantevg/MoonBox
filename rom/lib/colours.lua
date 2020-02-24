@@ -169,7 +169,7 @@ function colours.compose( name, brightness, opacity )
 	opacity = math.min( math.max( 0, opacity or 1 ), 1 )
 	
 	-- Round brightness and opacity
-	brightness = math.floor( brightness * 100 ) / 100
+	brightness = math.floor(brightness)
 	opacity = math.floor( opacity * 100 ) / 100
 	
 	local colour
