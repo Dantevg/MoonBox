@@ -1,3 +1,5 @@
+local syntax = require "syntax"
+
 local args = {...}
 local running = true
 local history = {}
@@ -8,75 +10,6 @@ if args[1] == "-G" or args[1] == "--global" then
 end
 local env = setmetatable( {exit = function() running = false end}, mt )
 
-local keywords = {
-	["and"] = true,
-	["break"] = true,
-	["do"] = true,
-	["else"] = true,
-	["elseif"] = true,
-	["end"] = true,
-	["false"] = true,
-	["for"] = true,
-	["function"] = true,
-	["if"] = true,
-	["in"] = true,
-	["local"] = true,
-	["nil"] = true,
-	["not"] = true,
-	["or"] = true,
-	["repeat"] = true,
-	["return"] = true,
-	["self"] = true,
-	["then"] = true,
-	["true"] = true,
-	["until"]= true,
-	["while"] = true,
-}
-
-local function autocomplete(input)
-	local start = string.find( input, "[a-zA-Z0-9%.]+$" )
-	input = string.sub( input, start or 1 )
-	start = 1
-	
-	-- Traverse through environment tables to get to input destination
-	local t = env
-	local dot = string.find( input, ".", start, true )
-	while dot do
-		local part = string.sub( input, start, dot-1 )
-		if type( t[part] ) == "table" then
-			t = t[part]
-			start = dot + 1
-			dot = string.find( input, ".", start, true )
-		else
-			return ""
-		end
-	end
-	
-	-- Find element in keywords
-	local part = string.sub( input, start )
-	if t == env then
-		for k, v in pairs(keywords) do
-			if string.sub( k, 1, #part ) == part then
-				return string.sub( k, #part+1 )
-			end
-		end
-	end
-	
-	-- Find element in table
-	while t do
-		for k, v in pairs(t) do
-			if string.sub( k, 1, #part ) == part and type(k) == "string" then
-				local suffix = type(v) == "table" and "." or (type(v) == "function" and "(" or "")
-				return string.sub( k..suffix, #part+1 )
-			end
-		end
-		t = getmetatable(t) and getmetatable(t).__index or nil
-		if type(t) ~= "table" then
-			return ""
-		end
-	end
-end
-
 print( "Call exit() to exit", "yellow+1" )
 
 while running do
@@ -85,7 +18,7 @@ while running do
 	screen.write("lua> ")
 	
 	-- Get input and save history
-	local input = read( history, false, autocomplete )
+	local input = read( history, false, function(input) return syntax.autocomplete(input,env) end )
 	print()
 	
 	local fn, err
