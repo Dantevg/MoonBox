@@ -362,6 +362,7 @@ function keyPress(key)
 			os.setClipboard( getSelection() )
 		elseif key == "v" then
 			local paste = os.getClipboard():gsub( "\r\n", "\n" ) -- CRLF (\r\n) -> LF (\n)
+			paste = paste:gsub("\t", "  ") -- Convert tab to double space
 			local before = string.sub( lines[y], 1, x-1 )
 			local after = string.sub( lines[y], x )
 			lines[y] = before
