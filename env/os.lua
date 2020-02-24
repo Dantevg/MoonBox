@@ -87,6 +87,15 @@ function os.shutdown()
 	love.event.quit()
 end
 
+function os.setClipboard(text)
+	expect( text, "string" )
+	computer.clipboard = text
+end
+
+function os.getClipboard()
+	return computer.clipboard
+end
+
 
 
 -- EXECUTION FUNCTIONS
