@@ -14,6 +14,7 @@ local menu = {
 		{name = "Lua", type = "fn", data = "lua"},
 		{name = "Shell", type = "fn", data = "shell"},
 		{name = "Screenshot", type = "fn", data = "screenshot"},
+		{name = "Clipboard", type = "menu", data = "clipboard"},
 		{name = "Reboot", type = "fn", data = "reboot"},
 		selected = 1,
 	},
@@ -32,11 +33,22 @@ local menu = {
 		{name = "Screenshot border", type = "input.boolean", source = "screenshotBorder", data = settings.screenshotBorder},
 		{name = "------", type = "text"},
 		{name = "Save", type = "fn", data = "saveSettings"},
-		selected = 1
+		selected = 1,
+	},
+	clipboard = {
+		{name = "Moonbox menu", type = "text"},
+		{name = "Press both [ctrl]s to switch", type = "text"},
+		{name = "", type = "text"},
+		{name = "Back", type = "menu", data = "main"},
+		{name = "------", type = "text"},
+		{name = "Copy from sandbox", type = "fn", data = "copy"},
+		{name = "Paste to sandbox", type = "fn", data = "paste"},
+		selected = 1,
 	},
 }
 local currentMenu = menu.main
 local max = 16
+local status
 
 -- Menu functions
 local fn = {}
@@ -77,6 +89,29 @@ function fn.screenshot()
 	end)
 	
 	screenshot:encode( "png", "/screenshots/"..filename..".png" )
+	
+	status = {
+		text = "Screnshot taken",
+		time = os.clock()
+	}
+	os.startTimer(2)
+end
+
+function fn.copy()
+	love.system.setClipboardText(computer.clipboard)
+	status = {
+		text = "Copied",
+		time = os.clock()
+	}
+	os.startTimer(2)
+end
+
+function fn.paste()
+	computer.clipboard = love.system.getClipboardText()status = {
+		text = "Pasted",
+		time = os.clock()
+	}
+	os.startTimer(2)
 end
 
 function fn.reboot()
@@ -146,6 +181,11 @@ function draw()
 			screen.write( tostring(currentMenu[i].data), {colour="blue"} )
 		end
 		y = y+1
+	end
+	
+	if status and status.time+2 > os.clock() then
+		local x = (screen.width - #status.text*(screen.font.width+1)) / 2
+		screen.write( status.text, {x = x, y = screen.height - 20, colour = "blue"} )
 	end
 end
 
