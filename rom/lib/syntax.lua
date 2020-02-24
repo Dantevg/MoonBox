@@ -65,6 +65,10 @@ syntax.patternsOrder = {
 }
 
 function syntax.matchPattern( s, from, patterns )
+	expect( s, "string", 1, "syntax.matchPattern" )
+	expect( from, {"number", "nil"}, 2, "syntax.matchPattern" )
+	expect( patterns, "table", 3, "syntax.matchPattern" )
+	
 	from = from or 1
 	for _, pattern in ipairs(patterns) do
 		local match = string.match( s, "^"..pattern..(patterns.after or ""), from )
@@ -73,6 +77,10 @@ function syntax.matchPattern( s, from, patterns )
 end
 
 function syntax.match( s, from, unfinished )
+	expect( s, "string", 1, "syntax.match" )
+	expect( from, {"number", "nil"}, 2, "syntax.match" )
+	expect( unfinished, {"boolean", "nil"}, 3, "syntax.match" )
+	
 	from = from or 1
 	for _, type in ipairs(syntax.patternsOrder) do
 		local match = syntax.matchPattern( s, from, syntax.patterns[type] )
@@ -86,6 +94,9 @@ function syntax.match( s, from, unfinished )
 end
 
 function syntax.matchAll( s, from )
+	expect( s, "string", 1, "syntax.matchAll" )
+	expect( from, {"number", "nil"}, 2, "syntax.matchAll" )
+	
 	from = from or 1
 	local matches = {}
 	for _, type in ipairs(syntax.patternsOrder) do
@@ -109,6 +120,9 @@ function syntax.matchAll( s, from )
 end
 
 function syntax.gmatch( s, unfinished )
+	expect( s, "string", 1, "syntax.gmatch" )
+	expect( unfinished, {"boolean", "nil"}, 2, "syntax.gmatch" )
+	
 	local start = 1
 	return function()
 		local str, type, from, to = syntax.match( s, start, unfinished )
@@ -118,7 +132,10 @@ function syntax.gmatch( s, unfinished )
 	end
 end
 
-function syntax.autocomplete(input)
+function syntax.autocomplete( input, env )
+	expect( input, "string", 1, "syntax.autocomplete" )
+	expect( env, {"table", "nil"}, 2, "syntax.autocomplete" )
+	
 	local path = {}
 	
 	-- Get path
@@ -133,7 +150,7 @@ function syntax.autocomplete(input)
 	table.insert( path, 1, str )
 	
 	-- Get variable
-	local t = _G
+	local t = env or getfenv(2)
 	for i = 1, #path-1 do
 		if type(t) == "table" and t[ path[i] ] then
 			t = t[ path[i] ]
