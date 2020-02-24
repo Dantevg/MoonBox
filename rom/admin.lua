@@ -94,7 +94,6 @@ function fn.screenshot()
 		text = "Screnshot taken",
 		time = os.clock()
 	}
-	os.startTimer(2)
 end
 
 function fn.copy()
@@ -103,7 +102,6 @@ function fn.copy()
 		text = "Copied",
 		time = os.clock()
 	}
-	os.startTimer(2)
 end
 
 function fn.paste()
@@ -111,7 +109,6 @@ function fn.paste()
 		text = "Pasted",
 		time = os.clock()
 	}
-	os.startTimer(2)
 end
 
 function fn.reboot()
@@ -183,9 +180,11 @@ function draw()
 		y = y+1
 	end
 	
-	if status and status.time+2 > os.clock() then
+	if status and status.time+1.5 > os.clock() then
 		local x = (screen.width - #status.text*(screen.font.width+1)) / 2
-		screen.write( status.text, {x = x, y = screen.height - 20, colour = "blue"} )
+		local colour = colours.compose( "blue", (os.clock()-status.time)*4 )
+		screen.write( status.text, {x = x, y = screen.height - 20, colour = colour} )
+		os.startTimer(0.5)
 	end
 end
 
