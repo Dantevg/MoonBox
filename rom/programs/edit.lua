@@ -104,6 +104,31 @@ function setIndent()
 	end
 end
 
+function withinSelection( x, y )
+	if not selection or not selection.from or not selection.to then return false end -- No selection
+	if y > selection.from[2] and y < selection.to[2] then return true end            -- Complete line selected
+	if y == selection.from[2] and y == selection.to[2] then                          -- Only one line selected
+		return x >= selection.from[1] and x < selection.to[1]
+	end
+	if y == selection.from[2] and x >= selection.from[1] then return true end        -- First line of selection
+	if y == selection.to[2] and x < selection.to[1] then return true end             -- Last line of selection
+end
+
+function getSelection()
+	-- Only one line selected
+	if selection.from[2] == selection.to[2] then
+		return string.sub( lines[ selection.from[2] ], selection.from[1], selection.to[1]-1 )
+	end
+	
+	-- Multiple lines selected
+	local s = string.sub( lines[ selection.from[2] ], selection.from[1] )
+	for line = selection.from[2]+1, selection.to[2]-1 do
+		s = s.."\n"..lines[line]
+	end
+	s = s.."\n"..string.sub( lines[ selection.to[2] ], 1, selection.to[1]-1 )
+	return s
+end
+
 function getWords(line)
 	local words = {}
 	local length = 1
@@ -130,7 +155,10 @@ function drawLine( row, start )
 	while #line > 0 and col < max do
 		local match, type = syntax.match( line, col+1 )
 		screen.setColour( theme[type] )
-		screen.write( string.sub( match, math.max(min-col, 0), max-col ), {overflow="none"} )
+		for i = math.max(min-col, 0), max-col do
+			local bg = withinSelection( col+i, row+yScroll ) and "blue-1" or theme.background
+			screen.write( string.sub(match,i,i), {overflow="none", background=bg} )
+		end
 		col = col + #match
 	end
 	
@@ -166,10 +194,10 @@ function draw()
 	screen.write( x..":"..y, screen.width-(screen.font.width+1) * #(x..":"..y) + 1, h )
 end
 
-function setCursor( newX, newY )
-	if event.keyDown("shift") then
-		selection = selection or { {x,y} }
-		selection[2] = { math.min(newX, #lines[y]+1), newY }
+function setCursor( newX, newY, select )
+	if select and event.keyDown("shift") then
+		selection = selection or { from = {x,y} }
+		selection.to = { math.min(newX, #lines[y]+1), newY }
 	else
 		selection = nil
 	end
@@ -281,55 +309,71 @@ function keyPress(key)
 			local words = getWords(y)
 			for i = 1, #words do
 				if x >= words[i].s and x <= words[i].e then
-					setCursor( (words[i].type == "separator") and words[i+1].e+1 or words[i].e+1, y )
+					setCursor( (words[i].type == "separator") and words[i+1].e+1 or words[i].e+1, y, true )
 					break
 				end
 			end
 		else
 			if x < #lines[y]+1 then
-				setCursor( x+1, y )
+				setCursor( x+1, y, true )
 			elseif y < #lines then
-				setCursor( 1, y+1 )
+				setCursor( 1, y+1, true )
 			end
 		end
 	elseif key == "down" then
 		if y < #lines then
-			setCursor( math.min( x, #lines[y+1]+1 ), y+1 )
+			setCursor( math.min( x, #lines[y+1]+1 ), y+1, true )
 		else
-			setCursor( #lines[y]+1, y )
+			setCursor( #lines[y]+1, y, true )
 		end
 	elseif key == "left" then
 		if event.keyDown("ctrl") and x > 1 then
 			local words = getWords(y)
 			for i = 1, #words do
 				if x > words[i].s and x <= words[i].e+1 then
-					setCursor( (words[i].type == "word") and (words[i-1] and words[i-1].s) or words[i].s, y )
+					setCursor( (words[i].type == "word") and (words[i-1] and words[i-1].s) or words[i].s, y, true )
 					break
 				end
 			end
 		else
 			if x > 1 then
-				setCursor( x-1, y )
+				setCursor( x-1, y, true )
 			elseif y > 1 then
-				setCursor( #lines[y-1]+1, y-1 )
+				setCursor( #lines[y-1]+1, y-1, true )
 			end
 		end
 	elseif key == "pageup" then
-		yScroll = math.max( yScroll - screen.charHeight, 0 )
-		setCursor( x, math.max(y-screen.charHeight, 1) )
+		yScroll = math.max( yScroll - screen.charHeight, 0, true )
+		setCursor( x, math.max(y-screen.charHeight, 1), true )
 	elseif key == "pagedown" then
-		yScroll = math.min( yScroll + screen.charHeight, math.max( 0, #lines-screen.charHeight+1 ) )
-		setCursor( x, math.min(y+screen.charHeight, #lines) )
+		yScroll = math.min( yScroll + screen.charHeight, math.max( 0, #lines-screen.charHeight+1 ), true )
+		setCursor( x, math.min(y+screen.charHeight, #lines), true )
 	elseif key == "end" then
-		setCursor( #lines[y]+1, y )
+		setCursor( #lines[y]+1, y, true )
 	elseif key == "home" then
-		setCursor( 1, y )
+		setCursor( 1, y, true )
 	elseif event.keyDown("ctrl") then
 		if key == "e" or key == "q" then
 			running = false
 			os.sleep()
 		elseif key == "s" then
 			save()
+		elseif key == "c" and selection then
+			os.setClipboard( getSelection() )
+		elseif key == "v" then
+			local paste = os.getClipboard():gsub( "\r\n", "\n" ) -- CRLF (\r\n) -> LF (\n)
+			local before = string.sub( lines[y], 1, x-1 )
+			local after = string.sub( lines[y], x )
+			lines[y] = before
+			for line in string.gmatch( paste, "(.-)\n" ) do
+				lines[y] = lines[y]..line
+				table.insert( lines, y+1, "" )
+				setCursor( indent*2+1, y+1 )
+			end
+			local lastLine = string.match( paste, "[^\n]+$" ) or ""
+			lines[y] = lines[y]..lastLine..after
+			setCursor( x+#lastLine, y )
+			lineStart = math.floor( math.log10(#lines) ) + 2 -- Recalculate line number width
 		end
 	end
 end
