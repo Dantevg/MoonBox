@@ -79,6 +79,7 @@ function sandbox.new( env, loadGeneral )
 	computer.timers = {n=1}
 	computer.eventFilter = nil
 	computer.eventBuffer = {}
+	computer.clipboard = ""
 	computer.error = nil
 	computer.reboot = false
 	computer.terminate = false
