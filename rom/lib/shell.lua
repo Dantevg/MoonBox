@@ -114,9 +114,9 @@ function shell.error( msg, level, file )
 		msg = string.gsub( msg, "^([^:]+)", disk.getFilename ) -- Only display filename, don't display full path
 	end
 	
+	screen.pos.x = 1
 	screen.write( (shell.traceback and debug.traceback(msg, level+1) or msg) .. "\n",
 		{colour = "red+1", background = screen.background} )
-	screen.pos.x = 1
 end
 
 
