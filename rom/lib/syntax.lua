@@ -171,11 +171,15 @@ function syntax.autocomplete( input, env )
 	end
 	
 	-- Find autocompletion
-	for k, v in pairs(t) do
-		if type(k) == "string" and k:sub( 1, #name ) == name then
-			local after = (type(v) == "table" and "." or (type(v) == "function" and "(" or ""))
-			return k:sub( #name + 1 )..after
+	while t do
+		for k, v in pairs(t) do
+			if type(k) == "string" and k:sub( 1, #name ) == name then
+				local after = (type(v) == "table" and "." or (type(v) == "function" and "(" or ""))
+				return k:sub( #name + 1 )..after
+			end
 		end
+		t = getmetatable(t) and getmetatable(t).__index or nil
+		if type(t) ~= "table" then return "" end
 	end
 	
 	return ""
