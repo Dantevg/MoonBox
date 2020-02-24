@@ -5,6 +5,8 @@ themes.dark = {
 	linenumbers = "gray+2",
 	toolbarbg = "gray-1",
 	toolbartext = "gray+1",
+	selectionbg = "blue-1",
+	selectiontext = "white",
 	comment = "gray",
 	string = "green+1",
 	number = "red+1",
@@ -19,6 +21,7 @@ themes.light = {
 	linenumbers = "gray+1",
 	toolbarbg = "blue",
 	toolbartext = "white",
+	selectionbg = "blue+3",
 	comment = "gray",
 	string = "green-1",
 	number = "red+1",
@@ -33,6 +36,8 @@ themes.gray = {
 	linenumbers = "gray+2",
 	toolbarbg = "gray",
 	toolbartext = "gray-1",
+	selectionbg = "gray-2",
+	selectiontext = "gray+1",
 	comment = "gray-2",
 	string = "black",
 	number = "black",
@@ -154,10 +159,10 @@ function drawLine( row, start )
 	
 	while #line > 0 and col < max do
 		local match, type = syntax.match( line, col+1 )
-		screen.setColour( theme[type] )
 		for i = math.max(min-col, 0), max-col do
-			local bg = withinSelection( col+i, row+yScroll ) and "blue-1" or theme.background
-			screen.write( string.sub(match,i,i), {overflow="none", background=bg} )
+			local bg = withinSelection( col+i, row+yScroll ) and theme.selectionbg or theme.background
+			local colour = withinSelection( col+i, row+yScroll ) and theme.selectiontext or theme[type]
+			screen.write( string.sub(match,i,i), {overflow="none", background=bg, colour = colour} )
 		end
 		col = col + #match
 	end
@@ -343,10 +348,10 @@ function keyPress(key)
 			end
 		end
 	elseif key == "pageup" then
-		yScroll = math.max( yScroll - screen.charHeight, 0, true )
+		yScroll = math.max( yScroll - screen.charHeight, 0 )
 		setCursor( x, math.max(y-screen.charHeight, 1), true )
 	elseif key == "pagedown" then
-		yScroll = math.min( yScroll + screen.charHeight, math.max( 0, #lines-screen.charHeight+1 ), true )
+		yScroll = math.min( yScroll + screen.charHeight, math.max( 0, #lines-screen.charHeight+1 ) )
 		setCursor( x, math.min(y+screen.charHeight, #lines), true )
 	elseif key == "end" then
 		setCursor( #lines[y]+1, y, true )
