@@ -77,7 +77,7 @@ disk.defaults = {}
 -- VIEWING FUNCTIONS
 
 function disk.defaults.list( path, showHidden )
-	expect( path, {"string", "nil"}, 1, "disk.list" )
+	expect( path, "string", 1, "disk.list" )
 	expect( showHidden, {"boolean", "nil"}, 2, "disk.list" )
 	
 	path = disk.absolute(path)
@@ -100,7 +100,7 @@ function disk.defaults.list( path, showHidden )
 end
 
 function disk.defaults.read(path)
-	expect( path, {"string", "nil"} )
+	expect( path, "string" )
 	
 	path = disk.absolute(path)
 	if not love.filesystem.getInfo( path, "file" ) then
@@ -111,7 +111,7 @@ function disk.defaults.read(path)
 end
 
 function disk.defaults.readLines(path)
-	expect( path, {"string", "nil"} )
+	expect( path, "string" )
 	
 	path = disk.absolute(path)
 	if not love.filesystem.getInfo( path, "file" ) then
@@ -126,7 +126,7 @@ function disk.defaults.readLines(path)
 end
 
 function disk.defaults.info(path)
-	expect( path, {"string", "nil"} )
+	expect( path, "string" )
 	
 	path = disk.absolute(path)
 	local info = love.filesystem.getInfo(path)
@@ -146,7 +146,7 @@ function disk.defaults.info(path)
 end
 
 function disk.defaults.exists(path)
-	expect( path, {"string", "nil"} )
+	expect( path, "string" )
 	
 	return disk.info(path).type and true or false
 end
@@ -156,18 +156,21 @@ end
 -- MODIFICATION FUNCTIONS
 
 function disk.defaults.write( path, data )
-	expect( path, {"string", "nil"}, 1, "disk.write" )
+	expect( path, "string", 1, "disk.write" )
 	expect( data, {"string", "nil"}, 2, "disk.write" )
 	
 	return love.filesystem.write( disk.absolute(path), data )
 end
 
 function disk.defaults.append( path, data )
+	expect( path, "string", 1, "disk.append" )
+	expect( data, {"string", "nil"}, 2, "disk.append" )
+	
 	return love.filesystem.append( disk.absolute(path), data )
 end
 
 function disk.defaults.mkdir(path)
-	expect( path, {"string", "nil"} )
+	expect( path, "string" )
 	
 	path = disk.absolute(path)
 	if love.filesystem.getInfo(path) then
@@ -178,14 +181,14 @@ function disk.defaults.mkdir(path)
 end
 
 function disk.defaults.newFile(path)
-	expect( path, {"string", "nil"} )
+	expect( path, "string" )
 	
 	local file = love.filesystem.newFile( disk.absolute(path) )
 	file:close()
 end
 
 function disk.defaults.remove(path)
-	expect( path, {"string", "nil"} )
+	expect( path, "string" )
 	
 	path = disk.absolute(path)
 	if love.filesystem.getInfo( path, "directory" ) and #disk.list(path) > 0 then
@@ -204,6 +207,8 @@ disk.drives = {}
 disk.drives["/"] = setmetatable( {}, {__index = disk.defaults} )
 
 disk.drives["/"].list = function(path)
+	expect( path, "string", 1, "disk.list" )
+	
 	local drive = disk.getParts( disk.absolute(path) )[1] or "/"
 	if not disk.drives[drive] then
 		error( "No such drive", 2 )
@@ -218,6 +223,8 @@ disk.drives["/"].list = function(path)
 	return drives
 end
 disk.drives["/"].info = function(path)
+	expect( path, "string" )
+	
 	if disk.drives[path] then
 		return {
 			type = "drive",
