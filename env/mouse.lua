@@ -21,8 +21,6 @@ setmetatable( mouse, {__index = function(t,k)
 		return computer.mouse.x
 	elseif k == "y" then
 		return computer.mouse.y
-	elseif k == "pos" then
-		return computer.mouse.x, computer.mouse.y
 	elseif k == "drag" then
 		if computer.mouse.drag then
 			return {
