@@ -49,13 +49,17 @@ Returns the dx and dy amounts of movement, followed by the button number.
 When the window has been resized.
 Returns the new screen width and height.
 
+#### timer
+When a timer set by `os.startTimer` has stopped.
+Returns the timer id.
+
 ---
 
 ## Keys
 Printable keys are represented by their value,
 except the space key, which is represented by the string `"space"`.
 The numpad keys are prefixed by `"kp"`. Other keys are named after their non-abbreviated name,
-so `"pagedown"` instead of ~~`'"pgdn"`~~.
+so `"pagedown"` instead of ~~`"pgdn"`~~.
 
 The key names are almost equal to [Love2d's key names](https://love2d.org/wiki/KeyConstant)
 (hey, what a coincidence!), but there are some differences:
