@@ -27,7 +27,8 @@ Displays help.
 Displays file in binary and hexadecimal notation,
 useful for viewing files like `.png`.
 
-### info
+### info \<path>
+Displays type, size and mofification time of the given `path`.
 
 ### ls [path] [-h]
 Lists all files and folders at `path`, or the current directory.
