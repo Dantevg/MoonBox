@@ -10,6 +10,8 @@ Contains the *target* FPS.
 Contains the string `"MoonBox {version}"`,
 with `{version}` replaced by the current version number.
 
+---
+
 ## Functions
 ### os.clock ( )
 Acts the same way as the default Lua `os.clock`.
