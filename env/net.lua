@@ -5,6 +5,7 @@
 	
 ]]--
 
+local socket = require "socket"
 local http = require "socket.http"
 
 local net = {}
