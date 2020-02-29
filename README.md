@@ -36,6 +36,7 @@ If you've ever worked with [LÖVE][love2d], you know what to do.
 For the documentation, refer to [docs/README.md](docs/README.md)
 
 ## License
+Refer to [LICENSE](LICENSE). A copy here:
 ```
 MIT License
 
