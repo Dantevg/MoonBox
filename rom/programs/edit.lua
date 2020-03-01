@@ -80,7 +80,7 @@ end
 
 -- Variables
 
-local syntax = require "syntax"
+local syntax = require("syntax")( require("luasyntax") )
 
 local lineStart = math.floor( math.log10(#lines) ) + 2 -- Width of line numbers
 
