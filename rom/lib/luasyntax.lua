@@ -4,13 +4,13 @@
 	
 ]]--
 
-local syntax = {}
+local luasyntax = {}
 
-syntax.patterns = {}
+luasyntax.patterns = {}
 
 local block = "%[(=*)%[.-%]%1%]"
 
-syntax.patterns.comment = {
+luasyntax.patterns.comment = {
 	"%-%-[^\n]*",                -- Single-line comment
 	"%-%-"..block,               -- Multiline comment
 	unfinished = {
@@ -18,7 +18,7 @@ syntax.patterns.comment = {
 	}
 }
 
-syntax.patterns.string = {
+luasyntax.patterns.string = {
 	'"[^\n"]-[^\\\n]"',          -- Single-line string with double quotes ("")
 	"'[^\n']-[^\\\n]'",          -- Single-line string with single quotes ('')
 	'""',                        -- Empty single-line string with double quotes ("")
@@ -31,15 +31,15 @@ syntax.patterns.string = {
 	}
 }
 
-syntax.patterns.number = {
+luasyntax.patterns.number = {
 	"0x%x+",                     -- Hexadecimal number
 	"%-?%d-%.?%d+[Ee][%+%-]?%d+",-- Number with exponent
 	"%-?%d*%.?%d+",              -- Number with optional decimal point
 }
 
-syntax.patterns.punctuation = {"%p"}
+luasyntax.patterns.punctuation = {"%p"}
 
-syntax.patterns.keyword = {
+luasyntax.patterns.keyword = {
 	"and", "break", "do", "else", "elseif",
 	"end", "false", "for", "function", "if",
 	"in", "local", "nil", "not", "or",
@@ -47,13 +47,13 @@ syntax.patterns.keyword = {
 	after = "%f[^%w_]",
 }
 
-syntax.patterns.word = {"[%a_][%w_]*"}
+luasyntax.patterns.word = {"[%a_][%w_]*"}
 
-syntax.patterns.whitespace = {"%s+"}
+luasyntax.patterns.whitespace = {"%s+"}
 
-syntax.patterns.other = {"."}  -- Match any character, to avoid getting stuck
+luasyntax.patterns.other = {"."}  -- Match any character, to avoid getting stuck
 
-syntax.patternsOrder = {
+luasyntax.patternsOrder = {
 	"comment",
 	"string",
 	"number",
@@ -64,20 +64,20 @@ syntax.patternsOrder = {
 	"other",
 }
 
-function syntax.autocomplete( input, env )
-	expect( input, "string", 1, "syntax.autocomplete" )
-	expect( env, {"table", "nil"}, 2, "syntax.autocomplete" )
+function luasyntax.autocomplete( input, env )
+	expect( input, "string", 1, "luasyntax.autocomplete" )
+	expect( env, {"table", "nil"}, 2, "luasyntax.autocomplete" )
 	
 	local path = {}
 	
 	-- Get path
-	local str = input:match("%.$") or input:match("%."..syntax.patterns.word[1].."$")
+	local str = input:match("%.$") or input:match("%."..luasyntax.patterns.word[1].."$")
 	while str do
 		table.insert( path, 1, str:sub(2) )
 		input = string.sub( input, 1, -#str-1 )
-		str = input:match("%."..syntax.patterns.word[1].."$") -- Match ".word"
+		str = input:match("%."..luasyntax.patterns.word[1].."$") -- Match ".word"
 	end
-	local str = input:match(syntax.patterns.word[1].."$") -- Match "word"
+	local str = input:match(luasyntax.patterns.word[1].."$") -- Match "word"
 	if not str then return end
 	table.insert( path, 1, str )
 	
@@ -95,7 +95,7 @@ function syntax.autocomplete( input, env )
 	
 	-- Find keyword
 	if #path == 1 then
-		for _, keyword in ipairs(syntax.patterns.keyword) do
+		for _, keyword in ipairs(luasyntax.patterns.keyword) do
 			if keyword:sub( 1, #name )  == name then
 				return keyword:sub( #name + 1 )
 			end
@@ -117,4 +117,4 @@ function syntax.autocomplete( input, env )
 	return ""
 end
 
-return syntax
+return luasyntax
