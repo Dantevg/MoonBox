@@ -26,7 +26,7 @@ function event.wait(event)
 end
 
 function event.push( event, ... )
-	expect( event, {"string", "nil"} )
+	expect( event, "string" )
 	
 	table.insert( computer.eventBuffer, {event, ...} )
 end

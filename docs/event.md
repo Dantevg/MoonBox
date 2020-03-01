@@ -7,7 +7,7 @@ Stops execution until `event` occurs (or any event, if missing).
 Returns the event name, followed by any values specific for that event (see [Events](#Events)).
 Always stops and errors when the "terminate" event occurs.
 
-### event.push ( [event [, ...]] )
+### event.push ( event [, ...] )
 Pushes an event on the stack, whith name given by `event`,
 and optional extra parameters which will be returned by `event.wait` later on.
 
