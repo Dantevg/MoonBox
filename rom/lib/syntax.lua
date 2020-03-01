@@ -139,13 +139,13 @@ function syntax.autocomplete( input, env )
 	local path = {}
 	
 	-- Get path
-	local str = input:match("%.$") or input:match("%.[%a_][%w_]*$")
+	local str = input:match("%.$") or input:match("%."..syntax.patterns.word.."*$")
 	while str do
 		table.insert( path, 1, str:sub(2) )
 		input = string.sub( input, 1, -#str-1 )
-		str = input:match("%.[%a_][%w_]*$") -- Match ".word"
+		str = input:match("%."..syntax.patterns.word.."*$") -- Match ".word"
 	end
-	local str = input:match("[%a_][%w_]*$") -- Match "word"
+	local str = input:match(syntax.patterns.word.."*$") -- Match "word"
 	if not str then return end
 	table.insert( path, 1, str )
 	
