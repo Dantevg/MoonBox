@@ -61,3 +61,7 @@ Removes the file or *empty* folder at `path`.
 
 ### shutdown
 Shuts down MoonBox.
+
+### view \<path>
+Prints the contents of the file at `path` to screen,
+with viewport navigation controls.
