@@ -281,6 +281,8 @@ disk.drives["rom"].remove = function()
 	error( "Attempt to modify read-only location", 2 )
 end
 
+disk.drives["docs"] = setmetatable( {}, {__index = disk.drives.rom} )
+
 function disk.getDrives()
 	local d = {}
 	for k in pairs(disk.drives) do
