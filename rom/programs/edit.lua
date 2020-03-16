@@ -80,7 +80,12 @@ end
 
 -- Variables
 
-local syntax = require("syntax")( require("luasyntax") )
+local syntax = require "syntax"
+if disk.getExtension(path) == ".md" then
+	syntax = syntax( require("mdsyntax") )
+else
+	syntax = syntax( require("luasyntax") )
+end
 
 local lineStart = math.floor( math.log10(#lines) ) + 2 -- Width of line numbers
 
