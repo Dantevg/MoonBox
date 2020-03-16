@@ -1,6 +1,6 @@
 local what = ...
 if what and disk.exists("/docs/"..what..".md") then
-	os.run( "/rom/programs/view.lua", "/docs/"..what..".md" )
+	os.run( "/rom/programs/view.lua", "/docs/"..what..".md", "--highlight" )
 else
 	print( "Topics:", "green+1" )
 	local files = disk.list("/docs")
