@@ -8,19 +8,47 @@ local mdsyntax = {}
 
 mdsyntax.patterns = {}
 
-mdsyntax.patterns.heading = {"#- [^\n]+"}
-
 mdsyntax.patterns.comment = {"<!%-%-.-%-%->"}
 
-mdsyntax.patterns.word = {"[%a_][%w_]*"}
+mdsyntax.patterns.heading = {"#+ [^\n]+"}
+
+mdsyntax.patterns.hline = {
+	"%-%-%-+$",
+	"%*%*%*+$",
+	"___+$",
+}
+
+mdsyntax.patterns.code = {
+	"`[^`]+`",        -- Inline code
+	"```.-```",       -- Code block
+	unfinished = {
+		"```.-$",
+	}
+}
+
+mdsyntax.patterns.bold = {
+	"%*[^%*]+%*",
+	"_[^_]^"
+}
+
+mdsyntax.patterns.italic = {
+	"%*%*[^%*]+%*%*",
+	"__[^_]+__"
+}
+
+mdsyntax.patterns.word = {"[%w_]+"}
 
 mdsyntax.patterns.whitespace = {"%s+"}
 
 mdsyntax.patterns.other = {"."}  -- Match any character, to avoid getting stuck
 
 mdsyntax.patternsOrder = {
-	"heading",
 	"comment",
+	"heading",
+	"hline",
+	"code",
+	"bold",
+	"italic",
 	"word",
 	"whitespace",
 	"other",
