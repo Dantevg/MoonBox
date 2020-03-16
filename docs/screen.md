@@ -15,7 +15,7 @@ A reference to either `screen.colours64` or `screen.colours32`
 ## Drawing functions
 These functions all work on a canvas, but to make life easier,
 they are set up in such a way that they default to the main screen,
-except for`(Canvas):draw()`:
+except for `(Canvas):draw()`:
 ```lua
 screen.pixel( 10, 10, "red" ) -- Draws a pixel on the main canvas
 c:pixel( 10, 5, "blue" )      -- Draws a pixel on a different canvas,
