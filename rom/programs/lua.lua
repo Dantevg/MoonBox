@@ -1,4 +1,4 @@
-local syntax = require "syntax"
+local syntax = require("syntax")( require("luasyntax") )
 
 local args = {...}
 local running = true
