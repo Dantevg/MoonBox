@@ -7,14 +7,28 @@ themes.dark = {
 	toolbartext = "gray+1",
 	selectionbg = "blue-1",
 	selectiontext = "white",
-	comment = "gray",
-	string = "green+1",
-	number = "red+1",
-	punctuation = "gray+1",
-	keyword = "yellow+1",
-	word = "white",
-	whitespace = "white",
-	other = "white",
+	text = "white",
+	lua = {
+		comment = "gray",
+		string = "green+1",
+		number = "red+1",
+		punctuation = "gray+1",
+		keyword = "yellow+1",
+		word = "white",
+		whitespace = "white",
+		other = "white",
+	},
+	md = {
+		comment = "gray",
+		heading = "red+1",
+		hline = "gray-1",
+		code = "blue+2",
+		bold = "orange",
+		italic = "purple+1",
+		word = "gray+2",
+		whitespace = "white",
+		other = "white",
+	},
 }
 themes.light = {
 	background = "gray+3",
@@ -22,14 +36,28 @@ themes.light = {
 	toolbarbg = "blue",
 	toolbartext = "white",
 	selectionbg = "blue+3",
-	comment = "gray",
-	string = "green-1",
-	number = "red+1",
-	punctuation = "gray",
-	keyword = "blue",
-	word = "gray-2",
-	whitespace = "gray-2",
-	other = "gray-2",
+	text = "black",
+	lua = {
+		comment = "gray",
+		string = "green-1",
+		number = "red+1",
+		punctuation = "gray",
+		keyword = "blue",
+		word = "gray-2",
+		whitespace = "gray-2",
+		other = "gray-2",
+	},
+	md = {
+		comment = "gray",
+		heading = "red+1",
+		hline = "gray+2",
+		code = "blue-1",
+		bold = "orange+1",
+		italic = "purple+1",
+		word = "gray-1",
+		whitespace = "black",
+		other = "black",
+	},
 }
 themes.gray = {
 	background = "gray-1",
@@ -38,14 +66,28 @@ themes.gray = {
 	toolbartext = "gray-1",
 	selectionbg = "gray-2",
 	selectiontext = "gray+1",
-	comment = "gray-2",
-	string = "black",
-	number = "black",
-	punctuation = "white",
-	keyword = "white",
-	word = "gray+1",
-	whitespace = "gray+1",
-	other = "gray+1"
+	text = "white",
+	lua = {
+		comment = "gray-2",
+		string = "black",
+		number = "black",
+		punctuation = "white",
+		keyword = "white",
+		word = "gray+1",
+		whitespace = "gray+1",
+		other = "gray+1"
+	},
+	md = {
+		comment = "gray",
+		heading = "white",
+		hline = "gray",
+		code = "gray-2",
+		bold = "white",
+		italic = "white",
+		word = "gray+1",
+		whitespace = "gray+1",
+		other = "gray+1",
+	},
 }
 
 local theme = themes.dark
@@ -81,7 +123,8 @@ end
 -- Variables
 
 local syntax = require "syntax"
-if disk.getExtension(path) == ".md" then
+local ext = string.sub( disk.getExtension(path), 2 )
+if ext == "md" then
 	syntax = syntax( require("mdsyntax") )
 else
 	syntax = syntax( require("luasyntax") )
@@ -166,7 +209,10 @@ function drawLine( row, start )
 		local match, type = syntax.match( line, col+1 )
 		for i = math.max(min-col, 0), max-col do
 			local bg = withinSelection( col+i, row+yScroll ) and theme.selectionbg or theme.background
-			local colour = withinSelection( col+i, row+yScroll ) and theme.selectiontext or theme[type]
+			local colour = theme[ext] and theme[ext][type] or theme.text
+			if withinSelection( col+i, row+yScroll ) then
+				colour = theme.selectiontext
+			end
 			screen.write( string.sub(match,i,i), {overflow="none", background=bg, colour = colour} )
 		end
 		col = col + #match
@@ -191,7 +237,7 @@ function draw()
 		screen.setCharPos( x-xScroll + lineStart, y-yScroll )
 		local x, y = screen.getPixelPos()
 		screen.rect( x, y, screen.font.width, screen.font.height, theme.background )
-		screen.setColour(theme.word)
+		screen.setColour(theme.text)
 		screen.cursor( x, y+1 )
 	end
 	
