@@ -147,7 +147,7 @@ end
 
 function drawLine( row, start )
 	local line = lines[row+yScroll]
-	local suggestion = #line>0 and y == row and x == #line+1 and syntax.autocomplete(line) or ""
+	local suggestion = #line>0 and x == #line+1 and syntax.autocomplete(line) or ""
 	screen.setCharPos( 1, row )
 	screen.setColour(theme.linenumbers)
 	screen.write(row + yScroll)
