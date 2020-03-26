@@ -22,7 +22,7 @@ local theme = {
 	other = {"white"},
 }
 
-local syntax = (arg[2] == "--highlight") and require("syntax")( require("mdsyntax") )
+local syntax = (arg[2] == "--highlight") and require "mdsyntax"
 local t = disk.readLines(path)
 local xScroll = 1
 local yScroll = 1
