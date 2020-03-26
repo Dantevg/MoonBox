@@ -74,9 +74,4 @@ function syntax.gmatch( s, unfinished )
 	end
 end
 
-return function(language)
-	syntax.patterns = language.patterns
-	syntax.patternsOrder = language.patternsOrder
-	syntax.autocomplete = language.autocomplete
-	return syntax
-end
+return syntax

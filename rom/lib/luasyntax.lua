@@ -117,4 +117,4 @@ function luasyntax.autocomplete( input, env )
 	return ""
 end
 
-return luasyntax
+return setmetatable( require("syntax"), {__index = luasyntax} )

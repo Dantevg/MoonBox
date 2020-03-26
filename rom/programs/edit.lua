@@ -122,13 +122,8 @@ end
 
 -- Variables
 
-local syntax = require "syntax"
 local ext = string.sub( disk.getExtension(path), 2 )
-if ext == "md" then
-	syntax = syntax( require("mdsyntax") )
-else
-	syntax = syntax( require("luasyntax") )
-end
+local syntax = require( ext == "md" and "mdsyntax" or "luasyntax" )
 
 local lineStart = math.floor( math.log10(#lines) ) + 2 -- Width of line numbers
 

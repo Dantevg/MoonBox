@@ -58,4 +58,4 @@ function mdsyntax.autocomplete()
 	return ""
 end
 
-return mdsyntax
+return setmetatable( require("syntax"), {__index = mdsyntax} )
