@@ -179,7 +179,7 @@ function colourPicker:mouse( x, y, btn )
 	if not self:within( x, y ) then return end
 	x, y = self:toLocalCoords( x, y )
 	
-	local c = colours.colour( self.palette.image:getPixel(x/8, y/8) )
+	local c = colours.colour( self.palette.image:getPixel((x-1)/8, (y-1)/8) )
 	local colour, brightness = colours.getName(c), colours.getBrightness(c)
 	
 	if btn == 1 then
