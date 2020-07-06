@@ -1,5 +1,5 @@
 # OS
-rovides OS functions for time/timing,
+Provides OS functions for time/timing,
 shutdown/reboot communication and execution.
 
 ## Constants
